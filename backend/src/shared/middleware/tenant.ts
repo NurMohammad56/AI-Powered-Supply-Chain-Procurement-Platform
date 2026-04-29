@@ -6,6 +6,7 @@ import { ErrorCodes } from '../errors/errorCodes.js';
 import { verifyAccessToken } from '../auth/jwt.js';
 import { tenantStorage } from '../db/tenancyPlugin.js';
 import { getRequestId } from '../http/apiResponse.js';
+import { isAccessTokenDenied } from '../security/tokenDenylist.js';
 import type { TenantContext } from '../auth/types.js';
 
 /**
@@ -28,18 +29,30 @@ export const resolveTenant: RequestHandler = (req, _res, next) => {
   }
   const claims = verifyAccessToken(token);
 
-  const ctx: TenantContext = {
-    tenantId: new Types.ObjectId(claims.tenantId),
-    userId: new Types.ObjectId(claims.sub),
-    role: claims.role,
-    subscriptionTier: claims.tier,
-    seats: claims.seats,
-    features: new Set(claims.features ?? []),
-    requestId: getRequestId(req) ?? '',
-  };
-
-  req.context = ctx;
-  next();
+  // Fast-path revocation check: O(1) Redis lookup before constructing
+  // the tenant context. Fails open on Redis errors (logged inside the
+  // helper) - the refresh path is the authoritative revocation gate.
+  void (async () => {
+    const denied = await isAccessTokenDenied({
+      jti: claims.jti,
+      userId: claims.sub,
+      issuedAtSec: claims.iat ?? 0,
+    });
+    if (denied) {
+      return next(new UnauthorizedError(ErrorCodes.AUTH_TOKEN_INVALID, 'Access token revoked'));
+    }
+    const ctx: TenantContext = {
+      tenantId: new Types.ObjectId(claims.tenantId),
+      userId: new Types.ObjectId(claims.sub),
+      role: claims.role,
+      subscriptionTier: claims.tier,
+      seats: claims.seats,
+      features: new Set(claims.features ?? []),
+      requestId: getRequestId(req) ?? '',
+    };
+    req.context = ctx;
+    next();
+  })();
 };
 
 /**
