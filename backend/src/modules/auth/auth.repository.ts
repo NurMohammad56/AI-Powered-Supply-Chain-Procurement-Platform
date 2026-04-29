@@ -45,23 +45,6 @@ export class AuthRepository {
     return User.findById(id).lean<UserDoc>().exec();
   }
 
-  /**
-   * Login lookup. Includes `passwordHash` (which is otherwise `select:false`)
-   * by explicit projection. Runs in the GLOBAL scope - logging in establishes
-   * the tenant scope, it cannot assume one exists yet.
-   */
-  async findUserForLoginByEmail(email: string): Promise<(UserDoc & { passwordHash: string }) | null> {
-    return User.findOne({ email })
-      .select('+passwordHash')
-      .lean<UserDoc & { passwordHash: string }>()
-      .exec()
-      .then((doc) =>
-        // @ts-expect-error tenancy plugin will block the find without a scope; we run this
-        // call from inside `tenantStorage.run()` driven by the email lookup helper below.
-        doc,
-      );
-  }
-
   async createUser(input: Omit<UserDoc, '_id' | 'createdAt' | 'updatedAt' | 'factoryId'> & {
     factoryId?: Types.ObjectId;
   }): Promise<UserDoc> {

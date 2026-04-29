@@ -1,21 +1,21 @@
 import { AppError } from './AppError.js';
-import { ErrorCodes, type ErrorCode } from './errorCodes.js';
+import { ErrorCodes } from './errorCodes.js';
 
 export class BadRequestError extends AppError {
-  constructor(code: ErrorCode | string = ErrorCodes.BAD_REQUEST, message = 'Bad Request', details?: unknown) {
+  constructor(code: string = ErrorCodes.BAD_REQUEST, message = 'Bad Request', details?: unknown) {
     super(400, code, message, details);
   }
 }
 
 export class UnauthorizedError extends AppError {
-  constructor(code: ErrorCode | string = ErrorCodes.AUTH_TOKEN_INVALID, message = 'Unauthorized', details?: unknown) {
+  constructor(code: string = ErrorCodes.AUTH_TOKEN_INVALID, message = 'Unauthorized', details?: unknown) {
     super(401, code, message, details);
   }
 }
 
 export class PaymentRequiredError extends AppError {
   constructor(
-    code: ErrorCode | string = ErrorCodes.TIER_GATE,
+    code: string = ErrorCodes.TIER_GATE,
     message = 'Subscription upgrade required',
     details?: unknown,
   ) {
@@ -24,19 +24,19 @@ export class PaymentRequiredError extends AppError {
 }
 
 export class ForbiddenError extends AppError {
-  constructor(code: ErrorCode | string = ErrorCodes.FORBIDDEN, message = 'Forbidden', details?: unknown) {
+  constructor(code: string = ErrorCodes.FORBIDDEN, message = 'Forbidden', details?: unknown) {
     super(403, code, message, details);
   }
 }
 
 export class NotFoundError extends AppError {
-  constructor(code: ErrorCode | string = ErrorCodes.NOT_FOUND, message = 'Resource not found', details?: unknown) {
+  constructor(code: string = ErrorCodes.NOT_FOUND, message = 'Resource not found', details?: unknown) {
     super(404, code, message, details);
   }
 }
 
 export class ConflictError extends AppError {
-  constructor(code: ErrorCode | string = ErrorCodes.CONFLICT, message = 'Conflict', details?: unknown) {
+  constructor(code: string = ErrorCodes.CONFLICT, message = 'Conflict', details?: unknown) {
     super(409, code, message, details);
   }
 }
@@ -49,7 +49,7 @@ export class ValidationError extends AppError {
 
 export class TooManyRequestsError extends AppError {
   constructor(
-    code: ErrorCode | string = ErrorCodes.RATE_LIMITED,
+    code: string = ErrorCodes.RATE_LIMITED,
     message = 'Too many requests',
     details?: unknown,
   ) {
@@ -59,7 +59,7 @@ export class TooManyRequestsError extends AppError {
 
 export class ServiceUnavailableError extends AppError {
   constructor(
-    code: ErrorCode | string = ErrorCodes.SERVICE_UNAVAILABLE,
+    code: string = ErrorCodes.SERVICE_UNAVAILABLE,
     message = 'Service unavailable',
     details?: unknown,
   ) {
@@ -69,7 +69,7 @@ export class ServiceUnavailableError extends AppError {
 
 export class InternalError extends AppError {
   constructor(
-    code: ErrorCode | string = ErrorCodes.INTERNAL_ERROR,
+    code: string = ErrorCodes.INTERNAL_ERROR,
     message = 'Internal server error',
     details?: unknown,
   ) {

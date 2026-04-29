@@ -23,8 +23,7 @@
     "test:coverage": "jest --coverage",
     "test:integration": "jest --testPathPattern=tests/integration",
     "migrate": "tsx scripts/migrate.ts",
-    "seed": "tsx scripts/seed.ts",
-    "prepare": "cd .. && husky backend/.husky"
+    "seed": "tsx scripts/seed.ts"
   },
   "dependencies": {
     "@socket.io/redis-adapter": "^8.3.0",

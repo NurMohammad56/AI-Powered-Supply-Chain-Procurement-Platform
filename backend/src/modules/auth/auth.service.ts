@@ -389,8 +389,8 @@ export class AuthService {
     if (!stub) {
       throw new UnauthorizedError(ErrorCodes.AUTH_RESET_TOKEN_INVALID, 'Reset token invalid');
     }
-    const userId = stub._id as Types.ObjectId;
-    const factoryId = stub.factoryId as Types.ObjectId;
+    const userId = stub._id;
+    const factoryId = stub.factoryId;
 
     await authRepository.withScope(factoryId, async () => {
       const user = await authRepository.findUserById(userId);
@@ -428,8 +428,8 @@ export class AuthService {
     if (!expires || expires.getTime() < Date.now()) {
       throw new UnauthorizedError(ErrorCodes.AUTH_VERIFY_TOKEN_INVALID, 'Verification token expired');
     }
-    const userId = stub._id as Types.ObjectId;
-    const factoryId = stub.factoryId as Types.ObjectId;
+    const userId = stub._id;
+    const factoryId = stub.factoryId;
     await authRepository.withScope(factoryId, () =>
       authRepository.updateUser(userId, {
         emailVerifiedAt: new Date(),

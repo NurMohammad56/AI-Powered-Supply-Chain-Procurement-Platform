@@ -11,19 +11,26 @@ import { verifyAccessToken } from '../auth/jwt.js';
 import { SocketEvents, factoryRoom, userRoom } from './events.js';
 import type { Role } from '../auth/types.js';
 
-interface SocketContext {
+export interface SocketAuthContext {
   factoryId: Types.ObjectId;
   userId: Types.ObjectId;
   role: Role;
 }
 
-declare module 'socket.io' {
-  interface Socket {
-    data: { context?: SocketContext };
-  }
+interface ServerToClientEvents {
+  [event: string]: (...args: unknown[]) => void;
+}
+interface ClientToServerEvents {
+  ping: () => void;
+}
+interface InterServerEvents {
+  [event: string]: (...args: unknown[]) => void;
+}
+interface SocketData {
+  context?: SocketAuthContext;
 }
 
-let io: IoServer | null = null;
+let io: IoServer<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData> | null = null;
 
 /**
  * Builds the Socket.io server with Redis adapter for horizontal scaling
@@ -33,20 +40,28 @@ let io: IoServer | null = null;
  * Strict posture (SDD §7.6): WebSocket-only transport (no long-polling
  * fallback), 1 MiB max frame, only `ping` accepted from clients.
  */
-export function createSocketServer(httpServer: HttpServer): IoServer {
+export function createSocketServer(httpServer: HttpServer): IoServer<
+  ClientToServerEvents,
+  ServerToClientEvents,
+  InterServerEvents,
+  SocketData
+> {
   if (io) return io;
 
-  io = new IoServer(httpServer, {
-    path: '/realtime',
-    cors: {
-      origin: env.CORS_ORIGINS.length > 0 ? env.CORS_ORIGINS : false,
-      credentials: true,
+  io = new IoServer<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>(
+    httpServer,
+    {
+      path: '/realtime',
+      cors: {
+        origin: env.CORS_ORIGINS.length > 0 ? env.CORS_ORIGINS : false,
+        credentials: true,
+      },
+      transports: ['websocket'],
+      pingInterval: 25_000,
+      pingTimeout: 20_000,
+      maxHttpBufferSize: 1024 * 1024,
     },
-    transports: ['websocket'],
-    pingInterval: 25_000,
-    pingTimeout: 20_000,
-    maxHttpBufferSize: 1024 * 1024,
-  });
+  );
 
   io.adapter(createAdapter(redisSockPub, redisSockSub));
 
@@ -69,14 +84,14 @@ export function createSocketServer(httpServer: HttpServer): IoServer {
     }
   });
 
-  io.on('connection', (socket: Socket) => {
+  io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>) => {
     const ctx = socket.data.context;
     if (!ctx) {
       socket.disconnect(true);
       return;
     }
-    socket.join(factoryRoom(ctx.factoryId.toString()));
-    socket.join(userRoom(ctx.userId.toString()));
+    void socket.join(factoryRoom(ctx.factoryId.toString()));
+    void socket.join(userRoom(ctx.userId.toString()));
 
     socket.emit(SocketEvents.SystemConnected, {
       serverTime: new Date().toISOString(),
@@ -109,13 +124,19 @@ export function createSocketServer(httpServer: HttpServer): IoServer {
   return io;
 }
 
-export function getIo(): IoServer {
+export function getIo(): IoServer<
+  ClientToServerEvents,
+  ServerToClientEvents,
+  InterServerEvents,
+  SocketData
+> {
   if (!io) throw new Error('Socket.io server not initialised');
   return io;
 }
 
 export async function closeSocketServer(): Promise<void> {
   if (!io) return;
-  await new Promise<void>((resolve) => io!.close(() => resolve()));
+  const ref = io;
+  await new Promise<void>((resolve) => ref.close(() => resolve()));
   io = null;
 }

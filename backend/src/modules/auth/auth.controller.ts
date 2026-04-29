@@ -5,7 +5,15 @@ import { asyncHandler } from '../../shared/http/asyncHandler.js';
 import { ok, created, noContent } from '../../shared/http/apiResponse.js';
 import { UnauthorizedError } from '../../shared/errors/HttpErrors.js';
 import { ErrorCodes } from '../../shared/errors/errorCodes.js';
+import type { TenantContext } from '../../shared/auth/types.js';
 import { authService } from './auth.service.js';
+
+function requireContext(req: Request): TenantContext {
+  if (!req.context) {
+    throw new UnauthorizedError(ErrorCodes.AUTH_TOKEN_MISSING, 'Tenant context not resolved');
+  }
+  return req.context;
+}
 
 const REFRESH_COOKIE = 'scp_refresh';
 const CSRF_COOKIE = 'scp_csrf';
@@ -110,7 +118,7 @@ export const authController = {
   }),
 
   me: asyncHandler(async (req, res) => {
-    const ctx = req.context!;
+    const ctx = requireContext(req);
     return ok(req, res, {
       userId: ctx.userId.toString(),
       factoryId: ctx.factoryId.toString(),
@@ -121,19 +129,19 @@ export const authController = {
   }),
 
   changePassword: asyncHandler(async (req, res) => {
-    const ctx = req.context!;
+    const ctx = requireContext(req);
     await authService.changePassword(ctx.userId, ctx.factoryId, req.body);
     return ok(req, res, { ok: true });
   }),
 
   inviteUser: asyncHandler(async (req, res) => {
-    const ctx = req.context!;
+    const ctx = requireContext(req);
     const result = await authService.inviteUser(ctx.userId, ctx.role, ctx.factoryId, req.body);
     return created(req, res, result);
   }),
 
   logoutEverywhere: asyncHandler(async (req, res) => {
-    const ctx = req.context!;
+    const ctx = requireContext(req);
     await authService.logoutEverywhere(ctx.userId, ctx.factoryId);
     clearRefreshCookie(res);
     return noContent(res);

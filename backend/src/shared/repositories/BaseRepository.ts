@@ -1,11 +1,10 @@
-import {
+import type {
+  FilterQuery,
+  Model,
+  ProjectionType,
+  QueryOptions,
   Types,
-  type FilterQuery,
-  type Model,
-  type ProjectionType,
-  type QueryOptions,
-  type RootFilterQuery,
-  type UpdateQuery,
+  UpdateQuery,
 } from 'mongoose';
 
 import { paginate, type Cursor, type Page } from '../utils/pagination.js';
@@ -54,7 +53,7 @@ export abstract class BaseRepository<TDoc extends { _id: Types.ObjectId }> {
     sort: Record<string, 1 | -1> = { _id: 1 },
   ): Promise<Page<TDoc>> {
     const fullFilter: FilterQuery<TDoc> = cursor.after
-      ? ({ ...filter, _id: { $gt: cursor.after } } as FilterQuery<TDoc>)
+      ? { ...filter, _id: { $gt: cursor.after } }
       : filter;
     const rows = await this.model
       .find(fullFilter)
@@ -67,7 +66,7 @@ export abstract class BaseRepository<TDoc extends { _id: Types.ObjectId }> {
 
   async create<TInput extends Partial<TDoc>>(input: TInput): Promise<TDoc> {
     const doc = await this.model.create(input);
-    return doc.toObject() as TDoc;
+    return doc.toObject();
   }
 
   async updateById(
@@ -93,15 +92,13 @@ export abstract class BaseRepository<TDoc extends { _id: Types.ObjectId }> {
   }
 
   async deleteById(id: Types.ObjectId | string): Promise<boolean> {
-    const result = await this.model.deleteOne({ _id: id } as RootFilterQuery<TDoc>).exec();
+    const result = await this.model.deleteOne({ _id: id }).exec();
     return (result.deletedCount ?? 0) > 0;
   }
 
   async softDeleteById(id: Types.ObjectId | string): Promise<boolean> {
     const result = await this.model
-      .updateOne({ _id: id } as RootFilterQuery<TDoc>, {
-        $set: { archivedAt: new Date() },
-      } as unknown as UpdateQuery<TDoc>)
+      .updateOne({ _id: id }, { $set: { archivedAt: new Date() } })
       .exec();
     return (result.modifiedCount ?? 0) > 0;
   }

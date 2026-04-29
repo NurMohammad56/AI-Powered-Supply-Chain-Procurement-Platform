@@ -1,16 +1,16 @@
 import rateLimit, { type RateLimitRequestHandler } from 'express-rate-limit';
-import RedisStore from 'rate-limit-redis';
+import RedisStore, { type SendCommandFn } from 'rate-limit-redis';
 
 import { redisCache } from '../../config/redis.js';
 import { env } from '../../config/env.js';
 import { TooManyRequestsError } from '../errors/HttpErrors.js';
 import { ErrorCodes } from '../errors/errorCodes.js';
 
+const sendCommand: SendCommandFn = (...args: string[]) =>
+  redisCache.call(args[0] as string, ...args.slice(1)) as ReturnType<SendCommandFn>;
+
 function buildStore(prefix: string): RedisStore {
-  return new RedisStore({
-    sendCommand: (...args: string[]) => redisCache.call(...(args as [string, ...string[]])) as Promise<unknown>,
-    prefix,
-  });
+  return new RedisStore({ sendCommand, prefix });
 }
 
 const handler = (_req: unknown, _res: unknown, next: (err?: unknown) => void): void => {

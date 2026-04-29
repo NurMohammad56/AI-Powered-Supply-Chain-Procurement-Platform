@@ -1,4 +1,4 @@
-import { Schema, Types, model, type HydratedDocument } from 'mongoose';
+import { Schema, model, type HydratedDocument, type Types } from 'mongoose';
 
 import { tenancyPlugin } from '../../../shared/db/tenancyPlugin.js';
 

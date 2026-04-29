@@ -30,8 +30,20 @@ export interface PaginatedEnvelope<T> {
   };
 }
 
+/**
+ * Coerces `req.id` to a string. `pino-http` types `req.id` as `ReqId`
+ * (`string | number`); the `requestId` middleware always sets a string,
+ * but downstream code must defend against the type union.
+ */
+export function getRequestId(req: Request): string | undefined {
+  const id = (req as Request & { id?: unknown }).id;
+  if (typeof id === 'string') return id;
+  if (typeof id === 'number') return String(id);
+  return undefined;
+}
+
 function metaFor(req: Request): ResponseMeta {
-  const requestId = (req as Request & { id?: string }).id;
+  const requestId = getRequestId(req);
   return requestId ? { requestId } : {};
 }
 

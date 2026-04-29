@@ -75,7 +75,10 @@ declare global {
     // eslint-disable-next-line @typescript-eslint/no-empty-interface
     interface Request {
       context?: TenantContext;
-      id?: string;
+      // NOTE: `req.id` is augmented by `pino-http` as `string | number`
+      // (its `ReqId` alias). We do NOT augment it here to avoid a
+      // declaration-merge conflict; instead, use `getRequestId(req)`
+      // from `shared/http/apiResponse.ts` which coerces to string.
     }
   }
 }

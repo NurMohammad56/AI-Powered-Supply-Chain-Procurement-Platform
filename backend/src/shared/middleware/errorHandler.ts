@@ -5,7 +5,7 @@ import mongoose from 'mongoose';
 import { logger } from '../../config/logger.js';
 import { AppError } from '../errors/AppError.js';
 import { ErrorCodes } from '../errors/errorCodes.js';
-import type { ErrorEnvelope } from '../http/apiResponse.js';
+import { getRequestId, type ErrorEnvelope } from '../http/apiResponse.js';
 
 const TENANCY_MARKERS = ['TENANCY_SCOPE_MISSING', 'TENANCY_VIOLATION'];
 
@@ -16,7 +16,7 @@ const TENANCY_MARKERS = ['TENANCY_SCOPE_MISSING', 'TENANCY_VIOLATION'];
  *   - everything else -> fatal log + opaque 500 with requestId
  */
 export const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {
-  const requestId = req.id;
+  const requestId = getRequestId(req);
 
   if (err instanceof AppError) {
     const body: ErrorEnvelope = {
@@ -129,11 +129,12 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {
  * 404 handler for unmatched routes. Mounted last, before `errorHandler`.
  */
 export const notFoundHandler: ErrorRequestHandler = (_err, req, res, _next) => {
+  const requestId = getRequestId(req);
   res.status(404).json({
     error: {
       code: ErrorCodes.NOT_FOUND,
       message: `Route not found: ${req.method} ${req.path}`,
-      ...(req.id ? { requestId: req.id } : {}),
+      ...(requestId ? { requestId } : {}),
     },
   });
 };

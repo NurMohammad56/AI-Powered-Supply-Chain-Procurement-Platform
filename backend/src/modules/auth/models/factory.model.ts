@@ -1,4 +1,4 @@
-import { Schema, Types, model, type HydratedDocument } from 'mongoose';
+import { Schema, model, type HydratedDocument, type Types } from 'mongoose';
 
 export type FactoryStatus = 'trial' | 'active' | 'past_due' | 'suspended' | 'cancelled';
 export type BusinessType = 'rmg' | 'textile' | 'leather' | 'light_manufacturing' | 'other';

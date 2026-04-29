@@ -1,5 +1,5 @@
 import type { RequestHandler } from 'express';
-import { z } from 'zod';
+import type { z } from 'zod';
 
 import { ValidationError } from '../errors/HttpErrors.js';
 

@@ -5,6 +5,7 @@ import { UnauthorizedError } from '../errors/HttpErrors.js';
 import { ErrorCodes } from '../errors/errorCodes.js';
 import { verifyAccessToken } from '../auth/jwt.js';
 import { tenantStorage } from '../db/tenancyPlugin.js';
+import { getRequestId } from '../http/apiResponse.js';
 import type { TenantContext } from '../auth/types.js';
 
 /**
@@ -34,7 +35,7 @@ export const resolveTenant: RequestHandler = (req, _res, next) => {
     subscriptionTier: claims.tier,
     seats: claims.seats,
     features: new Set(claims.features ?? []),
-    requestId: req.id ?? '',
+    requestId: getRequestId(req) ?? '',
   };
 
   req.context = ctx;
