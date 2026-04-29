@@ -36,6 +36,11 @@ export const OverrideForecastRequestSchema = z.object({
 });
 export type OverrideForecastRequest = z.infer<typeof OverrideForecastRequestSchema>;
 
+export const BatchForecastRequestSchema = z.object({
+  itemIds: z.array(objectIdStringSchema).max(2000).optional(),
+});
+export type BatchForecastRequest = z.infer<typeof BatchForecastRequestSchema>;
+
 export interface ForecastView {
   id: string;
   itemId: string;

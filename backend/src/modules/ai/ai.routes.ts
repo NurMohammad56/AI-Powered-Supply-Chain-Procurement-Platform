@@ -4,6 +4,7 @@ import { validate } from '../../shared/middleware/validate.js';
 import { rbacFor } from '../../shared/middleware/rbac.js';
 import { idempotencyKey } from '../../shared/middleware/idempotency.js';
 import {
+  BatchForecastRequestSchema,
   ForecastIdParamSchema,
   GenerateForecastRequestSchema,
   ListForecastsQuerySchema,
@@ -38,4 +39,18 @@ aiRouter.post(
   validate(ForecastIdParamSchema, 'params'),
   validate(OverrideForecastRequestSchema),
   aiController.overrideForecast,
+);
+
+aiRouter.post(
+  '/forecasts/batch',
+  rbacFor('ai.forecast.generate'),
+  idempotencyKey,
+  validate(BatchForecastRequestSchema),
+  aiController.runBatch,
+);
+
+aiRouter.get(
+  '/usage',
+  rbacFor('ai.forecast.generate'),
+  aiController.getUsage,
 );

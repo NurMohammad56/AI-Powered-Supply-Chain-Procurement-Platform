@@ -44,4 +44,15 @@ export const aiController = {
     const result = await aiService.overrideForecast(ctx, objId(req.params.id ?? ''), req.body);
     return ok(req, res, result);
   }),
+  runBatch: asyncHandler(async (req, res) => {
+    const ctx = requireContext(req);
+    const body = req.body as { itemIds?: string[] };
+    const result = await aiService.runForecastForAll({ ctx, itemIds: body.itemIds });
+    return ok(req, res, result);
+  }),
+  getUsage: asyncHandler(async (req, res) => {
+    const ctx = requireContext(req);
+    const result = await aiService.getUsageSnapshot(ctx);
+    return ok(req, res, result);
+  }),
 };
