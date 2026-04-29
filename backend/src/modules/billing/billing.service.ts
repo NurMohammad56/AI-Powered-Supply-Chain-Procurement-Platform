@@ -141,12 +141,14 @@ export class BillingService {
       scheduledTier: input.tier as SubscriptionDoc['scheduledTier'],
     });
     if (!updated) throw new NotFoundError();
+    const fromRank = SUBSCRIPTION_TIER_RANK[sub.tier] ?? 0;
+    const toRank = SUBSCRIPTION_TIER_RANK[input.tier] ?? 0;
     void recordAudit({
       tenantId: ctx.tenantId,
       actorUserId: ctx.userId,
       actorRole: ctx.role,
       action:
-        SUBSCRIPTION_TIER_RANK[input.tier] > SUBSCRIPTION_TIER_RANK[sub.tier]
+        toRank > fromRank
           ? AuditActions.BillingSubscriptionUpgraded
           : AuditActions.BillingSubscriptionDowngraded,
       target: { kind: 'subscription', id: sub._id },
