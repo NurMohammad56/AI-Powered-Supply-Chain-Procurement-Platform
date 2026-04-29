@@ -494,7 +494,7 @@ export class AuthService {
           ...(patch.notificationPrefs as Record<string, unknown>),
         };
       }
-      const updated = await authRepository.updateUser(userId, update as Partial<UserDoc>);
+      const updated = await authRepository.updateUser(userId, update);
       if (!updated) {
         throw new UnauthorizedError(ErrorCodes.AUTH_INVALID_CREDENTIALS, 'Update failed');
       }
