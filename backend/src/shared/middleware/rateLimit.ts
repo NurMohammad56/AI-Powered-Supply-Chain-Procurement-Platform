@@ -1,4 +1,4 @@
-import type { RequestHandler } from 'express';
+import type { Request, RequestHandler } from 'express';
 import rateLimit, { type RateLimitRequestHandler } from 'express-rate-limit';
 import RedisStore, { type SendCommandFn } from 'rate-limit-redis';
 
@@ -135,7 +135,7 @@ export interface SlidingWindowOptions {
   windowMs: number;
   limit: number;
   prefix: string;
-  keyGenerator: (req: import('express').Request) => string;
+  keyGenerator: (req: Request) => string;
 }
 
 export function slidingWindowLimiter(opts: SlidingWindowOptions): RequestHandler {
