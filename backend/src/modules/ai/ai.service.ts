@@ -1,4 +1,4 @@
-import { Types } from 'mongoose';
+import type { Types } from 'mongoose';
 
 import { NotFoundError, NotImplementedError } from '../../shared/errors/HttpErrors.js';
 import { assertTenantOwns } from '../../shared/auth/assertTenantOwns.js';
