@@ -57,4 +57,9 @@ export const quotationController = {
     const result = await quotationService.submitResponse(req.params.token ?? '', req.body);
     return ok(req, res, result);
   }),
+  compareQuotes: asyncHandler(async (req, res) => {
+    const ctx = requireContext(req);
+    const result = await quotationService.compareQuotes(ctx, objId(req.params.id ?? ''));
+    return ok(req, res, result);
+  }),
 };

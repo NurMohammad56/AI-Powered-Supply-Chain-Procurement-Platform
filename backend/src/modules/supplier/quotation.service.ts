@@ -6,7 +6,7 @@ import { ErrorCodes } from '../../shared/errors/errorCodes.js';
 import { assertTenantOwns } from '../../shared/auth/assertTenantOwns.js';
 import { recordAudit, AuditActions } from '../../shared/audit/index.js';
 import { logger } from '../../config/logger.js';
-import { enqueueForecast } from '../../shared/queue/queues.js';
+import { enqueueForecast, enqueueScheduled } from '../../shared/queue/queues.js';
 import type { TenantContext } from '../../shared/auth/types.js';
 import type { Page } from '../../shared/utils/pagination.js';
 import { runTextPipeline } from '../ai/forecastPipeline.js';
@@ -134,6 +134,25 @@ export class QuotationService {
       payload: { number: created.number, supplierCount: input.invitedSuppliers.length },
       requestId: ctx.requestId,
     });
+
+    // Schedule the expiry-check job to fire at validUntil. The worker
+    // is idempotent: if the quote has already been accepted/cancelled
+    // it does nothing.
+    const delay = Math.max(0, validUntil.getTime() - Date.now());
+    void enqueueScheduled(
+      'scheduled.quotation.expiry_check',
+      {
+        tenantId: ctx.tenantId.toString(),
+        quotationId: created._id.toString(),
+      },
+      { delay },
+    ).catch((err: unknown) => {
+      logger.warn(
+        { err, event: 'quote.create.expiry_schedule_failed', quotationId: created._id.toString() },
+        'failed to schedule quotation expiry job',
+      );
+    });
+
     return toView(created);
   }
 

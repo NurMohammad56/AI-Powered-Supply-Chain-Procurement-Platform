@@ -84,4 +84,25 @@ export const poController = {
     const result = await poService.close(ctx, objId(req.params.id ?? ''));
     return ok(req, res, result);
   }),
+  createFromForecast: asyncHandler(async (req, res) => {
+    const ctx = requireContext(req);
+    const body = req.body as { itemId: string; warehouseId: string; expectedDeliveryAt?: string };
+    const result = await poService.createFromForecast({
+      ctx,
+      itemId: objId(body.itemId),
+      warehouseId: objId(body.warehouseId),
+      expectedDeliveryAt: body.expectedDeliveryAt,
+    });
+    return created(req, res, result);
+  }),
+  sendToSupplier: asyncHandler(async (req, res) => {
+    const ctx = requireContext(req);
+    const result = await poService.sendToSupplier(ctx, objId(req.params.id ?? ''), req.body);
+    return ok(req, res, result);
+  }),
+  getPdfDownload: asyncHandler(async (req, res) => {
+    const ctx = requireContext(req);
+    const result = await poService.getPdfDownloadUrl(ctx, objId(req.params.id ?? ''));
+    return ok(req, res, result);
+  }),
 };

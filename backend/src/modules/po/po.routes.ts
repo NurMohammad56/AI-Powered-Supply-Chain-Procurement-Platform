@@ -6,6 +6,7 @@ import { idempotencyKey } from '../../shared/middleware/idempotency.js';
 import {
   ApprovePoRequestSchema,
   CancelPoRequestSchema,
+  CreateFromForecastRequestSchema,
   CreatePoRequestSchema,
   DispatchPoRequestSchema,
   ListPosQuerySchema,
@@ -107,4 +108,28 @@ poRouter.get(
   rbacFor('po.read'),
   validate(PoIdParamSchema, 'params'),
   poController.listReceipts,
+);
+
+// New: createFromForecast (AI-suggested PO), sendToSupplier (canonical
+// dispatch + PDF + email), pdf download URL.
+poRouter.post(
+  '/from-forecast',
+  rbacFor('po.create'),
+  idempotencyKey,
+  validate(CreateFromForecastRequestSchema),
+  poController.createFromForecast,
+);
+poRouter.post(
+  '/:id/send',
+  rbacFor('po.dispatch'),
+  idempotencyKey,
+  validate(PoIdParamSchema, 'params'),
+  validate(DispatchPoRequestSchema),
+  poController.sendToSupplier,
+);
+poRouter.get(
+  '/:id/pdf',
+  rbacFor('po.read'),
+  validate(PoIdParamSchema, 'params'),
+  poController.getPdfDownload,
 );

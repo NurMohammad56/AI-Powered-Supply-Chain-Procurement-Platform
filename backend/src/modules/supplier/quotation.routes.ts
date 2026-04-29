@@ -51,6 +51,12 @@ quotationRouter.post(
   validate(AcceptQuotationRequestSchema),
   quotationController.accept,
 );
+quotationRouter.get(
+  '/:id/compare',
+  rbacFor('supplier.read'),
+  validate(QuotationIdParamSchema, 'params'),
+  quotationController.compareQuotes,
+);
 
 /**
  * Public quotation response router - mounted under `/api/public/quotations`.

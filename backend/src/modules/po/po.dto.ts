@@ -86,6 +86,13 @@ export const ReceivePoRequestSchema = z.object({
 });
 export type ReceivePoRequest = z.infer<typeof ReceivePoRequestSchema>;
 
+export const CreateFromForecastRequestSchema = z.object({
+  itemId: objectIdStringSchema,
+  warehouseId: objectIdStringSchema,
+  expectedDeliveryAt: z.string().datetime().optional(),
+});
+export type CreateFromForecastRequest = z.infer<typeof CreateFromForecastRequestSchema>;
+
 // ============ Response views ============
 export interface PoLineView {
   id: string;

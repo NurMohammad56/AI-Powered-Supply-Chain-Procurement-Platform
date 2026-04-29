@@ -6,7 +6,7 @@ import { ErrorCodes } from '../../shared/errors/errorCodes.js';
 import { assertTenantOwns } from '../../shared/auth/assertTenantOwns.js';
 import { recordAudit, AuditActions } from '../../shared/audit/index.js';
 import { logger } from '../../config/logger.js';
-import { enqueueForecast } from '../../shared/queue/queues.js';
+import { enqueueForecast, enqueueScheduled } from '../../shared/queue/queues.js';
 import { tenantKey, uploadObject, presignGet } from '../../shared/storage/r2.client.js';
 import { Factory } from '../auth/models/factory.model.js';
 import type { TenantContext } from '../../shared/auth/types.js';
@@ -458,6 +458,25 @@ export class PoService {
         supplierContactName: po.supplierSnapshot.legalName,
         supplierContactEmail: input.sentTo,
         pdfUrl,
+      });
+    }
+
+    // Schedule delivery-overdue alert: 7 days past expectedDeliveryAt.
+    const overdueDelayMs =
+      updated.expectedDeliveryAt.getTime() + 7 * 24 * 60 * 60 * 1000 - Date.now();
+    if (overdueDelayMs > 0) {
+      void enqueueScheduled(
+        'scheduled.po.delivery_overdue_check',
+        {
+          tenantId: updated.tenantId.toString(),
+          poId: updated._id.toString(),
+        },
+        { delay: overdueDelayMs },
+      ).catch((err: unknown) => {
+        logger.warn(
+          { err, event: 'po.dispatch.overdue_schedule_failed', poId: updated._id.toString() },
+          'failed to schedule overdue check',
+        );
       });
     }
     return toView(updated);
