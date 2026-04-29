@@ -285,7 +285,7 @@ export class InventoryService {
         : null,
       reorderLevel: input.reorderLevel,
       movingAverageCost: input.movingAverageCost,
-      currency: input.currency as ItemDoc['currency'],
+      currency: input.currency,
     });
     void recordAudit({
       tenantId: ctx.tenantId,
@@ -333,7 +333,7 @@ export class InventoryService {
     }
     if (patch.reorderLevel !== undefined) update.reorderLevel = patch.reorderLevel;
     if (patch.movingAverageCost !== undefined) update.movingAverageCost = patch.movingAverageCost;
-    if (patch.currency !== undefined) update.currency = patch.currency as ItemDoc['currency'];
+    if (patch.currency !== undefined) update.currency = patch.currency;
     const updated = await inventoryRepository.updateItem(id, update);
     if (!updated) throw new NotFoundError();
     void recordAudit({
