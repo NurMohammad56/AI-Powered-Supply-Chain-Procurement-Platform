@@ -70,6 +70,38 @@ export class AuthRepository {
     ).exec();
   }
 
+  async listUsers(query: {
+    cursor?: string;
+    limit: number;
+    role?: string;
+    status?: string;
+  }): Promise<{ rows: UserDoc[]; nextCursor: string | null; hasMore: boolean; limit: number }> {
+    const filter: Record<string, unknown> = {};
+    if (query.role) filter.role = query.role;
+    if (query.status) filter.status = query.status;
+
+    const { decodeCursor, paginate } = await import('../../shared/utils/pagination.js');
+    const after = decodeCursor(query.cursor);
+    if (after) filter._id = { $gt: after };
+
+    const rows = await User.find(filter)
+      .sort({ _id: 1 })
+      .limit(query.limit + 1)
+      .lean<UserDoc[]>()
+      .exec();
+    const page = paginate(rows, query.limit);
+    return {
+      rows: page.rows,
+      nextCursor: page.nextCursor,
+      hasMore: page.hasMore,
+      limit: page.limit,
+    };
+  }
+
+  async countByRole(role: string): Promise<number> {
+    return User.countDocuments({ role, status: { $ne: 'disabled' } }).exec();
+  }
+
   // ----- Sessions (tenant-scoped) -----
 
   async createSession(input: Omit<SessionDoc, '_id' | 'createdAt' | 'updatedAt'>): Promise<SessionDoc> {

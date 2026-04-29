@@ -466,6 +466,125 @@ export class AuthService {
     });
   }
 
+  async getMe(userId: Types.ObjectId, tenantId: Types.ObjectId): Promise<UserView> {
+    return authRepository.withScope(tenantId, async () => {
+      const user = await authRepository.findUserById(userId);
+      if (!user) {
+        throw new UnauthorizedError(ErrorCodes.AUTH_INVALID_CREDENTIALS, 'User not found');
+      }
+      return toUserView(user);
+    });
+  }
+
+  async updateMyProfile(
+    userId: Types.ObjectId,
+    tenantId: Types.ObjectId,
+    patch: { fullName?: string; notificationPrefs?: unknown },
+  ): Promise<UserView> {
+    return authRepository.withScope(tenantId, async () => {
+      const user = await authRepository.findUserById(userId);
+      if (!user) {
+        throw new UnauthorizedError(ErrorCodes.AUTH_INVALID_CREDENTIALS, 'User not found');
+      }
+      const update: Record<string, unknown> = {};
+      if (patch.fullName !== undefined) update.fullName = patch.fullName;
+      if (patch.notificationPrefs !== undefined) {
+        update.notificationPrefs = {
+          ...user.notificationPrefs,
+          ...(patch.notificationPrefs as Record<string, unknown>),
+        };
+      }
+      const updated = await authRepository.updateUser(userId, update as Partial<UserDoc>);
+      if (!updated) {
+        throw new UnauthorizedError(ErrorCodes.AUTH_INVALID_CREDENTIALS, 'Update failed');
+      }
+      return toUserView(updated);
+    });
+  }
+
+  async listUsers(
+    tenantId: Types.ObjectId,
+    query: { cursor?: string; limit: number; role?: string; status?: string },
+  ): Promise<{ rows: UserView[]; nextCursor: string | null; hasMore: boolean; limit: number }> {
+    return authRepository.withScope(tenantId, async () => {
+      const result = await authRepository.listUsers(query);
+      return {
+        rows: result.rows.map(toUserView),
+        nextCursor: result.nextCursor,
+        hasMore: result.hasMore,
+        limit: result.limit,
+      };
+    });
+  }
+
+  async updateUserRole(
+    actorUserId: Types.ObjectId,
+    actorRole: Role,
+    tenantId: Types.ObjectId,
+    targetUserId: Types.ObjectId,
+    newRole: Role,
+  ): Promise<UserView> {
+    const { assignableRolesBy } = await import('../../shared/auth/rbac.js');
+    if (!assignableRolesBy(actorRole).includes(newRole)) {
+      throw new ForbiddenError(
+        ErrorCodes.RBAC_CAPABILITY_DENIED,
+        `Role ${actorRole} cannot assign role ${newRole}`,
+      );
+    }
+    return authRepository.withScope(tenantId, async () => {
+      const target = await authRepository.findUserById(targetUserId);
+      if (!target) throw new ConflictError(ErrorCodes.NOT_FOUND, 'User not found');
+      if (target._id.equals(actorUserId)) {
+        throw new ConflictError(ErrorCodes.RBAC_CAPABILITY_DENIED, 'Cannot change own role');
+      }
+      if (target.role === 'owner' && newRole !== 'owner') {
+        const ownerCount = await authRepository.countByRole('owner');
+        if (ownerCount <= 1) {
+          throw new ConflictError(
+            ErrorCodes.RBAC_CAPABILITY_DENIED,
+            'Cannot remove the last Owner',
+          );
+        }
+      }
+      const updated = await authRepository.updateUser(targetUserId, { role: newRole });
+      if (!updated) throw new ConflictError(ErrorCodes.NOT_FOUND, 'User not found');
+      return toUserView(updated);
+    });
+  }
+
+  async disableUser(
+    actorUserId: Types.ObjectId,
+    actorRole: Role,
+    tenantId: Types.ObjectId,
+    targetUserId: Types.ObjectId,
+  ): Promise<void> {
+    if (actorRole !== 'owner' && actorRole !== 'manager') {
+      throw new ForbiddenError(ErrorCodes.RBAC_CAPABILITY_DENIED, 'Insufficient privileges');
+    }
+    return authRepository.withScope(tenantId, async () => {
+      const target = await authRepository.findUserById(targetUserId);
+      if (!target) throw new ConflictError(ErrorCodes.NOT_FOUND, 'User not found');
+      if (target._id.equals(actorUserId)) {
+        throw new ConflictError(ErrorCodes.RBAC_CAPABILITY_DENIED, 'Cannot disable own account');
+      }
+      if (target.role === 'owner') {
+        const ownerCount = await authRepository.countByRole('owner');
+        if (ownerCount <= 1) {
+          throw new ConflictError(
+            ErrorCodes.RBAC_CAPABILITY_DENIED,
+            'Cannot disable the last Owner',
+          );
+        }
+      }
+      await authRepository.updateUser(targetUserId, { status: 'disabled' });
+      const { Session } = await import('./models/session.model.js');
+      await Session.updateMany(
+        { userId: targetUserId, revokedAt: null },
+        { $set: { revokedAt: new Date(), revokeReason: 'admin' } },
+      ).exec();
+    });
+  }
+
   async inviteUser(
     actorUserId: Types.ObjectId,
     actorRole: Role,

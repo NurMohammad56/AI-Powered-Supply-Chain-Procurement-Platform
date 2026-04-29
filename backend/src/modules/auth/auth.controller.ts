@@ -119,13 +119,51 @@ export const authController = {
 
   me: asyncHandler(async (req, res) => {
     const ctx = requireContext(req);
+    const user = await authService.getMe(ctx.userId, ctx.tenantId);
     return ok(req, res, {
-      userId: ctx.userId.toString(),
-      tenantId: ctx.tenantId.toString(),
-      role: ctx.role,
+      ...user,
       tier: ctx.subscriptionTier,
       features: Array.from(ctx.features),
     });
+  }),
+
+  updateMyProfile: asyncHandler(async (req, res) => {
+    const ctx = requireContext(req);
+    const result = await authService.updateMyProfile(ctx.userId, ctx.tenantId, req.body);
+    return ok(req, res, result);
+  }),
+
+  listUsers: asyncHandler(async (req, res) => {
+    const ctx = requireContext(req);
+    const result = await authService.listUsers(ctx.tenantId, req.query as never);
+    const { paginated } = await import('../../shared/http/apiResponse.js');
+    return paginated(req, res, result.rows, {
+      nextCursor: result.nextCursor,
+      limit: result.limit,
+      hasMore: result.hasMore,
+    });
+  }),
+
+  updateUserRole: asyncHandler(async (req, res) => {
+    const ctx = requireContext(req);
+    const { Types } = await import('mongoose');
+    const targetId = new Types.ObjectId(req.params.userId);
+    const result = await authService.updateUserRole(
+      ctx.userId,
+      ctx.role,
+      ctx.tenantId,
+      targetId,
+      req.body.role,
+    );
+    return ok(req, res, result);
+  }),
+
+  disableUser: asyncHandler(async (req, res) => {
+    const ctx = requireContext(req);
+    const { Types } = await import('mongoose');
+    const targetId = new Types.ObjectId(req.params.userId);
+    await authService.disableUser(ctx.userId, ctx.role, ctx.tenantId, targetId);
+    return noContent(res);
   }),
 
   changePassword: asyncHandler(async (req, res) => {

@@ -76,3 +76,11 @@ export class InternalError extends AppError {
     super(500, code, message, details, false);
   }
 }
+
+export class NotImplementedError extends AppError {
+  constructor(feature: string, message?: string) {
+    super(501, ErrorCodes.NOT_IMPLEMENTED, message ?? `Feature not yet implemented: ${feature}`, {
+      feature,
+    });
+  }
+}

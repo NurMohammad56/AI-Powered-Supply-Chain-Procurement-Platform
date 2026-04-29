@@ -13,9 +13,13 @@ import {
   ChangePasswordRequestSchema,
   ForgotPasswordRequestSchema,
   InviteUserRequestSchema,
+  ListUsersQuerySchema,
   LoginRequestSchema,
   RegisterFactoryRequestSchema,
   ResetPasswordRequestSchema,
+  UpdateMyProfileRequestSchema,
+  UpdateUserRoleRequestSchema,
+  UserIdParamSchema,
   VerifyEmailRequestSchema,
 } from './auth.dto.js';
 import { authController } from './auth.controller.js';
@@ -73,10 +77,23 @@ export const authPrivateRouter = Router();
 
 authPrivateRouter.get('/me', authController.me);
 
+authPrivateRouter.patch(
+  '/me',
+  validate(UpdateMyProfileRequestSchema),
+  authController.updateMyProfile,
+);
+
 authPrivateRouter.post(
   '/change-password',
   validate(ChangePasswordRequestSchema),
   authController.changePassword,
+);
+
+authPrivateRouter.get(
+  '/users',
+  rbacFor('user.invite'),
+  validate(ListUsersQuerySchema, 'query'),
+  authController.listUsers,
 );
 
 authPrivateRouter.post(
@@ -84,6 +101,21 @@ authPrivateRouter.post(
   rbacFor('user.invite'),
   validate(InviteUserRequestSchema),
   authController.inviteUser,
+);
+
+authPrivateRouter.patch(
+  '/users/:userId/role',
+  rbacFor('user.role.assign'),
+  validate(UserIdParamSchema, 'params'),
+  validate(UpdateUserRoleRequestSchema),
+  authController.updateUserRole,
+);
+
+authPrivateRouter.delete(
+  '/users/:userId',
+  rbacFor('user.role.assign'),
+  validate(UserIdParamSchema, 'params'),
+  authController.disableUser,
 );
 
 authPrivateRouter.post('/logout-everywhere', authController.logoutEverywhere);

@@ -68,6 +68,47 @@ export const InviteUserRequestSchema = z.object({
 });
 export type InviteUserRequest = z.infer<typeof InviteUserRequestSchema>;
 
+// ----- Profile self-update -----
+export const UpdateMyProfileRequestSchema = z.object({
+  fullName: z.string().min(2).max(120).optional(),
+  notificationPrefs: z
+    .object({
+      lowStock: z.object({ email: z.boolean(), inApp: z.boolean() }).partial().optional(),
+      poStatus: z.object({ email: z.boolean(), inApp: z.boolean() }).partial().optional(),
+      deliveryReminder: z
+        .object({ email: z.boolean(), inApp: z.boolean() })
+        .partial()
+        .optional(),
+      weeklyDigest: z.object({ email: z.boolean(), inApp: z.boolean() }).partial().optional(),
+    })
+    .optional(),
+});
+export type UpdateMyProfileRequest = z.infer<typeof UpdateMyProfileRequestSchema>;
+
+// ----- Role change (Owner only) -----
+export const UpdateUserRoleRequestSchema = z.object({
+  role: z.enum(ROLES as unknown as [string, ...string[]]),
+});
+export type UpdateUserRoleRequest = z.infer<typeof UpdateUserRoleRequestSchema>;
+
+// ----- List users query -----
+export const ListUsersQuerySchema = z.object({
+  cursor: z.string().optional(),
+  limit: z
+    .union([z.string(), z.number()])
+    .optional()
+    .transform((v) => (v === undefined ? 25 : Number(v)))
+    .pipe(z.number().int().positive().max(100)),
+  role: z.enum(ROLES as unknown as [string, ...string[]]).optional(),
+  status: z.enum(['invited', 'active', 'disabled']).optional(),
+});
+export type ListUsersQuery = z.infer<typeof ListUsersQuerySchema>;
+
+export const UserIdParamSchema = z.object({
+  userId: z.string().refine((v) => /^[a-fA-F0-9]{24}$/.test(v), 'Invalid user id'),
+});
+export type UserIdParam = z.infer<typeof UserIdParamSchema>;
+
 // ----- Responses -----
 export const UserViewSchema = z.object({
   id: z.string(),
