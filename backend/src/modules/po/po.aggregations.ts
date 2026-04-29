@@ -1,4 +1,4 @@
-import { Types, type PipelineStage } from 'mongoose';
+import type { PipelineStage, Types } from 'mongoose';
 
 import { PurchaseOrder } from './models/purchaseOrder.model.js';
 

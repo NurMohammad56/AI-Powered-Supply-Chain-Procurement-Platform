@@ -1,4 +1,4 @@
-import { Types, type PipelineStage } from 'mongoose';
+import type { PipelineStage, Types } from 'mongoose';
 
 import { StockMovement } from './models/stockMovement.model.js';
 import { StockBalance } from './models/stockBalance.model.js';
