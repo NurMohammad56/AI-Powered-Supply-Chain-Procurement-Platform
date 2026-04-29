@@ -8,11 +8,11 @@ import { aiService } from '../modules/ai/ai.service.js';
 import { tenantRoom, SocketEvents } from '../shared/realtime/events.js';
 import { getIo } from '../shared/realtime/socketServer.js';
 import { enqueueEmail } from '../shared/queue/queues.js';
-import { Item } from '../modules/ai/../inventory/models/item.model.js';
-import type { ItemDoc } from '../modules/inventory/models/item.model.js';
+import { Item, type ItemDoc } from '../modules/inventory/models/item.model.js';
 import { Factory } from '../modules/auth/models/factory.model.js';
 import { User } from '../modules/auth/models/user.model.js';
-import type { TenantContext } from '../shared/auth/types.js';
+import { Subscription } from '../modules/billing/models/subscription.model.js';
+import type { TenantContext, SubscriptionTier } from '../shared/auth/types.js';
 import type { ForecastHorizonDays } from '../modules/ai/models/forecast.model.js';
 
 /**
@@ -266,13 +266,16 @@ async function buildTenantContextForJob(args: {
   if (!user) {
     throw new Error(`Requesting user not found: ${args.userId}`);
   }
+  const subscription = await Subscription.findOne({ tenantId: tenantObjectId }).lean().exec();
+  const tier: SubscriptionTier = (subscription?.tier as SubscriptionTier) ?? 'trial';
+  const seats = subscription?.seats ?? 0;
   return {
     tenantId: tenantObjectId,
     userId: userObjectId,
     role: user.role,
-    subscriptionTier: factory.subscriptionTier,
-    seats: factory.seats ?? 0,
-    features: new Set<string>(factory.features ?? []),
+    subscriptionTier: tier,
+    seats,
+    features: new Set<string>(),
     requestId: `forecast-job:${args.tenantId}:${Date.now()}`,
   };
 }
@@ -329,13 +332,13 @@ async function sendBatchSummaryEmail(args: {
     _id: new Types.ObjectId(args.requestedBy),
     tenantId: new Types.ObjectId(args.tenantId),
   })
-    .select({ email: 1, name: 1 })
+    .select({ email: 1, fullName: 1 })
     .lean()
     .exec();
   if (!user || !user.email) return;
   const html = `
     <h2>Batch demand forecast complete</h2>
-    <p>Hi ${escapeHtml(user.name ?? 'there')},</p>
+    <p>Hi ${escapeHtml(user.fullName ?? 'there')},</p>
     <p>Your batch demand forecast has finished running. Here's the summary:</p>
     <ul>
       <li>Total items processed: <strong>${args.total}</strong></li>

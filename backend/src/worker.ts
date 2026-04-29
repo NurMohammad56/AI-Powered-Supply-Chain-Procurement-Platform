@@ -4,6 +4,7 @@ import { logger } from './config/logger.js';
 import { closeQueues } from './shared/queue/queues.js';
 import { startEmailWorker } from './workers/email.worker.js';
 import { startReportWorker } from './workers/report.worker.js';
+import { startForecastWorker } from './workers/forecast.worker.js';
 
 /**
  * Worker process entrypoint. Distinct from `server.ts` so long-running
@@ -14,7 +15,7 @@ async function bootstrap(): Promise<void> {
   await connectDatabase();
   await connectRedis();
 
-  const workers = [startEmailWorker(), startReportWorker()];
+  const workers = [startEmailWorker(), startReportWorker(), startForecastWorker()];
 
   logger.info(
     { event: 'worker.ready', queues: workers.map((w) => w.name) },

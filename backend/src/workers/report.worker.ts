@@ -1,8 +1,10 @@
 import { Worker, type Job } from 'bullmq';
+import { Types } from 'mongoose';
 
 import { redisQueue } from '../config/redis.js';
 import { logger } from '../config/logger.js';
 import { QueueNames, type ReportJobMap } from '../shared/queue/jobTypes.js';
+import { generateWeeklyReport } from '../modules/ai/reportGenerator.js';
 
 /**
  * Report worker. The actual analytics + AI narrative generation lands in
@@ -23,14 +25,31 @@ export function startReportWorker(): Worker<ReportJobMap[keyof ReportJobMap]> {
       log.info({ event: 'report.start', payload: job.data }, 'report job received');
 
       switch (job.name) {
-        case 'report.weekly_digest':
-          // Placeholder: real implementation fans out per tenant with the
-          // analytics engine + Puppeteer PDF render (FR-RPT-09).
-          log.info({ event: 'report.weekly_digest.stub' }, 'weekly digest stub - implementation pending');
-          return { ok: true, kind: 'weekly_digest_stub' };
+        case 'report.weekly_digest': {
+          const data = job.data as ReportJobMap['report.weekly_digest'];
+          const result = await generateWeeklyReport({
+            tenantId: new Types.ObjectId(data.tenantId),
+            weekStart: new Date(data.weekStart),
+            weekEnd: new Date(data.weekEnd),
+          });
+          log.info(
+            {
+              event: 'report.weekly_digest.complete',
+              tenantId: data.tenantId,
+              pdfRendered: result.pdfRendered,
+              emailSent: result.emailSent,
+              provider: result.provider,
+            },
+            'weekly digest generated',
+          );
+          return { ok: true, kind: 'weekly_digest', emailSent: result.emailSent, pdfRendered: result.pdfRendered };
+        }
 
         case 'report.adhoc':
-          log.info({ event: 'report.adhoc.stub' }, 'adhoc report stub - implementation pending');
+          // Adhoc analytics reports use the rpt aggregations layer
+          // directly; the AI narrative is only added for the weekly
+          // digest. See rpt.service.ts.
+          log.info({ event: 'report.adhoc.stub' }, 'adhoc report stub - analytics only, no AI narrative');
           return { ok: true, kind: 'adhoc_stub' };
 
         default:
