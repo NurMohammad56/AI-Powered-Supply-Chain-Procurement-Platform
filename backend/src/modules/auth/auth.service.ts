@@ -72,7 +72,7 @@ function slugify(input: string): string {
 function toUserView(user: UserDoc): UserView {
   return {
     id: user._id.toString(),
-    factoryId: user.factoryId.toString(),
+    tenantId: user.tenantId.toString(),
     email: user.email,
     fullName: user.fullName,
     role: user.role,
@@ -139,7 +139,7 @@ export class AuthService {
 
     const owner = await authRepository.withScope(factory._id, () =>
       authRepository.createUser({
-        factoryId: factory._id,
+        tenantId: factory._id,
         email: input.owner.email,
         passwordHash,
         fullName: input.owner.fullName,
@@ -164,7 +164,7 @@ export class AuthService {
     await authRepository.updateFactory(factory._id, { ownerUserId: owner._id });
 
     await enqueueEmail('email.send', {
-      factoryId: factory._id.toString(),
+      tenantId: factory._id.toString(),
       to: owner.email,
       subject: 'Verify your email - SCP Platform',
       html: this.renderVerifyEmail(owner.fullName, verifyToken),
@@ -211,19 +211,19 @@ export class AuthService {
         fails >= ACCOUNT_LOCK_AFTER_FAILS
           ? new Date(Date.now() + ACCOUNT_LOCK_DURATION_MS)
           : null;
-      await authRepository.withScope(candidate.factoryId, () =>
+      await authRepository.withScope(candidate.tenantId, () =>
         authRepository.incrementFailedLogins(candidate._id, lockUntil),
       );
       throw new UnauthorizedError(ErrorCodes.AUTH_INVALID_CREDENTIALS, 'Invalid credentials');
     }
 
     if (candidate.failedLoginCount > 0 || candidate.lockedUntil) {
-      await authRepository.withScope(candidate.factoryId, () =>
+      await authRepository.withScope(candidate.tenantId, () =>
         authRepository.resetFailedLogins(candidate._id),
       );
     }
 
-    const factory = await authRepository.findFactoryById(candidate.factoryId);
+    const factory = await authRepository.findFactoryById(candidate.tenantId);
     if (!factory) {
       throw new UnauthorizedError(ErrorCodes.AUTH_INVALID_CREDENTIALS, 'Tenant not found');
     }
@@ -233,7 +233,7 @@ export class AuthService {
 
     const tokens = await this.issueTokenPair({
       userId: candidate._id,
-      factoryId: candidate.factoryId,
+      tenantId: candidate.tenantId,
       role: candidate.role,
       tier: this.tierFromFactoryStatus(factory.status),
       family: newSessionFamily(),
@@ -257,9 +257,9 @@ export class AuthService {
    */
   async refresh(rawToken: string, meta: ClientMeta): Promise<{ tokens: AuthRefreshResponse; refreshToken: string; refreshTokenExpiresAt: string }> {
     const claims = verifyRefreshToken(rawToken);
-    const factoryId = new Types.ObjectId(claims.factoryId);
+    const tenantId = new Types.ObjectId(claims.tenantId);
 
-    return authRepository.withScope(factoryId, async () => {
+    return authRepository.withScope(tenantId, async () => {
       const tokenHash = sha256(rawToken);
       const session = await authRepository.findActiveSessionByTokenHash(tokenHash);
 
@@ -288,14 +288,14 @@ export class AuthService {
       if (!user || user.status !== 'active') {
         throw new UnauthorizedError(ErrorCodes.AUTH_REFRESH_INVALID, 'User no longer active');
       }
-      const factory = await authRepository.findFactoryById(factoryId);
+      const factory = await authRepository.findFactoryById(tenantId);
       if (!factory || factory.status === 'suspended' || factory.status === 'cancelled') {
         throw new UnauthorizedError(ErrorCodes.AUTH_REFRESH_INVALID, 'Tenant inactive');
       }
 
       const tokens = await this.issueTokenPair({
         userId: user._id,
-        factoryId,
+        tenantId,
         role: user.role,
         tier: this.tierFromFactoryStatus(factory.status),
         family: session.family,
@@ -321,8 +321,8 @@ export class AuthService {
     } catch {
       return;
     }
-    const factoryId = new Types.ObjectId(claims.factoryId);
-    await authRepository.withScope(factoryId, async () => {
+    const tenantId = new Types.ObjectId(claims.tenantId);
+    await authRepository.withScope(tenantId, async () => {
       const tokenHash = sha256(rawToken);
       const session = await authRepository.findActiveSessionByTokenHash(tokenHash);
       if (session) {
@@ -331,8 +331,8 @@ export class AuthService {
     });
   }
 
-  async logoutEverywhere(userId: Types.ObjectId, factoryId: Types.ObjectId): Promise<void> {
-    await authRepository.withScope(factoryId, async () => {
+  async logoutEverywhere(userId: Types.ObjectId, tenantId: Types.ObjectId): Promise<void> {
+    await authRepository.withScope(tenantId, async () => {
       const user = await authRepository.findUserById(userId);
       if (!user) return;
       // No family; revoke every active session of this user.
@@ -356,7 +356,7 @@ export class AuthService {
     const tokenHash = sha256(rawToken);
     const expiresAt = new Date(Date.now() + PASSWORD_RESET_TTL_MS);
 
-    await authRepository.withScope(user.factoryId, () =>
+    await authRepository.withScope(user.tenantId, () =>
       authRepository.updateUser(user._id, {
         passwordResetTokenHash: tokenHash,
         passwordResetExpiresAt: expiresAt,
@@ -364,7 +364,7 @@ export class AuthService {
     );
 
     await enqueueEmail('email.send', {
-      factoryId: user.factoryId.toString(),
+      tenantId: user.tenantId.toString(),
       to: user.email,
       subject: 'Reset your SCP Platform password',
       html: this.renderResetEmail(user.fullName, rawToken),
@@ -390,9 +390,9 @@ export class AuthService {
       throw new UnauthorizedError(ErrorCodes.AUTH_RESET_TOKEN_INVALID, 'Reset token invalid');
     }
     const userId = stub._id;
-    const factoryId = stub.factoryId;
+    const tenantId = stub.tenantId;
 
-    await authRepository.withScope(factoryId, async () => {
+    await authRepository.withScope(tenantId, async () => {
       const user = await authRepository.findUserById(userId);
       if (
         !user ||
@@ -429,8 +429,8 @@ export class AuthService {
       throw new UnauthorizedError(ErrorCodes.AUTH_VERIFY_TOKEN_INVALID, 'Verification token expired');
     }
     const userId = stub._id;
-    const factoryId = stub.factoryId;
-    await authRepository.withScope(factoryId, () =>
+    const tenantId = stub.tenantId;
+    await authRepository.withScope(tenantId, () =>
       authRepository.updateUser(userId, {
         emailVerifiedAt: new Date(),
         emailVerifyToken: null,
@@ -441,14 +441,14 @@ export class AuthService {
 
   async changePassword(
     userId: Types.ObjectId,
-    factoryId: Types.ObjectId,
+    tenantId: Types.ObjectId,
     input: ChangePasswordRequest,
   ): Promise<void> {
     const policy = checkPasswordPolicy(input.newPassword);
     if (!policy.ok) {
       throw new ValidationError({ newPassword: policy.message }, policy.message);
     }
-    await authRepository.withScope(factoryId, async () => {
+    await authRepository.withScope(tenantId, async () => {
       const { User } = await import('./models/user.model.js');
       const userWithHash = await User.findById(userId)
         .select('+passwordHash')
@@ -469,7 +469,7 @@ export class AuthService {
   async inviteUser(
     actorUserId: Types.ObjectId,
     actorRole: Role,
-    factoryId: Types.ObjectId,
+    tenantId: Types.ObjectId,
     input: InviteUserRequest,
   ): Promise<UserView> {
     const { assignableRolesBy } = await import('../../shared/auth/rbac.js');
@@ -481,8 +481,8 @@ export class AuthService {
       );
     }
 
-    return authRepository.withScope(factoryId, async () => {
-      const existing = await authRepository.withScope(factoryId, async () => {
+    return authRepository.withScope(tenantId, async () => {
+      const existing = await authRepository.withScope(tenantId, async () => {
         const { User } = await import('./models/user.model.js');
         return User.findOne({ email: input.email }).lean<UserDoc>().exec();
       });
@@ -493,7 +493,7 @@ export class AuthService {
       const passwordHash = await hashPassword(tempPassword);
       const verifyToken = crypto.randomBytes(32).toString('base64url');
       const created = await authRepository.createUser({
-        factoryId,
+        tenantId,
         email: input.email,
         passwordHash,
         fullName: input.fullName,
@@ -515,7 +515,7 @@ export class AuthService {
       });
 
       await enqueueEmail('email.send', {
-        factoryId: factoryId.toString(),
+        tenantId: tenantId.toString(),
         to: created.email,
         subject: 'You have been invited to SCP Platform',
         html: this.renderInviteEmail(created.fullName, verifyToken, actorUserId.toString()),
@@ -532,7 +532,7 @@ export class AuthService {
 
   private async issueTokenPair(args: {
     userId: Types.ObjectId;
-    factoryId: Types.ObjectId;
+    tenantId: Types.ObjectId;
     role: Role;
     tier: SubscriptionTier;
     family: string;
@@ -540,7 +540,7 @@ export class AuthService {
   }): Promise<IssuedTokenPair> {
     const access = issueAccessToken({
       userId: args.userId,
-      factoryId: args.factoryId,
+      tenantId: args.tenantId,
       role: args.role,
       tier: args.tier,
       seats: 0,
@@ -548,13 +548,13 @@ export class AuthService {
     });
     const refresh = issueRefreshToken({
       userId: args.userId,
-      factoryId: args.factoryId,
+      tenantId: args.tenantId,
       family: args.family,
     });
 
-    await authRepository.withScope(args.factoryId, () =>
+    await authRepository.withScope(args.tenantId, () =>
       authRepository.createSession({
-        factoryId: args.factoryId,
+        tenantId: args.tenantId,
         userId: args.userId,
         refreshTokenHash: sha256(refresh.token),
         family: args.family,

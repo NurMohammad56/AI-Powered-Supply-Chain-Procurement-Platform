@@ -14,7 +14,7 @@ import { paginate, type Cursor, type Page } from '../utils/pagination.js';
  * surface, then add domain-specific reads/writes alongside.
  *
  * The tenancy plugin transparently scopes every operation to the active
- * AsyncLocalStorage tenant - this class never adds factoryId itself.
+ * AsyncLocalStorage tenant - this class never adds tenantId itself.
  *
  * Conventions (SDD §3.4):
  *   - .lean() on every read path (no Mongoose hydration)

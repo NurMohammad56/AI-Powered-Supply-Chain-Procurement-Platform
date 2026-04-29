@@ -43,7 +43,7 @@ export const rateLimitTenant: RateLimitRequestHandler = rateLimit({
   standardHeaders: 'draft-7',
   legacyHeaders: false,
   store: buildStore('rl:tenant:'),
-  keyGenerator: (req) => req.context?.factoryId.toString() ?? req.ip ?? 'unknown',
+  keyGenerator: (req) => req.context?.tenantId.toString() ?? req.ip ?? 'unknown',
   handler,
 });
 

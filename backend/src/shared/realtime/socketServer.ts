@@ -8,11 +8,11 @@ import { redisSockPub, redisSockSub } from '../../config/redis.js';
 import { env } from '../../config/env.js';
 import { logger } from '../../config/logger.js';
 import { verifyAccessToken } from '../auth/jwt.js';
-import { SocketEvents, factoryRoom, userRoom } from './events.js';
+import { SocketEvents, tenantRoom, userRoom } from './events.js';
 import type { Role } from '../auth/types.js';
 
 export interface SocketAuthContext {
-  factoryId: Types.ObjectId;
+  tenantId: Types.ObjectId;
   userId: Types.ObjectId;
   role: Role;
 }
@@ -73,7 +73,7 @@ export function createSocketServer(httpServer: HttpServer): IoServer<
       }
       const claims = verifyAccessToken(token);
       socket.data.context = {
-        factoryId: new Types.ObjectId(claims.factoryId),
+        tenantId: new Types.ObjectId(claims.tenantId),
         userId: new Types.ObjectId(claims.sub),
         role: claims.role,
       };
@@ -90,7 +90,7 @@ export function createSocketServer(httpServer: HttpServer): IoServer<
       socket.disconnect(true);
       return;
     }
-    void socket.join(factoryRoom(ctx.factoryId.toString()));
+    void socket.join(tenantRoom(ctx.tenantId.toString()));
     void socket.join(userRoom(ctx.userId.toString()));
 
     socket.emit(SocketEvents.SystemConnected, {
@@ -107,7 +107,7 @@ export function createSocketServer(httpServer: HttpServer): IoServer<
           event: 'socket.unexpected_client_emit',
           eventName,
           socketId: socket.id,
-          factoryId: ctx.factoryId.toString(),
+          tenantId: ctx.tenantId.toString(),
           userId: ctx.userId.toString(),
         },
         'unexpected client emit; disconnecting',

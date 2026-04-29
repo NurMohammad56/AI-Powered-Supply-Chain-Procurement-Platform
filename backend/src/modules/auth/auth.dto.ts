@@ -71,7 +71,7 @@ export type InviteUserRequest = z.infer<typeof InviteUserRequestSchema>;
 // ----- Responses -----
 export const UserViewSchema = z.object({
   id: z.string(),
-  factoryId: z.string(),
+  tenantId: z.string(),
   email: z.string(),
   fullName: z.string(),
   role: z.string(),

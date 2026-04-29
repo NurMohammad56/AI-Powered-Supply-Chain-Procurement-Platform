@@ -121,7 +121,7 @@ export const authController = {
     const ctx = requireContext(req);
     return ok(req, res, {
       userId: ctx.userId.toString(),
-      factoryId: ctx.factoryId.toString(),
+      tenantId: ctx.tenantId.toString(),
       role: ctx.role,
       tier: ctx.subscriptionTier,
       features: Array.from(ctx.features),
@@ -130,19 +130,19 @@ export const authController = {
 
   changePassword: asyncHandler(async (req, res) => {
     const ctx = requireContext(req);
-    await authService.changePassword(ctx.userId, ctx.factoryId, req.body);
+    await authService.changePassword(ctx.userId, ctx.tenantId, req.body);
     return ok(req, res, { ok: true });
   }),
 
   inviteUser: asyncHandler(async (req, res) => {
     const ctx = requireContext(req);
-    const result = await authService.inviteUser(ctx.userId, ctx.role, ctx.factoryId, req.body);
+    const result = await authService.inviteUser(ctx.userId, ctx.role, ctx.tenantId, req.body);
     return created(req, res, result);
   }),
 
   logoutEverywhere: asyncHandler(async (req, res) => {
     const ctx = requireContext(req);
-    await authService.logoutEverywhere(ctx.userId, ctx.factoryId);
+    await authService.logoutEverywhere(ctx.userId, ctx.tenantId);
     clearRefreshCookie(res);
     return noContent(res);
   }),

@@ -6,7 +6,7 @@ import { ErrorCodes } from '../errors/errorCodes.js';
 import type { TenantContext } from './types.js';
 
 interface TenantOwnedResource {
-  factoryId: Types.ObjectId;
+  tenantId: Types.ObjectId;
 }
 
 /**
@@ -25,13 +25,13 @@ export function assertTenantOwns<T extends TenantOwnedResource | null | undefine
   if (!resource) {
     throw new NotFoundError();
   }
-  if (!resource.factoryId.equals(ctx.factoryId)) {
+  if (!resource.tenantId.equals(ctx.tenantId)) {
     logger.warn(
       {
         event: 'TENANCY_VIOLATION_BLOCKED',
         requestId: ctx.requestId,
-        attemptedFactoryId: resource.factoryId.toString(),
-        contextFactoryId: ctx.factoryId.toString(),
+        attemptedTenantId: resource.tenantId.toString(),
+        contextTenantId: ctx.tenantId.toString(),
         userId: ctx.userId.toString(),
       },
       'Cross-tenant access attempt blocked',

@@ -19,7 +19,7 @@ export interface NotificationPrefs {
 
 export interface UserDoc {
   _id: Types.ObjectId;
-  factoryId: Types.ObjectId;
+  tenantId: Types.ObjectId;
   email: string;
   passwordHash: string;
   fullName: string;
@@ -81,8 +81,8 @@ const userSchema = new Schema<UserDoc>(
   { timestamps: true },
 );
 
-userSchema.index({ factoryId: 1, email: 1 }, { unique: true });
-userSchema.index({ factoryId: 1, role: 1 });
+userSchema.index({ tenantId: 1, email: 1 }, { unique: true });
+userSchema.index({ tenantId: 1, role: 1 });
 
 userSchema.plugin(tenancyPlugin);
 userSchema.plugin(auditPlugin);

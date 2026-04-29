@@ -29,7 +29,7 @@ export const resolveTenant: RequestHandler = (req, _res, next) => {
   const claims = verifyAccessToken(token);
 
   const ctx: TenantContext = {
-    factoryId: new Types.ObjectId(claims.factoryId),
+    tenantId: new Types.ObjectId(claims.tenantId),
     userId: new Types.ObjectId(claims.sub),
     role: claims.role,
     subscriptionTier: claims.tier,
@@ -52,5 +52,5 @@ export const tenantScope: RequestHandler = (req, _res, next) => {
   if (!ctx) {
     return next(new UnauthorizedError(ErrorCodes.AUTH_TOKEN_MISSING, 'Tenant context not resolved'));
   }
-  tenantStorage.run({ factoryId: ctx.factoryId }, () => next());
+  tenantStorage.run({ tenantId: ctx.tenantId }, () => next());
 };

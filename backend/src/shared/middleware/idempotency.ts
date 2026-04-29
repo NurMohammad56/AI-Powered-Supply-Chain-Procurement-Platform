@@ -31,7 +31,7 @@ export const idempotencyKey: RequestHandler = async (req, res, next) => {
   if (!key) return next();
   if (key.length < 8 || key.length > 255) return next();
 
-  const tenant = req.context?.factoryId?.toString() ?? 'anon';
+  const tenant = req.context?.tenantId?.toString() ?? 'anon';
   const redisKey = `idem:${tenant}:${key}`;
 
   try {

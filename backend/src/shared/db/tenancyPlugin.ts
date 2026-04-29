@@ -8,18 +8,18 @@ import { logger } from '../../config/logger.js';
  * Control Point 2 of the multi-tenant boundary (SDD §2.4.2).
  *
  * Two protections, one plugin:
- *   1. Pre-find/update/delete hooks inject `factoryId` from the AsyncLocalStorage
+ *   1. Pre-find/update/delete hooks inject `tenantId` from the AsyncLocalStorage
  *      scope into the query filter. A query that runs without a tenant scope
  *      is rejected with TENANCY_SCOPE_MISSING - never silently broadened.
- *   2. Pre-save hook sets `factoryId` if absent (from scope) and rejects any
- *      attempt to save a document whose `factoryId` does not match the scope.
+ *   2. Pre-save hook sets `tenantId` if absent (from scope) and rejects any
+ *      attempt to save a document whose `tenantId` does not match the scope.
  *
  * The scope is established once per authenticated request by the
  * `tenantScope` middleware via `tenantStorage.run(...)`.
  */
 
 export interface TenantStore {
-  factoryId: Types.ObjectId;
+  tenantId: Types.ObjectId;
 }
 
 export const tenantStorage = new AsyncLocalStorage<TenantStore>();
@@ -66,10 +66,10 @@ export function tenancyPlugin(schema: Schema, opts: TenancyPluginOptions = {}): 
   if (opts.skip) return;
 
   // Define the discriminator field if absent. Compound indexes that must
-  // start with factoryId are declared per-collection (see SDD §4.3).
-  if (!schema.path('factoryId')) {
+  // start with tenantId are declared per-collection (see SDD §4.3).
+  if (!schema.path('tenantId')) {
     schema.add({
-      factoryId: {
+      tenantId: {
         type: Types.ObjectId,
         ref: 'Factory',
         required: true,
@@ -89,7 +89,7 @@ export function tenancyPlugin(schema: Schema, opts: TenancyPluginOptions = {}): 
         return next(err);
       }
       // `where` adds to the existing filter without overwriting unrelated keys.
-      this.where({ factoryId: store.factoryId });
+      this.where({ tenantId: store.tenantId });
       next();
     });
   }
@@ -99,21 +99,21 @@ export function tenancyPlugin(schema: Schema, opts: TenancyPluginOptions = {}): 
     if (!store) {
       return next(new Error('TENANCY_SCOPE_MISSING: save without tenant context'));
     }
-    const doc = this as unknown as { factoryId?: Types.ObjectId };
-    if (!doc.factoryId) {
-      doc.factoryId = store.factoryId;
+    const doc = this as unknown as { tenantId?: Types.ObjectId };
+    if (!doc.tenantId) {
+      doc.tenantId = store.tenantId;
       return next();
     }
-    if (!doc.factoryId.equals(store.factoryId)) {
+    if (!doc.tenantId.equals(store.tenantId)) {
       logger.error(
         {
           event: 'TENANCY_VIOLATION_ON_SAVE',
-          docFactoryId: doc.factoryId.toString(),
-          scopeFactoryId: store.factoryId.toString(),
+          docTenantId: doc.tenantId.toString(),
+          scopeTenantId: store.tenantId.toString(),
         },
         'Tenant violation blocked on save',
       );
-      return next(new Error('TENANCY_VIOLATION: factoryId mismatch on save'));
+      return next(new Error('TENANCY_VIOLATION: tenantId mismatch on save'));
     }
     next();
   });
@@ -123,11 +123,11 @@ export function tenancyPlugin(schema: Schema, opts: TenancyPluginOptions = {}): 
     if (!store) return next(new Error('TENANCY_SCOPE_MISSING: insertMany without tenant context'));
     const items = Array.isArray(docs) ? docs : [docs];
     for (const item of items) {
-      const candidate = item as { factoryId?: Types.ObjectId };
-      if (!candidate.factoryId) {
-        candidate.factoryId = store.factoryId;
-      } else if (!candidate.factoryId.equals(store.factoryId)) {
-        return next(new Error('TENANCY_VIOLATION: factoryId mismatch on insertMany'));
+      const candidate = item as { tenantId?: Types.ObjectId };
+      if (!candidate.tenantId) {
+        candidate.tenantId = store.tenantId;
+      } else if (!candidate.tenantId.equals(store.tenantId)) {
+        return next(new Error('TENANCY_VIOLATION: tenantId mismatch on insertMany'));
       }
     }
     next();
@@ -139,7 +139,7 @@ export function tenancyPlugin(schema: Schema, opts: TenancyPluginOptions = {}): 
     // Prepend a $match stage scoping to the tenant. Application code is
     // free to add additional filtering downstream.
     const pipeline = this.pipeline();
-    pipeline.unshift({ $match: { factoryId: store.factoryId } });
+    pipeline.unshift({ $match: { tenantId: store.tenantId } });
     next();
   });
 }

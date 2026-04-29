@@ -20,7 +20,7 @@ export type QueueName = (typeof QueueNames)[keyof typeof QueueNames];
 // ---------- Email queue ----------
 export interface SendEmailJob {
   emailDeliveryId?: string;
-  factoryId?: string;
+  tenantId?: string;
   to: string | string[];
   subject: string;
   html: string;
@@ -37,12 +37,12 @@ export type EmailJobMap = {
 
 // ---------- Report queue ----------
 export interface GenerateWeeklyDigestJob {
-  factoryId: string;
+  tenantId: string;
   weekStart: string;
   weekEnd: string;
 }
 export interface GenerateAdHocReportJob {
-  factoryId: string;
+  tenantId: string;
   reportKind: 'inventory_turnover' | 'spend' | 'cash_flow';
   rangeFrom: string;
   rangeTo: string;

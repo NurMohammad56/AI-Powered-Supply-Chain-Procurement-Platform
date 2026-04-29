@@ -45,8 +45,8 @@ export class AuthRepository {
     return User.findById(id).lean<UserDoc>().exec();
   }
 
-  async createUser(input: Omit<UserDoc, '_id' | 'createdAt' | 'updatedAt' | 'factoryId'> & {
-    factoryId?: Types.ObjectId;
+  async createUser(input: Omit<UserDoc, '_id' | 'createdAt' | 'updatedAt' | 'tenantId'> & {
+    tenantId?: Types.ObjectId;
   }): Promise<UserDoc> {
     const doc = await User.create(input);
     return doc.toObject();
@@ -110,9 +110,9 @@ export class AuthRepository {
    * the auth.service to perform login (which must look up the user
    * before the tenant context exists) and registration bootstrap.
    */
-  withScope<T>(factoryId: Types.ObjectId, fn: () => Promise<T>): Promise<T> {
+  withScope<T>(tenantId: Types.ObjectId, fn: () => Promise<T>): Promise<T> {
     return new Promise<T>((resolve, reject) => {
-      tenantStorage.run({ factoryId }, () => {
+      tenantStorage.run({ tenantId }, () => {
         fn().then(resolve, reject);
       });
     });

@@ -10,7 +10,7 @@ import type { Role, SubscriptionTier } from './types.js';
 
 export interface AccessTokenClaims extends JwtPayload {
   sub: string;
-  factoryId: string;
+  tenantId: string;
   role: Role;
   tier: SubscriptionTier;
   seats: number;
@@ -20,14 +20,14 @@ export interface AccessTokenClaims extends JwtPayload {
 
 export interface RefreshTokenClaims extends JwtPayload {
   sub: string;
-  factoryId: string;
+  tenantId: string;
   family: string;
   jti: string;
 }
 
 export interface IssueAccessTokenInput {
   userId: Types.ObjectId | string;
-  factoryId: Types.ObjectId | string;
+  tenantId: Types.ObjectId | string;
   role: Role;
   tier: SubscriptionTier;
   seats: number;
@@ -36,7 +36,7 @@ export interface IssueAccessTokenInput {
 
 export interface IssueRefreshTokenInput {
   userId: Types.ObjectId | string;
-  factoryId: Types.ObjectId | string;
+  tenantId: Types.ObjectId | string;
   family: string;
 }
 
@@ -76,7 +76,7 @@ export function issueAccessToken(input: IssueAccessTokenInput): IssuedToken {
   const jti = newJti();
   const payload: Omit<AccessTokenClaims, 'iat' | 'exp' | 'iss' | 'aud'> = {
     sub: input.userId.toString(),
-    factoryId: input.factoryId.toString(),
+    tenantId: input.tenantId.toString(),
     role: input.role,
     tier: input.tier,
     seats: input.seats,
@@ -93,7 +93,7 @@ export function issueRefreshToken(input: IssueRefreshTokenInput): IssuedToken {
   const jti = newJti();
   const payload: Omit<RefreshTokenClaims, 'iat' | 'exp' | 'iss' | 'aud'> = {
     sub: input.userId.toString(),
-    factoryId: input.factoryId.toString(),
+    tenantId: input.tenantId.toString(),
     family: input.family,
     jti,
   };

@@ -48,7 +48,7 @@ const transport = isDevelopment
 export const logger: Logger = transport ? pino(baseOptions, transport) : pino(baseOptions);
 
 /**
- * Per-request child logger. Carries requestId, factoryId, userId, route.
+ * Per-request child logger. Carries requestId, tenantId, userId, route.
  * `req.id` may be `string | number` per `pino-http`'s typings; we coerce
  * to string for log consistency.
  */
@@ -57,7 +57,7 @@ export function childLoggerFor(req: Request): Logger {
   const requestId = typeof rawId === 'string' ? rawId : rawId != null ? String(rawId) : undefined;
   return logger.child({
     requestId,
-    factoryId: req.context?.factoryId.toString(),
+    tenantId: req.context?.tenantId.toString(),
     userId: req.context?.userId.toString(),
     route: req.route?.path ?? req.path,
   });

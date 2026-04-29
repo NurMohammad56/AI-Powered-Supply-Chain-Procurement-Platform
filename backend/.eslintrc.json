@@ -71,7 +71,7 @@
           { "from": "shared", "allow": ["shared", "config"] },
           {
             "from": [["module", { "moduleName": "*" }]],
-            "allow": ["shared", "config", ["module", { "moduleName": "${from.moduleName}" }]]
+            "allow": ["shared", "config", "module"]
           },
           { "from": "workers", "allow": ["shared", "config", "module"] }
         ]

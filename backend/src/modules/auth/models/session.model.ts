@@ -6,7 +6,7 @@ export type RevokeReason = 'logout' | 'rotation' | 'reuse_detected' | 'admin' | 
 
 export interface SessionDoc {
   _id: Types.ObjectId;
-  factoryId: Types.ObjectId;
+  tenantId: Types.ObjectId;
   userId: Types.ObjectId;
   refreshTokenHash: string;
   family: string;
@@ -45,7 +45,7 @@ const sessionSchema = new Schema<SessionDoc>(
 
 sessionSchema.index({ refreshTokenHash: 1 }, { unique: true });
 sessionSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
-sessionSchema.index({ factoryId: 1, userId: 1, revokedAt: 1 });
+sessionSchema.index({ tenantId: 1, userId: 1, revokedAt: 1 });
 sessionSchema.index({ family: 1 });
 
 sessionSchema.plugin(tenancyPlugin);

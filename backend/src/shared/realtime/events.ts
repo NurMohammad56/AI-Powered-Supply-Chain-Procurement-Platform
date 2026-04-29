@@ -75,8 +75,8 @@ export type EventPayloadMap = {
   [SocketEvents.SystemConnected]: SystemConnectedPayload;
 };
 
-export function factoryRoom(factoryId: string): string {
-  return `factory:${factoryId}`;
+export function tenantRoom(tenantId: string): string {
+  return `tenant:${tenantId}`;
 }
 
 export function userRoom(userId: string): string {

@@ -61,7 +61,7 @@ export type Capability =
  * user-supplied input.
  */
 export interface TenantContext {
-  readonly factoryId: Types.ObjectId;
+  readonly tenantId: Types.ObjectId;
   readonly userId: Types.ObjectId;
   readonly role: Role;
   readonly subscriptionTier: SubscriptionTier;

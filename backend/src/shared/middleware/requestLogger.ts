@@ -12,10 +12,10 @@ export const requestLogger: RequestHandler = pinoHttp({
     return 'info';
   },
   customProps: (req) => {
-    const ctx = (req as { context?: { factoryId?: { toString(): string }; userId?: { toString(): string } } })
+    const ctx = (req as { context?: { tenantId?: { toString(): string }; userId?: { toString(): string } } })
       .context;
     return {
-      factoryId: ctx?.factoryId?.toString(),
+      tenantId: ctx?.tenantId?.toString(),
       userId: ctx?.userId?.toString(),
     };
   },
