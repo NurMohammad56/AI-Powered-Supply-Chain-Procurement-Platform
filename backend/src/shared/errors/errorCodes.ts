@@ -40,6 +40,7 @@ export const ErrorCodes = {
   // Quota / rate
   RATE_LIMITED: 'RATE_LIMITED',
   QUOTA_EXCEEDED: 'QUOTA_EXCEEDED',
+  AI_QUOTA_EXCEEDED: 'AI_QUOTA_EXCEEDED',
 
   // Internal / dependency
   INTERNAL_ERROR: 'INTERNAL_ERROR',
