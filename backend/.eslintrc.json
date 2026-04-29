@@ -1,0 +1,81 @@
+{
+  "root": true,
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaVersion": 2022,
+    "sourceType": "module",
+    "project": "./tsconfig.json"
+  },
+  "plugins": ["@typescript-eslint", "boundaries"],
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:@typescript-eslint/recommended-requiring-type-checking"
+  ],
+  "settings": {
+    "boundaries/elements": [
+      { "type": "config", "pattern": "src/config/*" },
+      { "type": "shared", "pattern": "src/shared/**" },
+      {
+        "type": "module",
+        "pattern": "src/modules/*",
+        "capture": ["moduleName"]
+      },
+      { "type": "workers", "pattern": "src/workers/*" },
+      { "type": "entry", "pattern": "src/{server,app,worker,routes}.ts", "mode": "file" }
+    ],
+    "boundaries/include": ["src/**/*"]
+  },
+  "rules": {
+    "@typescript-eslint/no-explicit-any": "error",
+    "@typescript-eslint/no-unused-vars": [
+      "error",
+      { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }
+    ],
+    "@typescript-eslint/explicit-module-boundary-types": "off",
+    "@typescript-eslint/no-non-null-assertion": "warn",
+    "@typescript-eslint/consistent-type-imports": [
+      "error",
+      { "prefer": "type-imports" }
+    ],
+    "@typescript-eslint/no-misused-promises": [
+      "error",
+      { "checksVoidReturn": false }
+    ],
+    "@typescript-eslint/require-await": "off",
+    "no-console": ["warn", { "allow": ["warn", "error"] }],
+    "no-restricted-syntax": [
+      "error",
+      {
+        "selector": "MemberExpression[object.name='Mongoose'][property.name='$where']",
+        "message": "MongoDB $where operator is forbidden (NoSQL injection risk)."
+      }
+    ],
+    "boundaries/element-types": [
+      "error",
+      {
+        "default": "disallow",
+        "rules": [
+          { "from": "entry", "allow": ["config", "shared", "module", "workers"] },
+          { "from": "config", "allow": ["config", "shared"] },
+          { "from": "shared", "allow": ["shared", "config"] },
+          {
+            "from": [["module", { "moduleName": "*" }]],
+            "allow": ["shared", "config", ["module", { "moduleName": "${from.moduleName}" }]]
+          },
+          { "from": "workers", "allow": ["shared", "config", "module"] }
+        ]
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": ["tests/**/*.ts"],
+      "rules": {
+        "@typescript-eslint/no-explicit-any": "off",
+        "boundaries/element-types": "off"
+      }
+    }
+  ],
+  "ignorePatterns": ["dist", "node_modules", "*.config.js", "*.config.ts"]
+}
