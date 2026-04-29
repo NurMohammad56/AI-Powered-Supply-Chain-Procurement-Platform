@@ -54,3 +54,30 @@ export type ReportJobMap = {
   'report.weekly_digest': GenerateWeeklyDigestJob;
   'report.adhoc': GenerateAdHocReportJob;
 };
+
+// ---------- Forecast queue ----------
+export interface ForecastSingleItemJob {
+  tenantId: string;
+  itemId: string;
+  /** When set, the worker emits a per-item progress update on the batch. */
+  batchJobId?: string;
+  /** Total items in the parent batch, for progress reporting. */
+  batchTotal?: number;
+  /** Index of this item within the batch (0-based). */
+  batchIndex?: number;
+  /** User who triggered the job, for socket fan-out + audit. */
+  requestedBy: string;
+}
+
+export interface ForecastBatchJob {
+  tenantId: string;
+  /** When omitted, all non-archived items in the tenant are forecast. */
+  itemIds?: string[];
+  requestedBy: string;
+}
+
+export type ForecastJobName = 'forecast.single_item' | 'forecast.batch';
+export type ForecastJobMap = {
+  'forecast.single_item': ForecastSingleItemJob;
+  'forecast.batch': ForecastBatchJob;
+};

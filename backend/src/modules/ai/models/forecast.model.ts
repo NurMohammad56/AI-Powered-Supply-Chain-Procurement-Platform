@@ -36,6 +36,8 @@ export interface ForecastProvenance {
   failoverInvoked: boolean;
   latencyMs: number;
   cacheHit: boolean;
+  promptTokens: number;
+  completionTokens: number;
 }
 
 export interface ForecastDoc {
@@ -52,6 +54,8 @@ export interface ForecastDoc {
   reorderPointSuggestion: ForecastReorderSuggestion | null;
   override: ForecastOverride | null;
   provenance: ForecastProvenance;
+  rawPrompt: string | null;
+  rawResponse: string | null;
   generatedAt: Date;
   expiresAt: Date;
   actualQuantity: number | null;
@@ -98,6 +102,8 @@ const provenanceSchema = new Schema<ForecastProvenance>(
     failoverInvoked: { type: Boolean, default: false },
     latencyMs: { type: Number, default: 0, min: 0 },
     cacheHit: { type: Boolean, default: false },
+    promptTokens: { type: Number, default: 0, min: 0 },
+    completionTokens: { type: Number, default: 0, min: 0 },
   },
   { _id: false },
 );
@@ -118,6 +124,8 @@ const forecastSchema = new Schema<ForecastDoc>(
     reorderPointSuggestion: { type: reorderSuggestionSchema, default: null },
     override: { type: overrideSchema, default: null },
     provenance: { type: provenanceSchema, required: true },
+    rawPrompt: { type: String, default: null, maxlength: 32_000 },
+    rawResponse: { type: String, default: null, maxlength: 32_000 },
     generatedAt: { type: Date, required: true, default: () => new Date() },
     expiresAt: { type: Date, required: true },
     actualQuantity: { type: Number, default: null, min: 0 },
