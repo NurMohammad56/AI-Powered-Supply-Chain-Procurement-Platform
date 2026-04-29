@@ -28,17 +28,17 @@ export const inventoryController = {
   }),
   getWarehouse: asyncHandler(async (req, res) => {
     const ctx = requireContext(req);
-    const result = await inventoryService.getWarehouse(ctx, objId(req.params.id));
+    const result = await inventoryService.getWarehouse(ctx, objId(req.params.id ?? ''));
     return ok(req, res, result);
   }),
   updateWarehouse: asyncHandler(async (req, res) => {
     const ctx = requireContext(req);
-    const result = await inventoryService.updateWarehouse(ctx, objId(req.params.id), req.body);
+    const result = await inventoryService.updateWarehouse(ctx, objId(req.params.id ?? ''), req.body);
     return ok(req, res, result);
   }),
   deleteWarehouse: asyncHandler(async (req, res) => {
     const ctx = requireContext(req);
-    await inventoryService.archiveWarehouse(ctx, objId(req.params.id));
+    await inventoryService.archiveWarehouse(ctx, objId(req.params.id ?? ''));
     return noContent(res);
   }),
   listWarehouses: asyncHandler(async (req, res) => {
@@ -59,17 +59,17 @@ export const inventoryController = {
   }),
   getCategory: asyncHandler(async (req, res) => {
     const ctx = requireContext(req);
-    const result = await inventoryService.getCategory(ctx, objId(req.params.id));
+    const result = await inventoryService.getCategory(ctx, objId(req.params.id ?? ''));
     return ok(req, res, result);
   }),
   updateCategory: asyncHandler(async (req, res) => {
     const ctx = requireContext(req);
-    const result = await inventoryService.updateCategory(ctx, objId(req.params.id), req.body);
+    const result = await inventoryService.updateCategory(ctx, objId(req.params.id ?? ''), req.body);
     return ok(req, res, result);
   }),
   deleteCategory: asyncHandler(async (req, res) => {
     const ctx = requireContext(req);
-    await inventoryService.archiveCategory(ctx, objId(req.params.id));
+    await inventoryService.archiveCategory(ctx, objId(req.params.id ?? ''));
     return noContent(res);
   }),
   listCategories: asyncHandler(async (req, res) => {
@@ -90,17 +90,17 @@ export const inventoryController = {
   }),
   getItem: asyncHandler(async (req, res) => {
     const ctx = requireContext(req);
-    const result = await inventoryService.getItem(ctx, objId(req.params.id));
+    const result = await inventoryService.getItem(ctx, objId(req.params.id ?? ''));
     return ok(req, res, result);
   }),
   updateItem: asyncHandler(async (req, res) => {
     const ctx = requireContext(req);
-    const result = await inventoryService.updateItem(ctx, objId(req.params.id), req.body);
+    const result = await inventoryService.updateItem(ctx, objId(req.params.id ?? ''), req.body);
     return ok(req, res, result);
   }),
   deleteItem: asyncHandler(async (req, res) => {
     const ctx = requireContext(req);
-    await inventoryService.archiveItem(ctx, objId(req.params.id));
+    await inventoryService.archiveItem(ctx, objId(req.params.id ?? ''));
     return noContent(res);
   }),
   listItems: asyncHandler(async (req, res) => {
@@ -116,17 +116,17 @@ export const inventoryController = {
   // -------- Stock movements --------
   adjustStock: asyncHandler(async (req, res) => {
     const ctx = requireContext(req);
-    const result = await inventoryService.adjustStock(ctx, objId(req.params.id), req.body);
+    const result = await inventoryService.adjustStock(ctx, objId(req.params.id ?? ''), req.body);
     return ok(req, res, result);
   }),
   transferStock: asyncHandler(async (req, res) => {
     const ctx = requireContext(req);
-    const result = await inventoryService.transferStock(ctx, objId(req.params.id), req.body);
+    const result = await inventoryService.transferStock(ctx, objId(req.params.id ?? ''), req.body);
     return ok(req, res, result);
   }),
   getItemHistory: asyncHandler(async (req, res) => {
     const ctx = requireContext(req);
-    const result = await inventoryService.getItemHistory(ctx, objId(req.params.id), req.query as never);
+    const result = await inventoryService.getItemHistory(ctx, objId(req.params.id ?? ''), req.query as never);
     return paginated(req, res, result.rows, {
       nextCursor: result.nextCursor,
       hasMore: result.hasMore,
@@ -135,7 +135,7 @@ export const inventoryController = {
   }),
   getItemBalances: asyncHandler(async (req, res) => {
     const ctx = requireContext(req);
-    const result = await inventoryService.getItemBalances(ctx, objId(req.params.id));
+    const result = await inventoryService.getItemBalances(ctx, objId(req.params.id ?? ''));
     return ok(req, res, result);
   }),
   listLowStock: asyncHandler(async (req, res) => {

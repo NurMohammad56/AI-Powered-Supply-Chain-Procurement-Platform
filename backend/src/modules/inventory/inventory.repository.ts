@@ -51,8 +51,8 @@ export class InventoryRepository {
   async findCategoryById(id: Types.ObjectId | string): Promise<ItemCategoryDoc | null> {
     return ItemCategory.findById(id).lean<ItemCategoryDoc>().exec();
   }
-  async findCategoryByCode(code: string): Promise<ItemCategoryDoc | null> {
-    return ItemCategory.findOne({ code: code.toUpperCase() }).lean<ItemCategoryDoc>().exec();
+  async findCategoryByName(name: string): Promise<ItemCategoryDoc | null> {
+    return ItemCategory.findOne({ name }).lean<ItemCategoryDoc>().exec();
   }
   async createCategory(input: Partial<ItemCategoryDoc>): Promise<ItemCategoryDoc> {
     const doc = await ItemCategory.create(input);
@@ -133,8 +133,9 @@ export class InventoryRepository {
       ];
     }
     if (args.archived === true) {
-      (filter as { includeArchived?: boolean }).includeArchived = true;
       filter.archivedAt = { $type: 'date' };
+    } else if (args.archived === false) {
+      filter.archivedAt = null;
     }
     const after = decodeCursor(args.cursor);
     if (after) filter._id = { $gt: after };

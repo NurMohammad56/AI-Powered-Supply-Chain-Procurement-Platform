@@ -44,14 +44,14 @@ function toWarehouseView(w: WarehouseDoc): WarehouseView {
     id: w._id.toString(),
     name: w.name,
     code: w.code,
-    address: {
-      line1: w.address.line1,
-      line2: w.address.line2 ?? null,
-      city: w.address.city,
-      district: w.address.district ?? null,
-      postalCode: w.address.postalCode ?? null,
-      country: w.address.country,
-    },
+    address: w.address
+      ? {
+          street: w.address.street,
+          city: w.address.city,
+          country: w.address.country,
+          postalCode: w.address.postalCode ?? null,
+        }
+      : null,
     isActive: w.isActive,
     archivedAt: w.archivedAt ? w.archivedAt.toISOString() : null,
     createdAt: w.createdAt.toISOString(),
@@ -63,7 +63,6 @@ function toCategoryView(c: ItemCategoryDoc): ItemCategoryView {
   return {
     id: c._id.toString(),
     name: c.name,
-    code: c.code,
     parentId: c.parentId ? c.parentId.toString() : null,
     description: c.description,
     archivedAt: c.archivedAt ? c.archivedAt.toISOString() : null,
@@ -116,7 +115,6 @@ function toMovementView(m: StockMovementDoc): StockMovementView {
       id: m.reference.id ? m.reference.id.toString() : null,
     },
     attachmentUrl: m.attachmentUrl,
-    notes: m.notes,
     performedBy: m.performedBy.toString(),
     performedAt: m.performedAt.toISOString(),
   };
@@ -144,7 +142,14 @@ export class InventoryService {
     const created = await inventoryRepository.createWarehouse({
       name: input.name,
       code: input.code,
-      address: input.address,
+      address: input.address
+        ? {
+            street: input.address.street,
+            city: input.address.city,
+            country: input.address.country,
+            postalCode: input.address.postalCode ?? null,
+          }
+        : null,
       isActive: input.isActive ?? true,
     });
     void recordAudit({
@@ -175,7 +180,21 @@ export class InventoryService {
       const dup = await inventoryRepository.findWarehouseByCode(patch.code);
       if (dup) throw new ConflictError(ErrorCodes.RESOURCE_DUPLICATE, 'Warehouse code already exists');
     }
-    const updated = await inventoryRepository.updateWarehouse(id, patch);
+    const update: Partial<WarehouseDoc> = {};
+    if (patch.name !== undefined) update.name = patch.name;
+    if (patch.code !== undefined) update.code = patch.code;
+    if (patch.isActive !== undefined) update.isActive = patch.isActive;
+    if (patch.address !== undefined) {
+      update.address = patch.address
+        ? {
+            street: patch.address.street,
+            city: patch.address.city,
+            country: patch.address.country,
+            postalCode: patch.address.postalCode ?? null,
+          }
+        : null;
+    }
+    const updated = await inventoryRepository.updateWarehouse(id, update);
     if (!updated) throw new NotFoundError();
     return toWarehouseView(updated);
   }
@@ -204,11 +223,10 @@ export class InventoryService {
     ctx: TenantContext,
     input: CreateItemCategoryRequest,
   ): Promise<ItemCategoryView> {
-    const dup = await inventoryRepository.findCategoryByCode(input.code);
-    if (dup) throw new ConflictError(ErrorCodes.RESOURCE_DUPLICATE, 'Category code already exists');
+    const dup = await inventoryRepository.findCategoryByName(input.name);
+    if (dup) throw new ConflictError(ErrorCodes.RESOURCE_DUPLICATE, 'Category name already exists');
     const created = await inventoryRepository.createCategory({
       name: input.name,
-      code: input.code,
       parentId: input.parentId ? new Types.ObjectId(input.parentId) : null,
       description: input.description ?? null,
     });
@@ -230,7 +248,6 @@ export class InventoryService {
     assertTenantOwns(c, ctx);
     const update: Partial<ItemCategoryDoc> = {};
     if (patch.name !== undefined) update.name = patch.name;
-    if (patch.code !== undefined) update.code = patch.code;
     if (patch.parentId !== undefined) {
       update.parentId = patch.parentId ? new Types.ObjectId(patch.parentId) : null;
     }
@@ -261,14 +278,14 @@ export class InventoryService {
       name: input.name,
       description: input.description ?? null,
       categoryId: input.categoryId ? new Types.ObjectId(input.categoryId) : null,
-      unit: input.unit,
-      type: input.type,
+      unit: input.unit as ItemDoc['unit'],
+      type: input.type as ItemDoc['type'],
       preferredSupplierId: input.preferredSupplierId
         ? new Types.ObjectId(input.preferredSupplierId)
         : null,
       reorderLevel: input.reorderLevel,
       movingAverageCost: input.movingAverageCost,
-      currency: input.currency,
+      currency: input.currency as ItemDoc['currency'],
     });
     void recordAudit({
       tenantId: ctx.tenantId,
@@ -316,7 +333,7 @@ export class InventoryService {
     }
     if (patch.reorderLevel !== undefined) update.reorderLevel = patch.reorderLevel;
     if (patch.movingAverageCost !== undefined) update.movingAverageCost = patch.movingAverageCost;
-    if (patch.currency !== undefined) update.currency = patch.currency;
+    if (patch.currency !== undefined) update.currency = patch.currency as ItemDoc['currency'];
     const updated = await inventoryRepository.updateItem(id, update);
     if (!updated) throw new NotFoundError();
     void recordAudit({
@@ -386,7 +403,6 @@ export class InventoryService {
       reasonCode: input.reasonCode,
       reference: { kind: 'adjustment', id: null },
       attachmentUrl: input.attachmentUrl ?? null,
-      notes: input.notes ?? null,
       performedBy: ctx.userId,
       performedAt: at,
     });
@@ -454,7 +470,6 @@ export class InventoryService {
       reasonCode: 'transfer',
       reference: { kind: 'transfer', id: transferRef },
       attachmentUrl: null,
-      notes: input.notes ?? null,
       performedBy: ctx.userId,
       performedAt: at,
     });
@@ -467,7 +482,6 @@ export class InventoryService {
       reasonCode: 'transfer',
       reference: { kind: 'transfer', id: transferRef },
       attachmentUrl: null,
-      notes: input.notes ?? null,
       performedBy: ctx.userId,
       performedAt: at,
     });
@@ -549,10 +563,10 @@ export class InventoryService {
           continue;
         }
         let categoryId: Types.ObjectId | null = null;
-        if (item.categoryCode) {
-          const cat = await inventoryRepository.findCategoryByCode(item.categoryCode);
+        if (item.categoryName) {
+          const cat = await inventoryRepository.findCategoryByName(item.categoryName);
           if (!cat) {
-            const msg = `Unknown category code: ${item.categoryCode}`;
+            const msg = `Unknown category name: ${item.categoryName}`;
             if (input.atomic) {
               errors.push({ row, sku, message: msg });
               return { imported: 0, skipped: 0, errors };
@@ -585,13 +599,12 @@ export class InventoryService {
             await inventoryRepository.createMovement({
               itemId: created._id,
               warehouseId: wh._id,
-              type: 'opening_balance',
+              type: 'opening',
               quantity: item.openingBalance.quantity,
               unitCost: item.openingBalance.unitCost ?? null,
               reasonCode: 'opening',
               reference: { kind: 'opening', id: null },
               attachmentUrl: null,
-              notes: 'CSV bulk import',
               performedBy: ctx.userId,
               performedAt: at,
             });

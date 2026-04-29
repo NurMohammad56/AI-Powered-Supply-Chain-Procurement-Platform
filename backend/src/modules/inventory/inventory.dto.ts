@@ -3,22 +3,37 @@ import { z } from 'zod';
 import { objectIdStringSchema } from '../../shared/utils/objectId.js';
 import { cursorQuerySchema } from '../../shared/utils/pagination.js';
 import { ITEM_TYPES, ITEM_UNITS } from './models/item.model.js';
-import { REASON_CODES } from './models/stockMovement.model.js';
+import { STOCK_MOVEMENT_TYPES } from './models/stockMovement.model.js';
+
+const REASON_CODES = [
+  'damage',
+  'loss',
+  'theft',
+  'expiry',
+  'count_correction',
+  'recount',
+  'opening',
+  'transfer',
+  'po_receipt',
+  'return_to_supplier',
+  'return_from_customer',
+  'production_consume',
+  'production_yield',
+  'other',
+] as const;
 
 // ============ Warehouses ============
 const addressSchema = z.object({
-  line1: z.string().min(1).max(200),
-  line2: z.string().max(200).nullable().optional(),
-  city: z.string().min(1).max(100),
-  district: z.string().max(100).nullable().optional(),
+  street: z.string().min(1).max(200),
+  city: z.string().min(1).max(80),
+  country: z.string().max(80).default('BD'),
   postalCode: z.string().max(20).nullable().optional(),
-  country: z.string().length(2).default('BD'),
 });
 
 export const CreateWarehouseRequestSchema = z.object({
   name: z.string().min(1).max(120),
-  code: z.string().min(1).max(16).toUpperCase(),
-  address: addressSchema,
+  code: z.string().min(1).max(20).toUpperCase(),
+  address: addressSchema.nullable().optional(),
   isActive: z.boolean().default(true),
 });
 export type CreateWarehouseRequest = z.infer<typeof CreateWarehouseRequestSchema>;
@@ -38,7 +53,6 @@ export type ListWarehousesQuery = z.infer<typeof ListWarehousesQuerySchema>;
 // ============ Item Categories ============
 export const CreateItemCategoryRequestSchema = z.object({
   name: z.string().min(1).max(120),
-  code: z.string().min(1).max(32).toUpperCase(),
   parentId: objectIdStringSchema.nullable().optional(),
   description: z.string().max(500).nullable().optional(),
 });
@@ -58,9 +72,9 @@ export const CreateItemRequestSchema = z.object({
   sku: z.string().min(1).max(64).toUpperCase(),
   barcode: z.string().max(64).nullable().optional(),
   name: z.string().min(1).max(200),
-  description: z.string().max(1000).nullable().optional(),
+  description: z.string().max(2000).nullable().optional(),
   categoryId: objectIdStringSchema.nullable().optional(),
-  unit: z.enum(UNITS as unknown as [string, ...string[]]),
+  unit: z.enum(ITEM_UNITS as unknown as [string, ...string[]]),
   type: z.enum(ITEM_TYPES as unknown as [string, ...string[]]),
   preferredSupplierId: objectIdStringSchema.nullable().optional(),
   reorderLevel: z.number().int().min(0).default(0),
@@ -91,7 +105,7 @@ export const StockAdjustmentRequestSchema = z.object({
   quantityDelta: z.number().refine((v) => v !== 0, 'quantityDelta must be non-zero'),
   reasonCode: z.enum(REASON_CODES as unknown as [string, ...string[]]),
   notes: z.string().max(1000).optional(),
-  attachmentUrl: z.string().url().max(1024).optional(),
+  attachmentUrl: z.string().url().max(2048).optional(),
 });
 export type StockAdjustmentRequest = z.infer<typeof StockAdjustmentRequestSchema>;
 
@@ -118,8 +132,7 @@ export const StockInRequestSchema = z.object({
         'transfer',
         'adjustment',
         'opening',
-        'sale',
-        'production',
+        'manual',
       ]),
       id: objectIdStringSchema.nullable().optional(),
     })
@@ -133,9 +146,7 @@ export const ItemHistoryQuerySchema = cursorQuerySchema.extend({
   warehouseId: objectIdStringSchema.optional(),
   from: z.string().datetime().optional(),
   to: z.string().datetime().optional(),
-  type: z
-    .enum(['in', 'out', 'transfer_in', 'transfer_out', 'adjustment', 'opening_balance'])
-    .optional(),
+  type: z.enum(STOCK_MOVEMENT_TYPES as unknown as [string, ...string[]]).optional(),
 });
 export type ItemHistoryQuery = z.infer<typeof ItemHistoryQuerySchema>;
 
@@ -152,15 +163,15 @@ export const BulkImportRequestSchema = z.object({
       z.object({
         sku: z.string().min(1).max(64),
         name: z.string().min(1).max(200),
-        unit: z.enum(UNITS as unknown as [string, ...string[]]),
+        unit: z.enum(ITEM_UNITS as unknown as [string, ...string[]]),
         type: z.enum(ITEM_TYPES as unknown as [string, ...string[]]),
         barcode: z.string().max(64).nullable().optional(),
-        description: z.string().max(1000).nullable().optional(),
-        categoryCode: z.string().max(32).optional(),
+        description: z.string().max(2000).nullable().optional(),
+        categoryName: z.string().max(120).optional(),
         reorderLevel: z.number().int().min(0).default(0),
         openingBalance: z
           .object({
-            warehouseCode: z.string().max(16),
+            warehouseCode: z.string().max(20),
             quantity: z.number().min(0),
             unitCost: z.number().min(0).optional(),
           })
@@ -196,13 +207,11 @@ export interface WarehouseView {
   name: string;
   code: string;
   address: {
-    line1: string;
-    line2: string | null;
+    street: string;
     city: string;
-    district: string | null;
-    postalCode: string | null;
     country: string;
-  };
+    postalCode: string | null;
+  } | null;
   isActive: boolean;
   archivedAt: string | null;
   createdAt: string;
@@ -212,7 +221,6 @@ export interface WarehouseView {
 export interface ItemCategoryView {
   id: string;
   name: string;
-  code: string;
   parentId: string | null;
   description: string | null;
   archivedAt: string | null;
@@ -256,7 +264,6 @@ export interface StockMovementView {
   reasonCode: string;
   reference: { kind: string; id: string | null };
   attachmentUrl: string | null;
-  notes: string | null;
   performedBy: string;
   performedAt: string;
 }
