@@ -55,6 +55,31 @@ export type ReportJobMap = {
   'report.adhoc': GenerateAdHocReportJob;
 };
 
+// ---------- Scheduled queue ----------
+/**
+ * The scheduled queue carries all "fire later" cron-style jobs that
+ * don't fit a single domain queue: quote-response expiry, PO delivery
+ * overdue checks, and any future tenant-scoped cron fan-out.
+ */
+export interface QuotationExpiryCheckJob {
+  tenantId: string;
+  quotationId: string;
+}
+
+export interface PoDeliveryOverdueCheckJob {
+  tenantId: string;
+  poId: string;
+}
+
+export type ScheduledJobName =
+  | 'scheduled.quotation.expiry_check'
+  | 'scheduled.po.delivery_overdue_check';
+
+export type ScheduledJobMap = {
+  'scheduled.quotation.expiry_check': QuotationExpiryCheckJob;
+  'scheduled.po.delivery_overdue_check': PoDeliveryOverdueCheckJob;
+};
+
 // ---------- Forecast queue ----------
 export interface ForecastSingleItemJob {
   tenantId: string;

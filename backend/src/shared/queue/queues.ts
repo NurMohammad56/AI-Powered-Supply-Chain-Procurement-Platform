@@ -2,7 +2,7 @@ import { Queue, QueueEvents, type JobsOptions } from 'bullmq';
 
 import { redisQueue } from '../../config/redis.js';
 import { logger } from '../../config/logger.js';
-import { QueueNames, type EmailJobMap, type ForecastJobMap, type ReportJobMap } from './jobTypes.js';
+import { QueueNames, type EmailJobMap, type ForecastJobMap, type ReportJobMap, type ScheduledJobMap } from './jobTypes.js';
 
 const defaultJobOptions: JobsOptions = {
   attempts: 3,
@@ -37,9 +37,17 @@ export const forecastQueue = buildQueue<ForecastJobMap[keyof ForecastJobMap]>(Qu
   backoff: { type: 'exponential', delay: 60_000 },
 });
 
+// Scheduled queue: cron-like jobs (quote expiry, PO overdue) enqueued
+// with `delay: <ms>`. Single retry; failures usually mean the upstream
+// row no longer exists, which is fine.
+export const scheduledQueue = buildQueue<ScheduledJobMap[keyof ScheduledJobMap]>(QueueNames.Scheduled, {
+  attempts: 1,
+});
+
 const emailEvents = new QueueEvents(QueueNames.Email, { connection: redisQueue });
 const reportEvents = new QueueEvents(QueueNames.Report, { connection: redisQueue });
 const forecastEvents = new QueueEvents(QueueNames.Forecast, { connection: redisQueue });
+const scheduledEvents = new QueueEvents(QueueNames.Scheduled, { connection: redisQueue });
 
 emailEvents.on('failed', ({ jobId, failedReason }) => {
   logger.warn({ queue: QueueNames.Email, jobId, failedReason }, 'email job failed');
@@ -50,15 +58,20 @@ reportEvents.on('failed', ({ jobId, failedReason }) => {
 forecastEvents.on('failed', ({ jobId, failedReason }) => {
   logger.warn({ queue: QueueNames.Forecast, jobId, failedReason }, 'forecast job failed');
 });
+scheduledEvents.on('failed', ({ jobId, failedReason }) => {
+  logger.warn({ queue: QueueNames.Scheduled, jobId, failedReason }, 'scheduled job failed');
+});
 
 export async function closeQueues(): Promise<void> {
   await Promise.all([
     emailQueue.close().catch(() => undefined),
     reportQueue.close().catch(() => undefined),
     forecastQueue.close().catch(() => undefined),
+    scheduledQueue.close().catch(() => undefined),
     emailEvents.close().catch(() => undefined),
     reportEvents.close().catch(() => undefined),
     forecastEvents.close().catch(() => undefined),
+    scheduledEvents.close().catch(() => undefined),
   ]);
 }
 
@@ -84,5 +97,14 @@ export async function enqueueForecast<K extends keyof ForecastJobMap>(
   opts: JobsOptions = {},
 ): Promise<{ jobId: string }> {
   const job = await forecastQueue.add(jobName, payload, opts);
+  return { jobId: job.id ?? '' };
+}
+
+export async function enqueueScheduled<K extends keyof ScheduledJobMap>(
+  jobName: K,
+  payload: ScheduledJobMap[K],
+  opts: JobsOptions = {},
+): Promise<{ jobId: string }> {
+  const job = await scheduledQueue.add(jobName, payload, opts);
   return { jobId: job.id ?? '' };
 }
