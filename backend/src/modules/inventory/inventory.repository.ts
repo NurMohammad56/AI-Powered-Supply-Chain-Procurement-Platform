@@ -186,6 +186,28 @@ export class InventoryRepository {
     return updated;
   }
 
+  /**
+   * Clear `lowStockSince` on a balance row whose quantity has risen back
+   * above the item's reorder level. Returns true when an alert was
+   * actively cleared, false otherwise. Idempotent.
+   */
+  async clearLowStockIfResolved(args: {
+    itemId: Types.ObjectId;
+    warehouseId: Types.ObjectId;
+    reorderLevel: number;
+  }): Promise<boolean> {
+    const result = await StockBalance.updateOne(
+      {
+        itemId: args.itemId,
+        warehouseId: args.warehouseId,
+        lowStockSince: { $type: 'date' },
+        quantity: { $gte: args.reorderLevel },
+      },
+      { $set: { lowStockSince: null } },
+    ).exec();
+    return (result.modifiedCount ?? 0) > 0;
+  }
+
   async listLowStock(args: {
     cursor?: string;
     limit: number;

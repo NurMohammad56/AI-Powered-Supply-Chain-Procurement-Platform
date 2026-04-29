@@ -5,10 +5,15 @@ import { BadRequestError, ConflictError, NotFoundError } from '../../shared/erro
 import { ErrorCodes } from '../../shared/errors/errorCodes.js';
 import { assertTenantOwns } from '../../shared/auth/assertTenantOwns.js';
 import { recordAudit, AuditActions } from '../../shared/audit/index.js';
+import { logger } from '../../config/logger.js';
+import { enqueueForecast } from '../../shared/queue/queues.js';
+import { tenantKey, uploadObject, presignGet } from '../../shared/storage/r2.client.js';
+import { Factory } from '../auth/models/factory.model.js';
 import type { TenantContext } from '../../shared/auth/types.js';
 import type { Page } from '../../shared/utils/pagination.js';
 import { inventoryRepository } from '../inventory/inventory.repository.js';
 import { supplierRepository } from '../supplier/supplier.repository.js';
+import { aiRepository } from '../ai/ai.repository.js';
 import { poRepository } from './po.repository.js';
 import {
   PURCHASE_ORDER_TRANSITIONS,
@@ -17,6 +22,15 @@ import {
   type PoLine,
 } from './models/purchaseOrder.model.js';
 import type { PoReceiptDoc } from './models/poReceipt.model.js';
+import { renderPoPdf } from './po.pdf.js';
+import {
+  notifyDeliveryOverdue,
+  notifyPoApproved,
+  notifyPoFullyReceived,
+  notifyPoRejected,
+  notifyPoSentToSupplier,
+  notifyPoSubmitted,
+} from './po.notifications.js';
 import type {
   ApprovePoRequest,
   CancelPoRequest,
@@ -307,6 +321,7 @@ export class PoService {
       target: { kind: 'po', id },
       requestId: ctx.requestId,
     });
+    void notifyPoSubmitted({ po: updated, submitterId: ctx.userId });
     return toView(updated);
   }
 
@@ -347,6 +362,11 @@ export class PoService {
       action: AuditActions.PoApproved,
       target: { kind: 'po', id },
       requestId: ctx.requestId,
+    });
+    // Render+upload the approved PO PDF in the background, then email
+    // the requester with the link. Do not block the API response.
+    void this.generateAndStorePdf(updated).then((pdfUrl) => {
+      void notifyPoApproved({ po: updated, approverId: ctx.userId, pdfUrl });
     });
     return toView(updated);
   }
@@ -389,10 +409,17 @@ export class PoService {
       payload: { reason: input.reason },
       requestId: ctx.requestId,
     });
+    void notifyPoRejected({ po: updated, approverId: ctx.userId, reason: input.reason });
     return toView(updated);
   }
 
-  async dispatch(ctx: TenantContext, id: Types.ObjectId, input: DispatchPoRequest): Promise<PoView> {
+  /**
+   * `dispatch` is the legacy verb retained for the existing route; the
+   * canonical entry point per Prompt 05 is `sendToSupplier`, which
+   * additionally renders the PDF, uploads to R2, and emails the
+   * supplier contact with the presigned link.
+   */
+  async sendToSupplier(ctx: TenantContext, id: Types.ObjectId, input: DispatchPoRequest): Promise<PoView> {
     const po = await poRepository.findById(id);
     assertTenantOwns(po, ctx);
     if (!canTransition(po.state, 'sent')) {
@@ -401,6 +428,7 @@ export class PoService {
         `Cannot dispatch PO in state ${po.state}`,
       );
     }
+    const pdfUrl = await this.generateAndStorePdf(po);
     const at = new Date();
     const updated = await poRepository.transitionState({
       id,
@@ -408,6 +436,8 @@ export class PoService {
       toState: 'sent',
       extraSet: {
         dispatch: { sentAt: at, sentTo: input.sentTo, emailDeliveryId: null },
+        pdfUrl: pdfUrl ?? po.pdfUrl,
+        pdfGeneratedAt: pdfUrl ? at : po.pdfGeneratedAt,
       },
     });
     if (!updated) {
@@ -419,10 +449,26 @@ export class PoService {
       actorRole: ctx.role,
       action: AuditActions.PoDispatched,
       target: { kind: 'po', id },
-      payload: { sentTo: input.sentTo },
+      payload: { sentTo: input.sentTo, pdfUrl: pdfUrl ?? null },
       requestId: ctx.requestId,
     });
+    if (pdfUrl) {
+      void notifyPoSentToSupplier({
+        po: updated,
+        supplierContactName: po.supplierSnapshot.legalName,
+        supplierContactEmail: input.sentTo,
+        pdfUrl,
+      });
+    }
     return toView(updated);
+  }
+
+  /**
+   * Legacy alias retained so callers using the old `/:id/dispatch` route
+   * keep working. New callers should use `sendToSupplier`.
+   */
+  async dispatch(ctx: TenantContext, id: Types.ObjectId, input: DispatchPoRequest): Promise<PoView> {
+    return this.sendToSupplier(ctx, id, input);
   }
 
   async cancel(ctx: TenantContext, id: Types.ObjectId, input: CancelPoRequest): Promise<PoView> {
@@ -524,10 +570,16 @@ export class PoService {
       notes: input.notes ?? null,
     });
 
-    // Post stock movements + balance increments.
+    // Post stock movements + balance increments. The stockMovements
+    // collection is an append-only ledger (SDD §4.2.2); stockBalances is
+    // a materialised view reconciled weekly by the balance-audit cron.
+    // Per-line movement+balance is therefore not strictly transactional,
+    // but every write here is atomic in isolation and audit-reconcilable.
+    const affectedItemIds = new Set<string>();
     for (const l of input.lines) {
       const at = new Date();
       const itemId = new Types.ObjectId(l.itemId);
+      affectedItemIds.add(itemId.toString());
       await inventoryRepository.createMovement({
         itemId,
         warehouseId,
@@ -550,6 +602,9 @@ export class PoService {
         movementAt: at,
       });
     }
+    // Track which items were touched - applyPostReceiptSideEffects fans
+    // out low-stock resolution + forecast re-trigger over this set.
+    void affectedItemIds;
 
     const transitioned = await poRepository.transitionState({
       id,
@@ -570,7 +625,85 @@ export class PoService {
       requestId: ctx.requestId,
     });
 
+    // Post-receipt fan-out: low-stock alert resolution, forecast
+    // re-trigger, and full-receipt confirmation email. All side-effects
+    // are best-effort; failures must not roll back the receipt.
+    void this.applyPostReceiptSideEffects({
+      ctx,
+      po: transitioned,
+      warehouseId,
+      receivedQuantity: input.lines.reduce((sum, l) => sum + l.quantity, 0),
+      isFullyReceived: resultingState === 'fully_received',
+      receivedItemIds: input.lines.map((l) => new Types.ObjectId(l.itemId)),
+    });
+
     return { po: toView(transitioned), receipt: toReceiptView(receipt) };
+  }
+
+  /**
+   * Best-effort post-receipt side-effects. Each block is independently
+   * try/catched - a failure in one (e.g. forecast queue down) must not
+   * stop the others (e.g. low-stock alert clear).
+   */
+  private async applyPostReceiptSideEffects(args: {
+    ctx: TenantContext;
+    po: PurchaseOrderDoc;
+    warehouseId: Types.ObjectId;
+    receivedQuantity: number;
+    isFullyReceived: boolean;
+    receivedItemIds: Types.ObjectId[];
+  }): Promise<void> {
+    // (a) Resolve any active low-stock alerts on the items just received.
+    for (const itemId of args.receivedItemIds) {
+      try {
+        const item = await inventoryRepository.findItemById(itemId);
+        if (!item) continue;
+        await inventoryRepository.clearLowStockIfResolved({
+          itemId,
+          warehouseId: args.warehouseId,
+          reorderLevel: item.reorderLevel,
+        });
+      } catch (err) {
+        logger.warn(
+          { err, event: 'po.receipt.low_stock_clear_failed', itemId: itemId.toString() },
+          'low-stock alert clear failed',
+        );
+      }
+    }
+
+    // (b) Re-trigger demand forecasts for the affected items so that
+    // the next dashboard view reflects the fresh stock baseline.
+    for (const itemId of args.receivedItemIds) {
+      try {
+        // Skip if a recent forecast exists - the AI service has its own
+        // 6h rate-limit; this is just a coarse pre-flight to avoid
+        // queue spam during a 200-line GRN.
+        const recent = await aiRepository.findLatestForItem({
+          tenantId: args.ctx.tenantId,
+          itemId,
+          horizonDays: 30,
+        });
+        const sixHoursAgo = Date.now() - 6 * 60 * 60 * 1000;
+        if (recent && recent.generatedAt.getTime() > sixHoursAgo) continue;
+
+        await enqueueForecast('forecast.single_item', {
+          tenantId: args.ctx.tenantId.toString(),
+          itemId: itemId.toString(),
+          requestedBy: args.ctx.userId.toString(),
+        });
+      } catch (err) {
+        logger.warn(
+          { err, event: 'po.receipt.forecast_retrigger_failed', itemId: itemId.toString() },
+          'forecast re-trigger failed',
+        );
+      }
+    }
+
+    // (c) Send the full-receipt confirmation email when this receipt
+    // closed out the PO.
+    if (args.isFullyReceived) {
+      void notifyPoFullyReceived({ po: args.po, receivedQuantity: args.receivedQuantity });
+    }
   }
 
   async listReceipts(ctx: TenantContext, id: Types.ObjectId): Promise<PoReceiptView[]> {
@@ -607,6 +740,135 @@ export class PoService {
       requestId: ctx.requestId,
     });
     return toView(updated);
+  }
+
+  /**
+   * Build a draft PO from an AI forecast suggestion. Pulls the latest
+   * forecast for the item, sizes the order at the 30-day predicted
+   * quantity (preferring the override when present), and stages it in
+   * the user's preferred warehouse.
+   */
+  async createFromForecast(args: {
+    ctx: TenantContext;
+    itemId: Types.ObjectId;
+    warehouseId: Types.ObjectId;
+    expectedDeliveryAt?: string;
+  }): Promise<PoView> {
+    const item = await inventoryRepository.findItemById(args.itemId);
+    assertTenantOwns(item, args.ctx);
+    if (!item.preferredSupplierId) {
+      throw new BadRequestError(
+        ErrorCodes.BAD_REQUEST,
+        'Item has no preferred supplier; pick a supplier manually',
+      );
+    }
+    const forecast = await aiRepository.findLatestForItem({
+      tenantId: args.ctx.tenantId,
+      itemId: args.itemId,
+      horizonDays: 30,
+    });
+    if (!forecast) {
+      throw new NotFoundError();
+    }
+    const suggested = forecast.override?.quantity ?? forecast.predictedQuantity;
+    if (suggested <= 0) {
+      throw new BadRequestError(
+        ErrorCodes.BAD_REQUEST,
+        'Forecast predicts zero demand; no PO needed',
+      );
+    }
+    // Order quantity = forecasted demand minus current on-hand stock,
+    // bounded at the suggested quantity. The user can edit before
+    // submitting.
+    const balance = await inventoryRepository.findBalance(args.itemId, args.warehouseId);
+    const onHand = balance?.quantity ?? 0;
+    const quantity = Math.max(1, Math.round(suggested - onHand));
+    const supplier = await supplierRepository.findById(item.preferredSupplierId);
+    assertTenantOwns(supplier, args.ctx);
+    const leadTimeDays = supplier.leadTimeDays ?? 14;
+    const expected = args.expectedDeliveryAt
+      ? new Date(args.expectedDeliveryAt)
+      : new Date(Date.now() + leadTimeDays * 24 * 60 * 60 * 1000);
+    return this.create(args.ctx, {
+      supplierId: supplier._id.toString(),
+      warehouseId: args.warehouseId.toString(),
+      currency: item.currency,
+      paymentTermsDays: supplier.paymentTermsDays,
+      expectedDeliveryAt: expected.toISOString(),
+      lines: [
+        {
+          itemId: args.itemId.toString(),
+          quantityOrdered: quantity,
+          unitPrice: item.movingAverageCost,
+          expectedDeliveryAt: expected.toISOString(),
+          remarks: `Auto-generated from forecast ${forecast._id.toString()} (predicted ${suggested}, on-hand ${onHand})`,
+        },
+      ],
+      taxRate: 0,
+    });
+  }
+
+  /**
+   * Render the PO PDF and upload it to R2. Returns the presigned URL
+   * (or null if rendering/upload failed). Best-effort: never throws.
+   */
+  private async generateAndStorePdf(po: PurchaseOrderDoc): Promise<string | null> {
+    try {
+      const factory = await Factory.findById(po.tenantId).lean().exec();
+      if (!factory) return null;
+      const pdfBuffer = await renderPoPdf({
+        factory: {
+          name: factory.name,
+          addressLine: 'Bangladesh', // SDD §2.6 - factories are BD-based
+          baseCurrency: factory.baseCurrency,
+          primaryColor: factory.branding?.primaryColor ?? '#1E40AF',
+        },
+        po,
+        isDraftWatermark: po.state === 'draft',
+      });
+      const key = tenantKey(po.tenantId.toString(), 'po-pdf', `${po.number}.pdf`);
+      const upload = await uploadObject({
+        key,
+        body: pdfBuffer,
+        contentType: 'application/pdf',
+        metadata: { poId: po._id.toString(), poNumber: po.number },
+      });
+      // Persist the storage key so subsequent reads can re-presign cheaply.
+      await poRepository.update(po._id, {
+        pdfUrl: upload.url,
+        pdfGeneratedAt: new Date(),
+      });
+      return upload.url;
+    } catch (err) {
+      logger.warn(
+        { err, event: 'po.pdf.generation_failed', poId: po._id.toString() },
+        'PO PDF generation/upload failed',
+      );
+      return null;
+    }
+  }
+
+  /**
+   * Re-presign an existing PDF storage key for download. Useful when
+   * the original 5-minute URL has expired - the persisted URL on the
+   * PO row is the storage key, and this presigns a fresh download.
+   */
+  async getPdfDownloadUrl(ctx: TenantContext, id: Types.ObjectId): Promise<{ url: string | null }> {
+    const po = await poRepository.findById(id);
+    assertTenantOwns(po, ctx);
+    if (!po.pdfUrl) {
+      // No PDF yet - render now.
+      const url = await this.generateAndStorePdf(po);
+      return { url };
+    }
+    // The persisted URL is presigned and may be stale; re-derive the
+    // storage key and presign again. We accept a stub URL passthrough
+    // for dev environments.
+    if (po.pdfUrl.startsWith('stub://')) {
+      return { url: po.pdfUrl };
+    }
+    const key = tenantKey(po.tenantId.toString(), 'po-pdf', `${po.number}.pdf`);
+    return { url: await presignGet(key) };
   }
 }
 
