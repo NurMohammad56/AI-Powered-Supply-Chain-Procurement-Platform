@@ -345,6 +345,12 @@ export class AuthService {
         { $set: { revokedAt: new Date(), revokeReason: 'logout' } },
       ).exec();
     });
+    // Fast-path: invalidate every still-valid access token for this
+    // user via the Redis denylist watermark. Tokens issued before this
+    // moment will be rejected at resolveTenant; tokens issued after
+    // (after a fresh login) carry a newer `iat` and pass.
+    const { denylistAllForUser } = await import('../../shared/security/tokenDenylist.js');
+    await denylistAllForUser(userId.toString());
   }
 
   async forgotPassword(input: ForgotPasswordRequest): Promise<void> {

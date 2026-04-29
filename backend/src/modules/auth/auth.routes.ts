@@ -5,6 +5,7 @@ import { resolveTenant, tenantScope } from '../../shared/middleware/tenant.js';
 import { rbacFor } from '../../shared/middleware/rbac.js';
 import { requireCsrfHeader } from '../../shared/middleware/csrf.js';
 import {
+  rateLimitAuthSensitive,
   rateLimitLogin,
   rateLimitRefresh,
   rateLimitUnauthenticated,
@@ -39,6 +40,7 @@ authPublicRouter.post(
 
 authPublicRouter.post(
   '/login',
+  rateLimitAuthSensitive,
   rateLimitLogin,
   validate(LoginRequestSchema),
   authController.login,
@@ -50,7 +52,7 @@ authPublicRouter.post('/logout', authController.logout);
 
 authPublicRouter.post(
   '/forgot-password',
-  rateLimitUnauthenticated,
+  rateLimitAuthSensitive,
   validate(ForgotPasswordRequestSchema),
   authController.forgotPassword,
 );

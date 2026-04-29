@@ -3,6 +3,7 @@ import { Router } from 'express';
 import { validate } from '../../shared/middleware/validate.js';
 import { rbacFor } from '../../shared/middleware/rbac.js';
 import { idempotencyKey } from '../../shared/middleware/idempotency.js';
+import { rateLimitAi } from '../../shared/middleware/rateLimit.js';
 import {
   BatchForecastRequestSchema,
   ForecastIdParamSchema,
@@ -23,6 +24,7 @@ aiRouter.get(
 aiRouter.post(
   '/forecasts',
   rbacFor('ai.forecast.generate'),
+  rateLimitAi,
   idempotencyKey,
   validate(GenerateForecastRequestSchema),
   aiController.generateForecast,
@@ -44,6 +46,7 @@ aiRouter.post(
 aiRouter.post(
   '/forecasts/batch',
   rbacFor('ai.forecast.generate'),
+  rateLimitAi,
   idempotencyKey,
   validate(BatchForecastRequestSchema),
   aiController.runBatch,

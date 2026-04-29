@@ -3,6 +3,7 @@ import { Router, raw } from 'express';
 import { validate } from '../../shared/middleware/validate.js';
 import { rbacFor } from '../../shared/middleware/rbac.js';
 import { idempotencyKey } from '../../shared/middleware/idempotency.js';
+import { rateLimitWebhook } from '../../shared/middleware/rateLimit.js';
 import {
   CancelSubscriptionRequestSchema,
   ChangeSubscriptionRequestSchema,
@@ -54,8 +55,14 @@ billingRouter.get(
  * Webhook router - mounted under `/api/webhooks` with NO JWT.
  * Each webhook uses raw-body parsing for signature verification by the
  * gateway adapter (lands in a later prompt).
+ *
+ * Rate limit: 1000 req/min per IP (Prompt 06 §5). Legitimate gateway
+ * traffic can spike during settlement windows; signature verification
+ * is the real authn gate.
  */
 export const webhookRouter = Router();
+
+webhookRouter.use(rateLimitWebhook);
 
 webhookRouter.post(
   '/stripe',
