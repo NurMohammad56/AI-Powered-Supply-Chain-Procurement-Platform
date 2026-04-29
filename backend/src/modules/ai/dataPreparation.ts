@@ -1,4 +1,4 @@
-import { Types } from 'mongoose';
+import type { Types } from 'mongoose';
 
 import { Item, type ItemDoc } from '../inventory/models/item.model.js';
 import { StockMovement } from '../inventory/models/stockMovement.model.js';

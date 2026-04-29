@@ -89,7 +89,7 @@ function getGroq(): BaseChatModel | null {
     temperature: 0.1,
     maxTokens: 2048,
     timeout: env.AI_PER_CALL_TIMEOUT_MS,
-  }) as unknown as BaseChatModel;
+  });
 }
 
 function getGemini(): BaseChatModel | null {
@@ -99,7 +99,7 @@ function getGemini(): BaseChatModel | null {
     model: env.GEMINI_MODEL,
     temperature: 0.1,
     maxOutputTokens: 2048,
-  }) as unknown as BaseChatModel;
+  });
 }
 
 interface ProviderInvocation {
@@ -118,7 +118,7 @@ async function invokeProvider(args: {
   prompt: string;
 }): Promise<ProviderInvocation> {
   const start = Date.now();
-  const result = (await args.client.invoke(args.prompt)) as AIMessageChunk;
+  const result = await args.client.invoke(args.prompt);
   const latencyMs = Date.now() - start;
   const text = typeof result.content === 'string' ? result.content : extractContentText(result.content);
   const usage = readUsageMetadata(result);

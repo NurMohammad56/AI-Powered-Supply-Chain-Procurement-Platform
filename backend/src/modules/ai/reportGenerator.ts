@@ -1,4 +1,4 @@
-import { Types } from 'mongoose';
+import type { Types } from 'mongoose';
 
 import { logger } from '../../config/logger.js';
 import { emailClient } from '../../shared/email/resend.client.js';
@@ -452,9 +452,10 @@ async function renderHtmlToPdf(html: string): Promise<{ buffer: Buffer | null; r
   let puppeteer: PuppeteerLike | null = null;
   let chromium: ChromiumLike | null = null;
   try {
-    puppeteer = (await import('puppeteer-core')) as unknown as PuppeteerLike;
-    const chromiumMod = (await import('@sparticuz/chromium')) as unknown as { default: ChromiumLike };
-    chromium = chromiumMod.default;
+    const puppeteerMod: unknown = await import('puppeteer-core');
+    puppeteer = puppeteerMod as PuppeteerLike;
+    const chromiumMod: unknown = await import('@sparticuz/chromium');
+    chromium = (chromiumMod as { default: ChromiumLike }).default;
   } catch (err) {
     logger.warn({ err, event: 'report.pdf.deps_missing' }, 'puppeteer-core or chromium not available');
     return { buffer: null, rendered: false };
