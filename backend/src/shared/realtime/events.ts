@@ -20,6 +20,8 @@ export const SocketEvents = {
 
   // AI
   AiForecastCompleted: 'ai.forecast.completed',
+  AiForecastBatchProgress: 'ai.forecast.batch.progress',
+  AiForecastBatchCompleted: 'ai.forecast.batch.completed',
 
   // Notifications
   NotificationCreated: 'notification.created',
@@ -67,12 +69,39 @@ export interface SystemConnectedPayload {
   sessionId: string;
 }
 
+export interface AiForecastCompletedPayload {
+  forecastId: string;
+  itemId: string;
+  horizonDays: number;
+  confidence: string;
+  generatedAt: string;
+}
+
+export interface AiForecastBatchProgressPayload {
+  batchJobId: string;
+  itemId: string;
+  index: number;
+  total: number;
+  status: 'started' | 'completed' | 'failed';
+}
+
+export interface AiForecastBatchCompletedPayload {
+  batchJobId: string;
+  total: number;
+  succeeded: number;
+  failed: number;
+  durationMs: number;
+}
+
 export type EventPayloadMap = {
   [SocketEvents.InventoryBalanceChanged]: InventoryBalanceChangedPayload;
   [SocketEvents.PoStateChanged]: PoStateChangedPayload;
   [SocketEvents.NotificationCreated]: NotificationCreatedPayload;
   [SocketEvents.SessionInvalidated]: SessionInvalidatedPayload;
   [SocketEvents.SystemConnected]: SystemConnectedPayload;
+  [SocketEvents.AiForecastCompleted]: AiForecastCompletedPayload;
+  [SocketEvents.AiForecastBatchProgress]: AiForecastBatchProgressPayload;
+  [SocketEvents.AiForecastBatchCompleted]: AiForecastBatchCompletedPayload;
 };
 
 export function tenantRoom(tenantId: string): string {

@@ -2,7 +2,7 @@ import { Queue, QueueEvents, type JobsOptions } from 'bullmq';
 
 import { redisQueue } from '../../config/redis.js';
 import { logger } from '../../config/logger.js';
-import { QueueNames, type EmailJobMap, type ReportJobMap } from './jobTypes.js';
+import { QueueNames, type EmailJobMap, type ForecastJobMap, type ReportJobMap } from './jobTypes.js';
 
 const defaultJobOptions: JobsOptions = {
   attempts: 3,
@@ -31,8 +31,15 @@ export const reportQueue = buildQueue<ReportJobMap[keyof ReportJobMap]>(QueueNam
   backoff: { type: 'exponential', delay: 5 * 60_000 },
 });
 
+// Forecast queue: 2 retries (LLM calls are flaky), modest backoff.
+export const forecastQueue = buildQueue<ForecastJobMap[keyof ForecastJobMap]>(QueueNames.Forecast, {
+  attempts: 2,
+  backoff: { type: 'exponential', delay: 60_000 },
+});
+
 const emailEvents = new QueueEvents(QueueNames.Email, { connection: redisQueue });
 const reportEvents = new QueueEvents(QueueNames.Report, { connection: redisQueue });
+const forecastEvents = new QueueEvents(QueueNames.Forecast, { connection: redisQueue });
 
 emailEvents.on('failed', ({ jobId, failedReason }) => {
   logger.warn({ queue: QueueNames.Email, jobId, failedReason }, 'email job failed');
@@ -40,13 +47,18 @@ emailEvents.on('failed', ({ jobId, failedReason }) => {
 reportEvents.on('failed', ({ jobId, failedReason }) => {
   logger.warn({ queue: QueueNames.Report, jobId, failedReason }, 'report job failed');
 });
+forecastEvents.on('failed', ({ jobId, failedReason }) => {
+  logger.warn({ queue: QueueNames.Forecast, jobId, failedReason }, 'forecast job failed');
+});
 
 export async function closeQueues(): Promise<void> {
   await Promise.all([
     emailQueue.close().catch(() => undefined),
     reportQueue.close().catch(() => undefined),
+    forecastQueue.close().catch(() => undefined),
     emailEvents.close().catch(() => undefined),
     reportEvents.close().catch(() => undefined),
+    forecastEvents.close().catch(() => undefined),
   ]);
 }
 
@@ -64,4 +76,13 @@ export async function enqueueReport<K extends keyof ReportJobMap>(
   opts: JobsOptions = {},
 ): Promise<void> {
   await reportQueue.add(jobName, payload, opts);
+}
+
+export async function enqueueForecast<K extends keyof ForecastJobMap>(
+  jobName: K,
+  payload: ForecastJobMap[K],
+  opts: JobsOptions = {},
+): Promise<{ jobId: string }> {
+  const job = await forecastQueue.add(jobName, payload, opts);
+  return { jobId: job.id ?? '' };
 }
