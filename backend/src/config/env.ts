@@ -34,6 +34,20 @@ const envSchema = z.object({
 
   BCRYPT_COST: numericString(12).refine((n) => n >= 12, 'BCRYPT_COST must be >= 12'),
 
+  /**
+   * 32-byte symmetric key for AES-256-GCM field encryption, supplied as a
+   * base64 string (44 chars including padding) or 64-char hex. Validated
+   * lazily by the crypto helper so dev environments without sensitive
+   * data still boot.
+   */
+  FIELD_ENCRYPTION_KEY: z.string().default(''),
+  /**
+   * Optional comma-separated list of older keys (`base64:kid:key,...`)
+   * the helper will try when decrypting historical ciphertexts. Lets us
+   * rotate `FIELD_ENCRYPTION_KEY` without re-encrypting everything.
+   */
+  FIELD_ENCRYPTION_KEY_PREVIOUS: z.string().default(''),
+
   CORS_ORIGINS: z
     .string()
     .default('')

@@ -27,7 +27,39 @@ export function createApp(): Express {
   app.disable('x-powered-by');
 
   // ---- Global middleware (order matters - SDD §3.3.1) ----
-  app.use(helmet({ contentSecurityPolicy: false, crossOriginEmbedderPolicy: false }));
+  // Security posture (SDD §9.4):
+  //   - HSTS only in production (preload-eligible 1y, includeSubDomains)
+  //   - CSP set to API-only (no inline scripts, no JS execution path)
+  //   - frameguard deny: this is an API; no embedding allowed
+  //   - referrerPolicy strict-origin-when-cross-origin
+  //   - crossOriginEmbedderPolicy disabled because the API serves no
+  //     HTML; the SPA on Vercel sets its own COEP/COOP.
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'none'"],
+          baseUri: ["'none'"],
+          frameAncestors: ["'none'"],
+          formAction: ["'none'"],
+          imgSrc: ["'self'", 'data:'],
+          connectSrc: ["'self'"],
+          objectSrc: ["'none'"],
+          scriptSrc: ["'none'"],
+          styleSrc: ["'none'"],
+        },
+      },
+      crossOriginEmbedderPolicy: false,
+      crossOriginResourcePolicy: { policy: 'same-site' },
+      referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+      hsts: env.NODE_ENV === 'production'
+        ? { maxAge: 31_536_000, includeSubDomains: true, preload: true }
+        : false,
+      frameguard: { action: 'deny' },
+      noSniff: true,
+      xssFilter: true,
+    }),
+  );
   app.use(
     cors({
       origin: (origin, cb) => {
