@@ -1,4 +1,4 @@
-import { Types, type FilterQuery } from 'mongoose';
+import type { FilterQuery, Types } from 'mongoose';
 
 import { decodeCursor, paginate, type Page } from '../../shared/utils/pagination.js';
 import { Notification, type NotificationDoc } from './models/notification.model.js';
