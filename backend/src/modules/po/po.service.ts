@@ -24,7 +24,6 @@ import {
 import type { PoReceiptDoc } from './models/poReceipt.model.js';
 import { renderPoPdf } from './po.pdf.js';
 import {
-  notifyDeliveryOverdue,
   notifyPoApproved,
   notifyPoFullyReceived,
   notifyPoRejected,

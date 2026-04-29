@@ -1,4 +1,4 @@
-import { Types } from 'mongoose';
+import type { Types } from 'mongoose';
 
 import { logger } from '../../config/logger.js';
 import { enqueueEmail } from '../../shared/queue/queues.js';

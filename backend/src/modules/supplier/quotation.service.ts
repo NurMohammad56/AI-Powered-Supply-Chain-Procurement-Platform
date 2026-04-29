@@ -343,7 +343,7 @@ export class QuotationService {
       supplierId: supplier._id.toString(),
       warehouseId: item.preferredSupplierId
         ? item.preferredSupplierId.toString()
-        : (firstItem.itemId as unknown as Types.ObjectId).toString(),
+        : firstItem.itemId.toString(),
       // Currency follows the supplier response; assume single currency
       // across response lines (the RFQ enforces this in practice).
       currency: response.lines[0]?.currency ?? 'BDT',
