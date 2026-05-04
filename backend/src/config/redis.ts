@@ -31,15 +31,53 @@ export const redisSockPub = createClient('sock-pub');
 export const redisSockSub = createClient('sock-sub');
 
 /**
- * Connect all Redis clients safely
+ * Connect all four Redis clients, idempotently.
+ *
+ * Why idempotent: BullMQ's `Queue` / `QueueEvents` constructors take a
+ * reference to our `redisQueue` instance and call `.connect()` on it
+ * internally as soon as the module that creates them is loaded. Because
+ * `server.ts` imports `shared/queue/queues.ts` at the top (for
+ * `closeQueues`), those queues are constructed BEFORE `bootstrap()`
+ * calls `connectRedis()`. A second `.connect()` on an already-connecting
+ * client throws `Redis is already connecting/connected`.
+ *
+ * `safeConnect` inspects the ioredis status and only calls `.connect()`
+ * when the client is in a connectable state (`wait` / `end`). For
+ * clients already past that point, we wait for the `ready` event (or
+ * resolve immediately if already ready).
  */
 export async function connectRedis(): Promise<void> {
   await Promise.all([
-    redisCache.connect(),
-    redisQueue.connect(),
-    redisSockPub.connect(),
-    redisSockSub.connect(),
+    safeConnect(redisCache, 'cache'),
+    safeConnect(redisQueue, 'queue'),
+    safeConnect(redisSockPub, 'sock-pub'),
+    safeConnect(redisSockSub, 'sock-sub'),
   ]);
+}
+
+async function safeConnect(client: Redis, role: string): Promise<void> {
+  // ioredis status state machine:
+  //   wait | connecting | connect | ready | reconnecting | close | end
+  const status = client.status;
+  if (status === 'ready') return;
+  if (status === 'wait' || status === 'end') {
+    await client.connect();
+    return;
+  }
+  // 'connecting' | 'connect' | 'reconnecting' | 'close' — wait for ready.
+  await new Promise<void>((resolve, reject) => {
+    const onReady = (): void => {
+      client.off('error', onError);
+      resolve();
+    };
+    const onError = (err: Error): void => {
+      client.off('ready', onReady);
+      logger.error({ err, role, event: 'redis.connect_failed' }, 'Redis connect failed');
+      reject(err);
+    };
+    client.once('ready', onReady);
+    client.once('error', onError);
+  });
 }
 
 /**

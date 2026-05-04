@@ -187,7 +187,7 @@ function readUsageMetadata(msg: AIMessageChunk): { prompt: number; completion: n
  * is the floor of correctness.
  */
 export async function runForecastPipeline(context: ForecastContext): Promise<PipelineResult> {
-  const prompt = await renderForecastPrompt(context);
+  const prompt = renderForecastPrompt(context);
   const promptTokensEstimate = estimatePromptTokens(prompt);
 
   const leadTimeDays = context.item.preferredSupplierLeadTimeDays ?? 14;

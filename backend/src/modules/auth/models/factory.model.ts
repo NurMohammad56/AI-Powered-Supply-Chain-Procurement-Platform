@@ -26,7 +26,7 @@ export type FactoryHydrated = HydratedDocument<FactoryDoc>;
 const factorySchema = new Schema<FactoryDoc>(
   {
     name: { type: String, required: true, trim: true, maxlength: 200 },
-    slug: { type: String, required: true, lowercase: true, trim: true, unique: true },
+    slug: { type: String, required: true, lowercase: true, trim: true },
     businessType: {
       type: String,
       enum: ['rmg', 'textile', 'leather', 'light_manufacturing', 'other'],

@@ -81,7 +81,7 @@ export async function generateWeeklyReport(args: {
     throw new Error(`AI quota exceeded for tenant; reason=${quota.reason ?? 'unknown'}`);
   }
 
-  const prompt = await renderReportPrompt(inputs);
+  const prompt = renderReportPrompt(inputs);
   const aiResult = await runTextPipeline(prompt);
   const markdown = aiResult.text.trim();
 
