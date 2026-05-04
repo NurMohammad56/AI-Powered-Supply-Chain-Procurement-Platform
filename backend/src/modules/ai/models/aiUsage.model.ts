@@ -46,8 +46,11 @@ const aiUsageSchema = new Schema<AiUsageDoc>(
   { timestamps: true },
 );
 
+// Compound (tenantId, period) is the operational lookup; the inline
+// `index: true` on the `period` field provides the standalone index
+// for cross-tenant period queries (e.g. cron rollups). No standalone
+// `period` index here — Mongoose would warn about duplication.
 aiUsageSchema.index({ tenantId: 1, period: 1 }, { unique: true });
-aiUsageSchema.index({ period: 1 });
 
 aiUsageSchema.plugin(tenancyPlugin);
 

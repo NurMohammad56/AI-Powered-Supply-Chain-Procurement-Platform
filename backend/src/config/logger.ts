@@ -46,7 +46,7 @@ if (isDevelopment && process.env.NODE_ENV !== 'production') {
         ignore: 'pid,hostname',
       },
     });
-  } catch (err) {
+  } catch {
     console.warn('pino-pretty not available, falling back to standard logger');
   }
 }

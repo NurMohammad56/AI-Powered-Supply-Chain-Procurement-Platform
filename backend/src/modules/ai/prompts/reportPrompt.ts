@@ -1,5 +1,3 @@
-import { PromptTemplate } from '@langchain/core/prompts';
-
 export const REPORT_PROMPT_VERSION = 'weekly-report-v1.0.1';
 
 export interface WeeklyReportInputs {
