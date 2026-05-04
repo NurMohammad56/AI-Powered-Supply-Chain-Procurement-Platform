@@ -33,8 +33,11 @@ const baseOptions: LoggerOptions = {
   timestamp: pino.stdTimeFunctions.isoTime,
 };
 
-const transport = isDevelopment
-  ? pino.transport({
+let transport;
+
+if (isDevelopment && process.env.NODE_ENV !== 'production') {
+  try {
+    transport = pino.transport({
       target: 'pino-pretty',
       options: {
         colorize: true,
@@ -42,8 +45,11 @@ const transport = isDevelopment
         singleLine: false,
         ignore: 'pid,hostname',
       },
-    })
-  : undefined;
+    });
+  } catch (err) {
+    console.warn('pino-pretty not available, falling back to standard logger');
+  }
+}
 
 export const logger: Logger = transport ? pino(baseOptions, transport) : pino(baseOptions);
 

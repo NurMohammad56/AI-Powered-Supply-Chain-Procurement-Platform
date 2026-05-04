@@ -23,7 +23,10 @@ async function bootstrap(): Promise<void> {
 
   await new Promise<void>((resolve) => {
     httpServer.listen(env.PORT, () => {
-      logger.info({ port: env.PORT, env: env.NODE_ENV, event: 'server.listening' }, 'API server listening');
+      logger.info(
+        { port: env.PORT, env: env.NODE_ENV, event: 'server.listening' },
+        'API server listening',
+      );
       resolve();
     });
   });
