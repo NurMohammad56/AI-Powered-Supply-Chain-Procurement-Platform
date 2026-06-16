@@ -1,0 +1,24 @@
+{
+  "id": "scp-platform-local",
+  "name": "SCP Platform - Local Dev",
+  "values": [
+    { "key": "baseUrl", "value": "http://localhost:4000/api/v1", "enabled": true, "type": "default" },
+    { "key": "accessToken", "value": "", "enabled": true, "type": "secret" },
+    { "key": "refreshToken", "value": "", "enabled": true, "type": "secret" },
+    { "key": "tenantId", "value": "", "enabled": true, "type": "default" },
+    { "key": "userId", "value": "", "enabled": true, "type": "default" },
+    { "key": "warehouseId", "value": "", "enabled": true, "type": "default" },
+    { "key": "categoryId", "value": "", "enabled": true, "type": "default" },
+    { "key": "itemId", "value": "", "enabled": true, "type": "default" },
+    { "key": "supplierId", "value": "", "enabled": true, "type": "default" },
+    { "key": "secondSupplierId", "value": "", "enabled": true, "type": "default" },
+    { "key": "quotationId", "value": "", "enabled": true, "type": "default" },
+    { "key": "quoteToken", "value": "", "enabled": true, "type": "secret" },
+    { "key": "poId", "value": "", "enabled": true, "type": "default" },
+    { "key": "poLineId", "value": "", "enabled": true, "type": "default" },
+    { "key": "forecastId", "value": "", "enabled": true, "type": "default" },
+    { "key": "notificationId", "value": "", "enabled": true, "type": "default" },
+    { "key": "csrfToken", "value": "dev-csrf-token", "enabled": true, "type": "default" }
+  ],
+  "_postman_variable_scope": "environment"
+}

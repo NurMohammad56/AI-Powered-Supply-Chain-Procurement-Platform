@@ -1,0 +1,1337 @@
+{
+  "info": {
+    "_postman_id": "scp-platform-backend",
+    "name": "AI-Powered Supply Chain Platform - Backend API",
+    "description": "Complete API collection for the AI-Powered Supply Chain & Procurement Platform backend. Endpoints are grouped by module and ordered to walk a realistic onboarding workflow:\n\n1. Auth (Public): register a factory + login\n2. Auth (Private): manage users\n3. Inventory: warehouses + items\n4. Suppliers + Quotations\n5. Purchase Orders (full state machine)\n6. AI forecasts\n7. Reports + Notifications + Billing\n\nThe Login request auto-saves accessToken/refreshToken/tenantId/userId to the environment so subsequent calls work without manual copy-paste. POST writes use a freshly-generated Idempotency-Key per request via a pre-request script.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Generate a fresh Idempotency-Key for any POST request that needs one.",
+          "if (pm.request.method === 'POST') {",
+          "  pm.request.headers.upsert({ key: 'Idempotency-Key', value: 'pm-' + pm.variables.replaceIn('{{$guid}}') });",
+          "}"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:4000/api/v1", "type": "string" },
+    { "key": "accessToken", "value": "", "type": "string" },
+    { "key": "refreshToken", "value": "", "type": "string" },
+    { "key": "tenantId", "value": "", "type": "string" },
+    { "key": "userId", "value": "", "type": "string" },
+    { "key": "warehouseId", "value": "", "type": "string" },
+    { "key": "categoryId", "value": "", "type": "string" },
+    { "key": "itemId", "value": "", "type": "string" },
+    { "key": "supplierId", "value": "", "type": "string" },
+    { "key": "secondSupplierId", "value": "", "type": "string" },
+    { "key": "quotationId", "value": "", "type": "string" },
+    { "key": "quoteToken", "value": "", "type": "string" },
+    { "key": "poId", "value": "", "type": "string" },
+    { "key": "poLineId", "value": "", "type": "string" },
+    { "key": "forecastId", "value": "", "type": "string" },
+    { "key": "notificationId", "value": "", "type": "string" },
+    { "key": "csrfToken", "value": "dev-csrf-token", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "01 - Auth (Public)",
+      "description": "No JWT required. Run Register or Login first; the test script saves tokens to the environment.",
+      "item": [
+        {
+          "name": "Register Factory + Owner",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"factoryName\": \"Acme Textile Mills\",\n  \"slug\": \"acme-textile\",\n  \"businessType\": \"textile\",\n  \"ownerEmail\": \"owner@acme.test\",\n  \"ownerFullName\": \"Acme Owner\",\n  \"ownerPassword\": \"StrongPass!2026\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/register", "host": ["{{baseUrl}}"], "path": ["auth", "register"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const json = pm.response.json();",
+                  "  if (json.data?.accessToken) pm.environment.set('accessToken', json.data.accessToken);",
+                  "  if (json.data?.refreshToken) pm.environment.set('refreshToken', json.data.refreshToken);",
+                  "  if (json.data?.tenantId) pm.environment.set('tenantId', json.data.tenantId);",
+                  "  if (json.data?.userId) pm.environment.set('userId', json.data.userId);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"owner@acme.test\",\n  \"password\": \"StrongPass!2026\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const json = pm.response.json();",
+                  "  if (json.data?.accessToken) pm.environment.set('accessToken', json.data.accessToken);",
+                  "  if (json.data?.refreshToken) pm.environment.set('refreshToken', json.data.refreshToken);",
+                  "  if (json.data?.tenantId) pm.environment.set('tenantId', json.data.tenantId);",
+                  "  if (json.data?.userId) pm.environment.set('userId', json.data.userId);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-CSRF", "value": "{{csrfToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/refresh", "host": ["{{baseUrl}}"], "path": ["auth", "refresh"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const json = pm.response.json();",
+                  "  if (json.data?.accessToken) pm.environment.set('accessToken', json.data.accessToken);",
+                  "  if (json.data?.refreshToken) pm.environment.set('refreshToken', json.data.refreshToken);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}" },
+            "url": { "raw": "{{baseUrl}}/auth/logout", "host": ["{{baseUrl}}"], "path": ["auth", "logout"] }
+          }
+        },
+        {
+          "name": "Forgot Password",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"owner@acme.test\"\n}" },
+            "url": { "raw": "{{baseUrl}}/auth/forgot-password", "host": ["{{baseUrl}}"], "path": ["auth", "forgot-password"] }
+          }
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"token\": \"<paste-from-email>\",\n  \"newPassword\": \"NewStrongPass!2026\"\n}" },
+            "url": { "raw": "{{baseUrl}}/auth/reset-password", "host": ["{{baseUrl}}"], "path": ["auth", "reset-password"] }
+          }
+        },
+        {
+          "name": "Verify Email",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"token\": \"<paste-from-email>\"\n}" },
+            "url": { "raw": "{{baseUrl}}/auth/verify-email", "host": ["{{baseUrl}}"], "path": ["auth", "verify-email"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 - Auth (Private)",
+      "description": "Requires JWT.",
+      "item": [
+        {
+          "name": "Get Me",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/auth/me", "host": ["{{baseUrl}}"], "path": ["auth", "me"] }
+          }
+        },
+        {
+          "name": "Update My Profile",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Acme Owner Updated\",\n  \"notificationPrefs\": {\n    \"lowStock\": { \"email\": true, \"inApp\": true },\n    \"poStatus\": { \"email\": true, \"inApp\": true },\n    \"deliveryReminder\": { \"email\": true, \"inApp\": true },\n    \"weeklyDigest\": { \"email\": true, \"inApp\": true }\n  }\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/me", "host": ["{{baseUrl}}"], "path": ["auth", "me"] }
+          }
+        },
+        {
+          "name": "List Users",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/auth/users?limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "users"],
+              "query": [{ "key": "limit", "value": "20" }, { "key": "role", "value": "manager", "disabled": true }]
+            }
+          }
+        },
+        {
+          "name": "Invite User",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"manager@acme.test\",\n  \"fullName\": \"Acme Manager\",\n  \"role\": \"manager\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/invite", "host": ["{{baseUrl}}"], "path": ["auth", "invite"] }
+          }
+        },
+        {
+          "name": "Update User Role",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"role\": \"manager\"\n}" },
+            "url": {
+              "raw": "{{baseUrl}}/auth/users/:userId/role",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "users", ":userId", "role"],
+              "variable": [{ "key": "userId", "value": "<user-object-id>" }]
+            }
+          }
+        },
+        {
+          "name": "Disable User",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/auth/users/:userId",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "users", ":userId"],
+              "variable": [{ "key": "userId", "value": "<user-object-id>" }]
+            }
+          }
+        },
+        {
+          "name": "Change Password",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"StrongPass!2026\",\n  \"newPassword\": \"EvenStrongerPass!2026\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/change-password", "host": ["{{baseUrl}}"], "path": ["auth", "change-password"] }
+          }
+        },
+        {
+          "name": "Logout Everywhere",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/auth/logout-everywhere", "host": ["{{baseUrl}}"], "path": ["auth", "logout-everywhere"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 - Inventory - Warehouses",
+      "item": [
+        {
+          "name": "List Warehouses",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/inventory/warehouses?limit=20", "host": ["{{baseUrl}}"], "path": ["inventory", "warehouses"], "query": [{ "key": "limit", "value": "20" }] }
+          }
+        },
+        {
+          "name": "Create Warehouse",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Main Warehouse - Dhaka\",\n  \"code\": \"DHK-01\",\n  \"address\": {\n    \"street\": \"123 Industrial Road\",\n    \"city\": \"Dhaka\",\n    \"country\": \"BD\",\n    \"postalCode\": \"1212\"\n  },\n  \"isActive\": true\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/inventory/warehouses", "host": ["{{baseUrl}}"], "path": ["inventory", "warehouses"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const json = pm.response.json();",
+                  "  if (json.data?.id) pm.environment.set('warehouseId', json.data.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Warehouse",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/inventory/warehouses/{{warehouseId}}", "host": ["{{baseUrl}}"], "path": ["inventory", "warehouses", "{{warehouseId}}"] }
+          }
+        },
+        {
+          "name": "Update Warehouse",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Main Warehouse - Dhaka (Updated)\"\n}" },
+            "url": { "raw": "{{baseUrl}}/inventory/warehouses/{{warehouseId}}", "host": ["{{baseUrl}}"], "path": ["inventory", "warehouses", "{{warehouseId}}"] }
+          }
+        },
+        {
+          "name": "Archive Warehouse",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/inventory/warehouses/{{warehouseId}}", "host": ["{{baseUrl}}"], "path": ["inventory", "warehouses", "{{warehouseId}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 - Inventory - Categories",
+      "item": [
+        {
+          "name": "List Categories",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/inventory/categories?limit=20", "host": ["{{baseUrl}}"], "path": ["inventory", "categories"], "query": [{ "key": "limit", "value": "20" }] }
+          }
+        },
+        {
+          "name": "Create Category",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Raw Cotton\",\n  \"description\": \"Cotton-based raw materials\"\n}" },
+            "url": { "raw": "{{baseUrl}}/inventory/categories", "host": ["{{baseUrl}}"], "path": ["inventory", "categories"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const json = pm.response.json();",
+                  "  if (json.data?.id) pm.environment.set('categoryId', json.data.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Category",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/inventory/categories/{{categoryId}}", "host": ["{{baseUrl}}"], "path": ["inventory", "categories", "{{categoryId}}"] }
+          }
+        },
+        {
+          "name": "Update Category",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"description\": \"Updated cotton family description\"\n}" },
+            "url": { "raw": "{{baseUrl}}/inventory/categories/{{categoryId}}", "host": ["{{baseUrl}}"], "path": ["inventory", "categories", "{{categoryId}}"] }
+          }
+        },
+        {
+          "name": "Archive Category",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/inventory/categories/{{categoryId}}", "host": ["{{baseUrl}}"], "path": ["inventory", "categories", "{{categoryId}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 - Inventory - Items",
+      "item": [
+        {
+          "name": "List Items",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/inventory/items?limit=20&type=raw_material",
+              "host": ["{{baseUrl}}"],
+              "path": ["inventory", "items"],
+              "query": [
+                { "key": "limit", "value": "20" },
+                { "key": "type", "value": "raw_material" },
+                { "key": "q", "value": "cotton", "disabled": true },
+                { "key": "categoryId", "value": "{{categoryId}}", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Item",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sku\": \"COTTON-RAW-001\",\n  \"name\": \"Raw Cotton 60 GSM\",\n  \"description\": \"Premium raw cotton, 60 gsm grade\",\n  \"categoryId\": \"{{categoryId}}\",\n  \"unit\": \"kg\",\n  \"type\": \"raw_material\",\n  \"reorderLevel\": 100,\n  \"movingAverageCost\": 250.5,\n  \"currency\": \"BDT\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/inventory/items", "host": ["{{baseUrl}}"], "path": ["inventory", "items"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const json = pm.response.json();",
+                  "  if (json.data?.id) pm.environment.set('itemId', json.data.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Item",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/inventory/items/{{itemId}}", "host": ["{{baseUrl}}"], "path": ["inventory", "items", "{{itemId}}"] }
+          }
+        },
+        {
+          "name": "Update Item",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"reorderLevel\": 150,\n  \"movingAverageCost\": 260\n}" },
+            "url": { "raw": "{{baseUrl}}/inventory/items/{{itemId}}", "host": ["{{baseUrl}}"], "path": ["inventory", "items", "{{itemId}}"] }
+          }
+        },
+        {
+          "name": "Archive Item",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/inventory/items/{{itemId}}", "host": ["{{baseUrl}}"], "path": ["inventory", "items", "{{itemId}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "06 - Inventory - Stock & Reports",
+      "item": [
+        {
+          "name": "Adjust Stock (positive opening balance)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"warehouseId\": \"{{warehouseId}}\",\n  \"quantityDelta\": 500,\n  \"reasonCode\": \"opening\",\n  \"notes\": \"Opening balance for COTTON-RAW-001\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/inventory/items/{{itemId}}/adjust", "host": ["{{baseUrl}}"], "path": ["inventory", "items", "{{itemId}}", "adjust"] }
+          }
+        },
+        {
+          "name": "Adjust Stock (count correction down)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"warehouseId\": \"{{warehouseId}}\",\n  \"quantityDelta\": -25,\n  \"reasonCode\": \"count_correction\",\n  \"notes\": \"Cycle count variance\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/inventory/items/{{itemId}}/adjust", "host": ["{{baseUrl}}"], "path": ["inventory", "items", "{{itemId}}", "adjust"] }
+          }
+        },
+        {
+          "name": "Transfer Stock",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fromWarehouseId\": \"{{warehouseId}}\",\n  \"toWarehouseId\": \"<other-warehouse-id>\",\n  \"quantity\": 50,\n  \"notes\": \"Inter-warehouse transfer\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/inventory/items/{{itemId}}/transfer", "host": ["{{baseUrl}}"], "path": ["inventory", "items", "{{itemId}}", "transfer"] }
+          }
+        },
+        {
+          "name": "Item Movement History",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/inventory/items/{{itemId}}/history?limit=50",
+              "host": ["{{baseUrl}}"],
+              "path": ["inventory", "items", "{{itemId}}", "history"],
+              "query": [
+                { "key": "limit", "value": "50" },
+                { "key": "warehouseId", "value": "{{warehouseId}}", "disabled": true },
+                { "key": "type", "value": "in", "disabled": true },
+                { "key": "from", "value": "2026-01-01T00:00:00Z", "disabled": true },
+                { "key": "to", "value": "2026-12-31T23:59:59Z", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Item Balances (per warehouse)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/inventory/items/{{itemId}}/balances", "host": ["{{baseUrl}}"], "path": ["inventory", "items", "{{itemId}}", "balances"] }
+          }
+        },
+        {
+          "name": "Low Stock List",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/inventory/low-stock?limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["inventory", "low-stock"],
+              "query": [{ "key": "limit", "value": "20" }, { "key": "warehouseId", "value": "{{warehouseId}}", "disabled": true }]
+            }
+          }
+        },
+        {
+          "name": "Bulk Import Items",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"atomic\": false,\n  \"items\": [\n    {\n      \"sku\": \"COTTON-RAW-002\",\n      \"name\": \"Raw Cotton 80 GSM\",\n      \"unit\": \"kg\",\n      \"type\": \"raw_material\",\n      \"reorderLevel\": 80,\n      \"openingBalance\": { \"warehouseCode\": \"DHK-01\", \"quantity\": 200, \"unitCost\": 280 }\n    },\n    {\n      \"sku\": \"DYE-RED-001\",\n      \"name\": \"Red Dye Concentrate\",\n      \"unit\": \"litre\",\n      \"type\": \"raw_material\",\n      \"reorderLevel\": 25\n    }\n  ]\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/inventory/bulk-import", "host": ["{{baseUrl}}"], "path": ["inventory", "bulk-import"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "07 - Suppliers",
+      "item": [
+        {
+          "name": "List Suppliers",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/suppliers?limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["suppliers"],
+              "query": [
+                { "key": "limit", "value": "20" },
+                { "key": "q", "value": "fabric", "disabled": true },
+                { "key": "status", "value": "active", "disabled": true },
+                { "key": "tier", "value": "preferred", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Supplier",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"legalName\": \"Bengal Cotton Traders Ltd.\",\n  \"tradingName\": \"BCT\",\n  \"taxId\": \"BD-1234567890\",\n  \"status\": \"active\",\n  \"address\": {\n    \"street\": \"45 Industrial Estate\",\n    \"city\": \"Chittagong\",\n    \"country\": \"BD\",\n    \"postalCode\": \"4000\"\n  },\n  \"paymentTermsDays\": 30,\n  \"leadTimeDays\": 14,\n  \"contacts\": [\n    {\n      \"name\": \"Rahim Khan\",\n      \"designation\": \"Sales Manager\",\n      \"email\": \"rahim@bct.test\",\n      \"phone\": \"+8801712345678\",\n      \"isPrimary\": true\n    }\n  ],\n  \"categoryIds\": [],\n  \"tier\": \"preferred\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/suppliers", "host": ["{{baseUrl}}"], "path": ["suppliers"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const json = pm.response.json();",
+                  "  if (json.data?.id) pm.environment.set('supplierId', json.data.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Second Supplier",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"legalName\": \"Padma Fabrics Co.\",\n  \"taxId\": \"BD-9876543210\",\n  \"status\": \"active\",\n  \"paymentTermsDays\": 45,\n  \"leadTimeDays\": 10,\n  \"contacts\": [\n    {\n      \"name\": \"Nazia Akter\",\n      \"email\": \"nazia@padma.test\",\n      \"isPrimary\": true\n    }\n  ],\n  \"tier\": \"backup\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/suppliers", "host": ["{{baseUrl}}"], "path": ["suppliers"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const json = pm.response.json();",
+                  "  if (json.data?.id) pm.environment.set('secondSupplierId', json.data.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Supplier",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/suppliers/{{supplierId}}", "host": ["{{baseUrl}}"], "path": ["suppliers", "{{supplierId}}"] }
+          }
+        },
+        {
+          "name": "Update Supplier",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"paymentTermsDays\": 45,\n  \"tier\": \"strategic\"\n}" },
+            "url": { "raw": "{{baseUrl}}/suppliers/{{supplierId}}", "host": ["{{baseUrl}}"], "path": ["suppliers", "{{supplierId}}"] }
+          }
+        },
+        {
+          "name": "Archive Supplier",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/suppliers/{{supplierId}}", "host": ["{{baseUrl}}"], "path": ["suppliers", "{{supplierId}}"] }
+          }
+        },
+        {
+          "name": "Compare Suppliers (2-5 ids)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/suppliers/compare?ids={{supplierId}},{{secondSupplierId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["suppliers", "compare"],
+              "query": [{ "key": "ids", "value": "{{supplierId}},{{secondSupplierId}}" }]
+            }
+          }
+        },
+        {
+          "name": "Supplier Performance",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/suppliers/{{supplierId}}/performance", "host": ["{{baseUrl}}"], "path": ["suppliers", "{{supplierId}}", "performance"] }
+          }
+        },
+        {
+          "name": "Add Contact",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Karim Hossain\",\n  \"designation\": \"Logistics\",\n  \"email\": \"karim@bct.test\",\n  \"isPrimary\": false\n}" },
+            "url": { "raw": "{{baseUrl}}/suppliers/{{supplierId}}/contacts", "host": ["{{baseUrl}}"], "path": ["suppliers", "{{supplierId}}", "contacts"] }
+          }
+        },
+        {
+          "name": "Update Contact (by index)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"phone\": \"+8801812345678\"\n}" },
+            "url": {
+              "raw": "{{baseUrl}}/suppliers/{{supplierId}}/contacts/0",
+              "host": ["{{baseUrl}}"],
+              "path": ["suppliers", "{{supplierId}}", "contacts", "0"]
+            }
+          }
+        },
+        {
+          "name": "Remove Contact (by index)",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/suppliers/{{supplierId}}/contacts/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["suppliers", "{{supplierId}}", "contacts", "1"]
+            }
+          }
+        },
+        {
+          "name": "Add Document",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"kind\": \"contract\",\n  \"url\": \"https://example.com/contracts/bct-2026.pdf\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/suppliers/{{supplierId}}/documents", "host": ["{{baseUrl}}"], "path": ["suppliers", "{{supplierId}}", "documents"] }
+          }
+        },
+        {
+          "name": "Remove Document (by index)",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/suppliers/{{supplierId}}/documents/0",
+              "host": ["{{baseUrl}}"],
+              "path": ["suppliers", "{{supplierId}}", "documents", "0"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "08 - Quotations (Private)",
+      "item": [
+        {
+          "name": "List Quotations",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/quotations?limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["quotations"],
+              "query": [{ "key": "limit", "value": "20" }, { "key": "status", "value": "open", "disabled": true }]
+            }
+          }
+        },
+        {
+          "name": "Create Quotation Request (RFQ)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"validUntil\": \"2026-12-31T23:59:59Z\",\n  \"lines\": [\n    {\n      \"itemId\": \"{{itemId}}\",\n      \"quantity\": 200,\n      \"targetUnitPrice\": 240,\n      \"targetDeliveryDate\": \"2026-06-01T00:00:00Z\",\n      \"remarks\": \"Need by Q2\"\n    }\n  ],\n  \"invitedSuppliers\": [\n    { \"supplierId\": \"{{supplierId}}\", \"contactEmail\": \"rahim@bct.test\" },\n    { \"supplierId\": \"{{secondSupplierId}}\", \"contactEmail\": \"nazia@padma.test\" }\n  ]\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/quotations", "host": ["{{baseUrl}}"], "path": ["quotations"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const json = pm.response.json();",
+                  "  if (json.data?.id) pm.environment.set('quotationId', json.data.id);",
+                  "  // The token isn't returned by default; fetch via GET to harvest it.",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Quotation (saves quoteToken for first invitation)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/quotations/{{quotationId}}", "host": ["{{baseUrl}}"], "path": ["quotations", "{{quotationId}}"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const json = pm.response.json();",
+                  "  // The view does not expose responseToken (PII). For testing the public",
+                  "  // endpoint, query Mongo directly or add a dev-only logging hook.",
+                  "  // Set quoteToken manually in the env for now.",
+                  "  console.log('Tip: copy responseToken from the database into the env var quoteToken.');",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Compare Quotes (deterministic + AI)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/quotations/{{quotationId}}/compare", "host": ["{{baseUrl}}"], "path": ["quotations", "{{quotationId}}", "compare"] }
+          }
+        },
+        {
+          "name": "Cancel Quotation",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/quotations/{{quotationId}}/cancel", "host": ["{{baseUrl}}"], "path": ["quotations", "{{quotationId}}", "cancel"] }
+          }
+        },
+        {
+          "name": "Accept Quotation (auto-creates draft PO)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"supplierId\": \"{{supplierId}}\"\n}" },
+            "url": { "raw": "{{baseUrl}}/quotations/{{quotationId}}/accept", "host": ["{{baseUrl}}"], "path": ["quotations", "{{quotationId}}", "accept"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const json = pm.response.json();",
+                  "  if (json.data?.purchaseOrder?.id) pm.environment.set('poId', json.data.purchaseOrder.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "09 - Quotations (Public, no JWT)",
+      "item": [
+        {
+          "name": "Submit Quotation Response (token-gated)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"lines\": [\n    {\n      \"itemId\": \"{{itemId}}\",\n      \"unitPrice\": 235,\n      \"currency\": \"BDT\",\n      \"moq\": 100,\n      \"leadTimeDays\": 12,\n      \"validityDays\": 30,\n      \"remarks\": \"FOB Chittagong\"\n    }\n  ],\n  \"comments\": \"Stock available within 2 weeks.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/public/quotations/responses/{{quoteToken}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["public", "quotations", "responses", "{{quoteToken}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "10 - Purchase Orders",
+      "item": [
+        {
+          "name": "List POs",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/purchase-orders?limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["purchase-orders"],
+              "query": [
+                { "key": "limit", "value": "20" },
+                { "key": "state", "value": "draft", "disabled": true },
+                { "key": "supplierId", "value": "{{supplierId}}", "disabled": true },
+                { "key": "from", "value": "2026-01-01T00:00:00Z", "disabled": true },
+                { "key": "to", "value": "2026-12-31T23:59:59Z", "disabled": true },
+                { "key": "q", "value": "PO-", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create PO (manual)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"supplierId\": \"{{supplierId}}\",\n  \"warehouseId\": \"{{warehouseId}}\",\n  \"currency\": \"BDT\",\n  \"paymentTermsDays\": 30,\n  \"expectedDeliveryAt\": \"2026-06-15T00:00:00Z\",\n  \"taxRate\": 0.05,\n  \"lines\": [\n    {\n      \"itemId\": \"{{itemId}}\",\n      \"quantityOrdered\": 100,\n      \"unitPrice\": 245,\n      \"expectedDeliveryAt\": \"2026-06-15T00:00:00Z\",\n      \"remarks\": \"First batch\"\n    }\n  ]\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/purchase-orders", "host": ["{{baseUrl}}"], "path": ["purchase-orders"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const json = pm.response.json();",
+                  "  if (json.data?.id) pm.environment.set('poId', json.data.id);",
+                  "  if (json.data?.lines?.[0]?.id) pm.environment.set('poLineId', json.data.lines[0].id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create PO from Forecast (AI-suggested)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"itemId\": \"{{itemId}}\",\n  \"warehouseId\": \"{{warehouseId}}\",\n  \"expectedDeliveryAt\": \"2026-07-01T00:00:00Z\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/purchase-orders/from-forecast", "host": ["{{baseUrl}}"], "path": ["purchase-orders", "from-forecast"] }
+          }
+        },
+        {
+          "name": "Get PO",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/purchase-orders/{{poId}}", "host": ["{{baseUrl}}"], "path": ["purchase-orders", "{{poId}}"] }
+          }
+        },
+        {
+          "name": "Update PO (draft / rejected only)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"paymentTermsDays\": 45\n}" },
+            "url": { "raw": "{{baseUrl}}/purchase-orders/{{poId}}", "host": ["{{baseUrl}}"], "path": ["purchase-orders", "{{poId}}"] }
+          }
+        },
+        {
+          "name": "Submit PO for Approval",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{}" },
+            "url": { "raw": "{{baseUrl}}/purchase-orders/{{poId}}/submit", "host": ["{{baseUrl}}"], "path": ["purchase-orders", "{{poId}}", "submit"] }
+          }
+        },
+        {
+          "name": "Approve PO",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"thresholdRule\": \"manager-under-100k\"\n}" },
+            "url": { "raw": "{{baseUrl}}/purchase-orders/{{poId}}/approve", "host": ["{{baseUrl}}"], "path": ["purchase-orders", "{{poId}}", "approve"] }
+          }
+        },
+        {
+          "name": "Reject PO",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"reason\": \"Pricing higher than alternative supplier; please re-quote.\"\n}" },
+            "url": { "raw": "{{baseUrl}}/purchase-orders/{{poId}}/reject", "host": ["{{baseUrl}}"], "path": ["purchase-orders", "{{poId}}", "reject"] }
+          }
+        },
+        {
+          "name": "Dispatch PO (sendToSupplier)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"sentTo\": \"rahim@bct.test\"\n}" },
+            "url": { "raw": "{{baseUrl}}/purchase-orders/{{poId}}/dispatch", "host": ["{{baseUrl}}"], "path": ["purchase-orders", "{{poId}}", "dispatch"] }
+          }
+        },
+        {
+          "name": "Cancel PO",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"reason\": \"Supplier missed lead time confirmation.\"\n}" },
+            "url": { "raw": "{{baseUrl}}/purchase-orders/{{poId}}/cancel", "host": ["{{baseUrl}}"], "path": ["purchase-orders", "{{poId}}", "cancel"] }
+          }
+        },
+        {
+          "name": "Close PO (after fully_received)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{}" },
+            "url": { "raw": "{{baseUrl}}/purchase-orders/{{poId}}/close", "host": ["{{baseUrl}}"], "path": ["purchase-orders", "{{poId}}", "close"] }
+          }
+        },
+        {
+          "name": "Record Receipt (partial or full)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"warehouseId\": \"{{warehouseId}}\",\n  \"lines\": [\n    {\n      \"poLineId\": \"{{poLineId}}\",\n      \"itemId\": \"{{itemId}}\",\n      \"quantity\": 50,\n      \"unitCost\": 245,\n      \"qualityNotes\": \"All bales sealed; no damage.\"\n    }\n  ],\n  \"grnDocumentUrl\": \"https://example.com/grn/grn-001.pdf\",\n  \"notes\": \"First half of order\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/purchase-orders/{{poId}}/receipts", "host": ["{{baseUrl}}"], "path": ["purchase-orders", "{{poId}}", "receipts"] }
+          }
+        },
+        {
+          "name": "List Receipts for PO",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/purchase-orders/{{poId}}/receipts", "host": ["{{baseUrl}}"], "path": ["purchase-orders", "{{poId}}", "receipts"] }
+          }
+        },
+        {
+          "name": "Get PO PDF Download URL",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/purchase-orders/{{poId}}/pdf", "host": ["{{baseUrl}}"], "path": ["purchase-orders", "{{poId}}", "pdf"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "11 - AI - Forecasts",
+      "item": [
+        {
+          "name": "List Forecasts",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/ai/forecasts?limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["ai", "forecasts"],
+              "query": [
+                { "key": "limit", "value": "20" },
+                { "key": "itemId", "value": "{{itemId}}", "disabled": true },
+                { "key": "horizonDays", "value": "30", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Generate Single Forecast",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"itemId\": \"{{itemId}}\",\n  \"horizonDays\": 30\n}" },
+            "url": { "raw": "{{baseUrl}}/ai/forecasts", "host": ["{{baseUrl}}"], "path": ["ai", "forecasts"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200 || pm.response.code === 201) {",
+                  "  const json = pm.response.json();",
+                  "  if (json.data?.id) pm.environment.set('forecastId', json.data.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Forecast",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/ai/forecasts/{{forecastId}}", "host": ["{{baseUrl}}"], "path": ["ai", "forecasts", "{{forecastId}}"] }
+          }
+        },
+        {
+          "name": "Override Forecast",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quantity\": 350,\n  \"justification\": \"Q3 promotional event will lift demand 40%.\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/ai/forecasts/{{forecastId}}/override", "host": ["{{baseUrl}}"], "path": ["ai", "forecasts", "{{forecastId}}", "override"] }
+          }
+        },
+        {
+          "name": "Run Batch Forecast (all items)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{}" },
+            "url": { "raw": "{{baseUrl}}/ai/forecasts/batch", "host": ["{{baseUrl}}"], "path": ["ai", "forecasts", "batch"] }
+          }
+        },
+        {
+          "name": "Run Batch Forecast (subset)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"itemIds\": [\"{{itemId}}\"]\n}" },
+            "url": { "raw": "{{baseUrl}}/ai/forecasts/batch", "host": ["{{baseUrl}}"], "path": ["ai", "forecasts", "batch"] }
+          }
+        },
+        {
+          "name": "AI Usage Snapshot",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/ai/usage", "host": ["{{baseUrl}}"], "path": ["ai", "usage"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "12 - Reports (Analytics)",
+      "item": [
+        {
+          "name": "Inventory Turnover",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/reports/inventory-turnover?from=2026-01-01T00:00:00Z&to=2026-04-29T23:59:59Z",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports", "inventory-turnover"],
+              "query": [
+                { "key": "from", "value": "2026-01-01T00:00:00Z" },
+                { "key": "to", "value": "2026-04-29T23:59:59Z" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Spend by Supplier",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/reports/spend-by-supplier?from=2026-01-01T00:00:00Z&to=2026-04-29T23:59:59Z",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports", "spend-by-supplier"],
+              "query": [
+                { "key": "from", "value": "2026-01-01T00:00:00Z" },
+                { "key": "to", "value": "2026-04-29T23:59:59Z" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Supplier Cost Comparison",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/reports/supplier-cost-comparison?from=2026-01-01T00:00:00Z&to=2026-04-29T23:59:59Z",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports", "supplier-cost-comparison"],
+              "query": [
+                { "key": "from", "value": "2026-01-01T00:00:00Z" },
+                { "key": "to", "value": "2026-04-29T23:59:59Z" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Cash Flow Projection",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/reports/cash-flow-projection", "host": ["{{baseUrl}}"], "path": ["reports", "cash-flow-projection"] }
+          }
+        },
+        {
+          "name": "Dead Stock",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/reports/dead-stock?from=2026-01-01T00:00:00Z&to=2026-04-29T23:59:59Z",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports", "dead-stock"],
+              "query": [
+                { "key": "from", "value": "2026-01-01T00:00:00Z" },
+                { "key": "to", "value": "2026-04-29T23:59:59Z" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "13 - Notifications",
+      "item": [
+        {
+          "name": "List Notifications",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/notifications?limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["notifications"],
+              "query": [
+                { "key": "limit", "value": "20" },
+                { "key": "unreadOnly", "value": "true", "disabled": true },
+                { "key": "category", "value": "low_stock", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Unread Count",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/notifications/unread-count", "host": ["{{baseUrl}}"], "path": ["notifications", "unread-count"] }
+          }
+        },
+        {
+          "name": "Mark Read (specific ids)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ids\": [\"{{notificationId}}\"]\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/notifications/mark-read", "host": ["{{baseUrl}}"], "path": ["notifications", "mark-read"] }
+          }
+        },
+        {
+          "name": "Mark Read (all)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"all\": true\n}" },
+            "url": { "raw": "{{baseUrl}}/notifications/mark-read", "host": ["{{baseUrl}}"], "path": ["notifications", "mark-read"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "14 - Billing",
+      "item": [
+        {
+          "name": "List Plans",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/billing/plans", "host": ["{{baseUrl}}"], "path": ["billing", "plans"] }
+          }
+        },
+        {
+          "name": "Get Subscription",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/billing/subscription", "host": ["{{baseUrl}}"], "path": ["billing", "subscription"] }
+          }
+        },
+        {
+          "name": "Create Checkout Session (501 NotImplemented for now)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tier\": \"growth\",\n  \"gateway\": \"stripe\",\n  \"successUrl\": \"http://localhost:3000/billing/success\",\n  \"cancelUrl\": \"http://localhost:3000/billing/cancel\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/billing/checkout-session", "host": ["{{baseUrl}}"], "path": ["billing", "checkout-session"] }
+          }
+        },
+        {
+          "name": "Change Subscription Tier (schedule at period end)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"tier\": \"growth\"\n}" },
+            "url": { "raw": "{{baseUrl}}/billing/subscription/change", "host": ["{{baseUrl}}"], "path": ["billing", "subscription", "change"] }
+          }
+        },
+        {
+          "name": "Cancel Subscription",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"cancelImmediately\": false\n}" },
+            "url": { "raw": "{{baseUrl}}/billing/subscription/cancel", "host": ["{{baseUrl}}"], "path": ["billing", "subscription", "cancel"] }
+          }
+        },
+        {
+          "name": "List Invoices",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/billing/invoices?limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["billing", "invoices"],
+              "query": [
+                { "key": "limit", "value": "20" },
+                { "key": "status", "value": "paid", "disabled": true }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "15 - Webhooks (Public, no JWT)",
+      "description": "These accept and audit-log the request. Real signature verification + event dispatch will land when the gateway adapters are wired.",
+      "item": [
+        {
+          "name": "Stripe Webhook",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Stripe-Signature", "value": "t=0,v1=dev-stub" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"evt_dev_test\",\n  \"type\": \"customer.subscription.updated\",\n  \"data\": { \"object\": { \"id\": \"sub_dev_test\" } }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/../webhooks/stripe",
+              "host": ["{{baseUrl}}"],
+              "path": ["..", "webhooks", "stripe"]
+            },
+            "description": "Webhook router is mounted at /api/webhooks (NOT /api/v1/webhooks). Adjust the URL when running."
+          }
+        },
+        {
+          "name": "SSLCommerz Webhook",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/x-www-form-urlencoded" },
+              { "key": "X-SSLCommerz-Signature", "value": "dev-stub" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "tran_id=DEV001&val_id=val_dev&amount=4900&card_type=VISA&store_amount=4800&status=VALID"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/../webhooks/sslcommerz",
+              "host": ["{{baseUrl}}"],
+              "path": ["..", "webhooks", "sslcommerz"]
+            },
+            "description": "Webhook router is mounted at /api/webhooks (NOT /api/v1/webhooks). Adjust the URL when running."
+          }
+        }
+      ]
+    }
+  ]
+}
