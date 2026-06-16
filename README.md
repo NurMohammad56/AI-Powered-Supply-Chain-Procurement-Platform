@@ -1,1 +1,0 @@
-# AI-Powered-Supply-Chain-Procurement-Platform
