@@ -58,5 +58,3 @@ docker-compose.override.yml
 *.pid
 *.seed
 *.pid.lock
-
-/docs
