@@ -1,916 +1,767 @@
-# How to test the backend end-to-end
+# How to test the backend — complete, every-route guide
 
-This is the hands-on companion to [BACKEND.md](BACKEND.md) and [ARCHITECTURE.md](ARCHITECTURE.md). Follow it top to bottom and you will have validated every layer of the system.
+This is the hands-on testing manual. It is written so that **even if you have never
+seen this backend before, you can test every single API in the right order** and
+understand *why* you are hitting each one and *what* it does.
 
-It covers, in order:
+It has two parts:
 
-1. [What you need installed](#1-what-you-need-installed)
-2. [Setting up Redis (the most-asked-about piece)](#2-setting-up-redis)
-3. [Setting up MongoDB](#3-setting-up-mongodb)
-4. [The full `.env` walkthrough](#4-the-full-env-walkthrough)
-5. [Installing and starting the project](#5-installing-and-starting-the-project)
-6. [Health checks before you open Postman](#6-health-checks)
-7. [Importing the Postman collection](#7-importing-the-postman-collection)
-8. [Phase-by-phase API testing playbook](#8-phase-by-phase-api-testing-playbook)
-9. [How AI behaves at every step (with and without API keys)](#9-how-ai-behaves) 10.[How to verify the worker process is doing its job](#10-how-to-verify-the-worker) 11.[Testing real-time events (WebSockets)](#11-testing-real-time-events) 12.[Troubleshooting](#12-troubleshooting)
+- **Part A — Setup** (§1–§7): get Redis, Mongo, `.env`, and the two processes running,
+  then import Postman.
+- **Part B — The complete route reference** (§8): **every one of the ~92 endpoints**,
+  grouped by module, in the order you should test them, each with: what it does, why you
+  hit it, the exact request body, what success looks like, the role required, and what it
+  depends on.
+
+Plus: §9 AI behaviour, §10 verifying the worker, §11 real-time events, §12 troubleshooting.
+
+> **Base URL:** every `/api/v1/...` path below is relative to
+> `http://localhost:4000/api/v1` (the Postman `{{baseUrl}}`). Health checks
+> (`/healthz`, `/readyz`) and webhooks live outside `/api/v1` — noted where relevant.
 
 ---
+
+# PART A — SETUP
 
 ## 1. What you need installed
 
-| Tool                       | Version                   | Why                                                                                   |
-| -------------------------- | ------------------------- | ------------------------------------------------------------------------------------- |
-| **Node.js**                | 20 LTS (>= 20.0.0)        | The codebase uses ESM + native `--env-file` (Node 20+). Anything older fails to boot. |
-| **npm**                    | 10+                       | Comes with Node 20.                                                                   |
-| **MongoDB**                | 7+ (replica set or Atlas) | Persistent state for every collection.                                                |
-| **Redis**                  | 7+                        | Rate limiting, BullMQ queues, idempotency cache, AI result cache, Socket.io adapter.  |
-| **Postman**                | latest                    | Hitting the APIs.                                                                     |
-| **mongosh** _(optional)_   | 2+                        | Reading from Mongo (e.g. harvesting the quote response token).                        |
-| **Docker** _(recommended)_ | latest                    | Easiest way to run Mongo + Redis locally.                                             |
-
-Verify Node:
+| Tool | Version | Why |
+|---|---|---|
+| **Node.js** | 20 LTS (≥20) | ESM + native `--env-file`. Older Node fails to boot. |
+| **npm** | 10+ | Ships with Node 20. |
+| **MongoDB** | 7+ (replica set or Atlas) | Persistent state for every collection. |
+| **Redis** | 7+ | Rate limits, BullMQ queues, idempotency + AI cache, token denylist, Socket.io adapter. |
+| **Postman** | latest | Hitting the APIs. |
+| **mongosh** *(optional)* | 2+ | Reading the quote response token from Mongo. |
+| **Docker** *(recommended)* | latest | Easiest local Mongo + Redis. |
 
 ```bash
-node --version    # v20.x.x  (anything below 20 → upgrade first)
+node --version    # must be v20.x+
 ```
 
----
+## 2. Redis (mandatory — the app will not boot without it)
 
-## 2. Setting up Redis
+The code opens **four connections to one Redis server** (cache, queue, sock-pub,
+sock-sub) — see [REDIS.md](./REDIS.md). You need one server, not four.
 
-**Redis is mandatory.** The API and worker processes will not boot without it. If `REDIS_URL` is missing or unreachable, every request will fail and the env validator will print the exact missing field at startup.
-
-### What Redis is used for
-
-The codebase opens **four separate Redis connections** (see `backend/src/config/redis.ts`) — they share the same Redis server but each has its own role:
-
-| Connection     | Used by                                                           | Why separate                                                                     |
-| -------------- | ----------------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| `redisCache`   | rate limiting, idempotency cache, AI result cache, token denylist | Read/write commands                                                              |
-| `redisQueue`   | BullMQ queues (email, report, forecast, scheduled)                | BullMQ blocks long-poll commands; mixing with cache causes head-of-line blocking |
-| `redisSockPub` | Socket.io publish channel                                         | Pub/sub commands take over the connection                                        |
-| `redisSockSub` | Socket.io subscribe channel                                       | Same — pub and sub need separate connections                                     |
-
-You do **not** need four servers — you need four _connections_ to the _same_ server. The code handles this automatically.
-
-### Option A: Docker (recommended for local dev)
-
-If you have Docker installed, this is the easiest:
-
+**Docker (recommended):**
 ```bash
-docker run -d \
-  --name scp-redis \
-  -p 6379:6379 \
-  --restart unless-stopped \
-  redis:7-alpine
-```
-
-Verify it's up:
-
-```bash
-docker ps | grep scp-redis
+docker run -d --name scp-redis -p 6379:6379 --restart unless-stopped redis:7-alpine
 docker exec scp-redis redis-cli PING    # expect PONG
 ```
+`.env`: `REDIS_URL=redis://localhost:6379` and `REDIS_TLS=false`.
 
-Connection string for `.env`:
+**Cloud (Upstash, free):** copy the `rediss://...` URL → set `REDIS_URL=rediss://...`
+and `REDIS_TLS=true` (note the double `s` = TLS).
 
+## 3. MongoDB
+
+**Docker (single-node replica set — needed for transactions):**
 ```bash
-REDIS_URL=redis://localhost:6379
-REDIS_TLS=false
-```
-
-### Option B: Native install (Linux)
-
-```bash
-# Ubuntu / Debian
-sudo apt update
-sudo apt install redis-server -y
-sudo systemctl enable --now redis-server
-
-# Verify
-redis-cli PING    # expect PONG
-```
-
-```bash
-# Fedora / RHEL
-sudo dnf install redis -y
-sudo systemctl enable --now redis
-redis-cli PING
-```
-
-```bash
-# macOS (Homebrew)
-brew install redis
-brew services start redis
-redis-cli PING
-```
-
-`.env` is identical to Docker:
-
-```bash
-REDIS_URL=redis://localhost:6379
-REDIS_TLS=false
-```
-
-### Option C: Native install (Windows)
-
-Redis isn't officially supported on Windows. Pick one:
-
-1. **WSL2** (best): install Ubuntu in WSL, then follow Option B inside WSL.
-2. **Memurai** (Redis-compatible Windows port): https://www.memurai.com/ — runs as a Windows service.
-3. **Docker Desktop**: follow Option A.
-
-### Option D: Cloud Redis (no install)
-
-If you don't want to run anything locally, use a free cloud Redis. Two good options:
-
-**Upstash** (free tier, no credit card):
-
-1. Sign up at https://upstash.com
-2. Create a database (region close to you)
-3. Copy the "Redis Connect URL" — it looks like `rediss://default:<password>@<host>.upstash.io:6379`
-4. Note the `rediss://` (with two `s`) — that's TLS. Set `REDIS_TLS=true` in `.env`.
-
-```bash
-REDIS_URL=rediss://default:abc123xyz@us1-helping-hyena-12345.upstash.io:6379
-REDIS_TLS=true
-```
-
-**Render Redis add-on** (paid, for production): managed inside the same Render account as the API.
-
-### How the project connects
-
-When the API or worker boots, `config/redis.ts` runs:
-
-```ts
-const client = new Redis(env.REDIS_URL, {
-  lazyConnect: true,
-  maxRetriesPerRequest: null,
-  enableReadyCheck: true,
-  tls: env.REDIS_TLS ? {} : undefined,
-});
-```
-
-It opens four such clients (one per role) and waits for all to be `ready` before serving traffic. The `readyz` endpoint (see §6) returns `false` for `redis` until all four are connected.
-
-### Verifying Redis is reachable from the project
-
-Once the API is running, hit:
-
-```bash
-curl http://localhost:4000/readyz
-# expect {"ok":true,"deps":{"mongo":true,"redis":true}}
-```
-
-If `redis: false`:
-
-- Wrong port (default is 6379)
-- Wrong host (use `localhost` for Docker/native, the cloud host for Upstash)
-- TLS mismatch (cloud usually requires `REDIS_TLS=true`; local does not)
-- Authentication needed but password missing from URL
-
-To debug from the command line:
-
-```bash
-# Local Redis
-redis-cli -u "$REDIS_URL" PING
-
-# Upstash (TLS)
-redis-cli --tls -u "$REDIS_URL" PING
-```
-
-If `redis-cli` returns `PONG` but the project still shows `redis: false`, restart both `npm run dev` and `npm run dev:worker` after fixing `.env`.
-
----
-
-## 3. Setting up MongoDB
-
-You have three good options:
-
-### Option A: Docker
-
-```bash
-# MongoDB requires a replica set for some features (transactions); we run a single-node RS:
-docker run -d \
-  --name scp-mongo \
-  -p 27017:27017 \
-  --restart unless-stopped \
-  mongo:7 \
-  --replSet rs0 --bind_ip_all
-
-# Initialise the replica set (one-time)
+docker run -d --name scp-mongo -p 27017:27017 --restart unless-stopped mongo:7 --replSet rs0 --bind_ip_all
 docker exec scp-mongo mongosh --eval "rs.initiate()"
 ```
+`.env`: `MONGO_URI=mongodb://localhost:27017/scp_dev?replicaSet=rs0`
 
-Connection string:
+**Atlas (free M0):** create cluster → DB user → allow your IP → copy the
+`mongodb+srv://...` string into `MONGO_URI`.
 
-```bash
-MONGO_URI=mongodb://localhost:27017/scp_dev?replicaSet=rs0
-```
+## 4. The `.env` (minimum working file)
 
-### Option B: MongoDB Atlas (cloud, free tier, recommended)
-
-1. Sign up at https://cloud.mongodb.com
-2. Create a free cluster (M0 tier, 512 MB)
-3. Database Access → add a user with read/write to any database
-4. Network Access → add IP `0.0.0.0/0` for dev (lock this down for prod)
-5. Connect → "Drivers" → copy the connection string
-
-Connection string looks like:
+Create `backend/.env`. Required vars or the app refuses to boot: `MONGO_URI`,
+`REDIS_URL`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`.
 
 ```bash
-MONGO_URI=mongodb+srv://<user>:<password>@cluster0.abcde.mongodb.net/scp_dev?retryWrites=true&w=majority
-```
-
-### Option C: Native install (not recommended for Windows / new users)
-
-Use Docker or Atlas instead unless you have a strong reason.
-
----
-
-## 4. The full `.env` walkthrough
-
-Create `backend/.env`. **Required** vars must be set or the app refuses to boot. **Optional** vars degrade gracefully if missing.
-
-### Required
-
-| Variable             | What it is                                             | Example value                           | What if missing            |
-| -------------------- | ------------------------------------------------------ | --------------------------------------- | -------------------------- |
-| `NODE_ENV`           | Environment label                                      | `development`                           | Defaults to `development`. |
-| `PORT`               | API HTTP port                                          | `4000`                                  | Defaults to `4000`.        |
-| `LOG_LEVEL`          | Pino log level                                         | `debug` for dev, `info` for prod        | Defaults to `info`.        |
-| `MONGO_URI`          | MongoDB connection string                              | `mongodb://localhost:27017/scp_dev`     | **App refuses to boot.**   |
-| `REDIS_URL`          | Redis connection string                                | `redis://localhost:6379`                | **App refuses to boot.**   |
-| `REDIS_TLS`          | Whether Redis uses TLS                                 | `false` (local), `true` (Upstash)       | Defaults to `false`.       |
-| `JWT_ACCESS_SECRET`  | HS256 signing key, ≥32 chars                           | Generate with `openssl rand -base64 48` | **App refuses to boot.**   |
-| `JWT_REFRESH_SECRET` | HS256 signing key, ≥32 chars (must differ from access) | Generate with `openssl rand -base64 48` | **App refuses to boot.**   |
-| `BCRYPT_COST`        | Password hashing cost                                  | `12` (must be ≥ 12)                     | Defaults to `12`.          |
-
-Generate JWT secrets right now:
-
-```bash
-openssl rand -base64 48    # use the output as JWT_ACCESS_SECRET
-openssl rand -base64 48    # different output for JWT_REFRESH_SECRET
-```
-
-### Recommended (have sensible defaults but you'll want to set them)
-
-| Variable                    | What it is                  | Default if missing        | When you'd change it                                                 |
-| --------------------------- | --------------------------- | ------------------------- | -------------------------------------------------------------------- |
-| `JWT_ACCESS_TTL`            | Access token lifetime       | `15m`                     | Shorten for security demo, lengthen for ergonomics                   |
-| `JWT_REFRESH_TTL`           | Refresh token lifetime      | `7d`                      | Shorten in production-grade                                          |
-| `JWT_ISSUER`                | JWT `iss` claim             | `scp-platform`            | Multi-environment deployments                                        |
-| `JWT_AUDIENCE`              | JWT `aud` claim             | `scp-platform-clients`    | Same                                                                 |
-| `CORS_ORIGINS`              | Comma-separated allowlist   | empty (no origin allowed) | Add your frontend URL: `http://localhost:3000,http://localhost:5173` |
-| `COOKIE_DOMAIN`             | Refresh-token cookie domain | `localhost`               | Set to your domain in prod                                           |
-| `COOKIE_SECURE`             | HTTPS-only cookie flag      | `false` (dev)             | `true` in prod                                                       |
-| `FRONTEND_BASE_URL`         | Used in email deep links    | `http://localhost:3000`   | Set to deployed frontend URL                                         |
-| `RATE_LIMIT_UNAUTH_PER_MIN` | Per-IP unauth limit         | `60`                      | Tighten for hostile environments                                     |
-| `RATE_LIMIT_AUTH_PER_MIN`   | Per-IP auth limit           | `600`                     |                                                                      |
-| `RATE_LIMIT_TENANT_PER_MIN` | Per-tenant limit            | `6000`                    |                                                                      |
-
-### Optional (the system degrades gracefully without these)
-
-These services unlock specific features but the API still works without them:
-
-| Variable                                                                                | Feature it unlocks                      | What happens without it                                                      |
-| --------------------------------------------------------------------------------------- | --------------------------------------- | ---------------------------------------------------------------------------- |
-| `RESEND_API_KEY`                                                                        | Real email delivery (Resend)            | All emails log `email.stub_send`; no real email sent.                        |
-| `EMAIL_FROM` / `EMAIL_REPLY_TO`                                                         | "From" address on emails                | Defaults to `noreply@factory.bd` / `support@factory.bd`.                     |
-| `GROQ_API_KEY`                                                                          | Primary AI provider (Llama 3.3 70B)     | Forecast pipeline falls through to Gemini → deterministic baseline.          |
-| `GROQ_MODEL`                                                                            | Override Groq model name                | Defaults to `llama-3.3-70b-versatile`.                                       |
-| `GEMINI_API_KEY`                                                                        | Fallback AI provider (Gemini 1.5 Flash) | Forecast pipeline → deterministic baseline if both keys missing.             |
-| `GEMINI_MODEL`                                                                          | Override Gemini model name              | Defaults to `gemini-1.5-flash`.                                              |
-| `AI_PER_CALL_TIMEOUT_MS`                                                                | Per-LLM-call timeout                    | Defaults to `30000` (30s).                                                   |
-| `AI_FAILURE_THRESHOLD`                                                                  | Circuit breaker trip count              | Defaults to `3` consecutive failures.                                        |
-| `AI_COOLDOWN_MS`                                                                        | Circuit breaker open duration           | Defaults to `60000` (60s).                                                   |
-| `FIELD_ENCRYPTION_KEY`                                                                  | AES-256-GCM at-rest encryption          | Encrypt-helper throws if used (no encrypted fields written by default).      |
-| `FIELD_ENCRYPTION_KEY_PREVIOUS`                                                         | Old keys for decrypt during rotation    | Optional even when encryption is on.                                         |
-| `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET`, `R2_ENDPOINT` | Cloudflare R2 file uploads              | PDF uploads return `stub://r2/...` URL. The PDF buffer still gets generated. |
-| `R2_PUBLIC_URL_TTL_SECONDS`                                                             | Presigned URL TTL                       | Defaults to `300` (5 min).                                                   |
-| `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`                                            | Stripe billing                          | Checkout endpoint returns 501. Webhooks accept but don't dispatch.           |
-| `SSLCOMMERZ_STORE_ID`, `SSLCOMMERZ_STORE_PASSWORD`, `SSLCOMMERZ_IS_LIVE`                | SSLCommerz billing                      | Same as Stripe — 501 / accept-only.                                          |
-| `SENTRY_DSN`, `SENTRY_TRACES_SAMPLE_RATE`                                               | Sentry error tracking                   | Errors only logged to stdout.                                                |
-
-### Where to get the API keys
-
-- **Groq**: https://console.groq.com → API Keys (free tier, 30 RPM)
-- **Gemini**: https://aistudio.google.com → API Keys (free tier, generous)
-- **Resend**: https://resend.com → API Keys (free 100 emails/day)
-- **Cloudflare R2**: Cloudflare dashboard → R2 → Manage Tokens (10 GB free/month)
-- **Stripe**: https://dashboard.stripe.com → Developers → API keys (use test keys in dev)
-
-### A complete dev `.env` to copy-paste
-
-This is the minimum viable file for a fully working local setup with stubbed external services:
-
-```bash
-# === Core ===
+# Core
 NODE_ENV=development
 PORT=4000
 LOG_LEVEL=debug
 GIT_SHA=local
 
-# === Database (use ONE of these blocks) ===
-# Local Mongo via Docker single-node RS
+# Database + Redis
 MONGO_URI=mongodb://localhost:27017/scp_dev?replicaSet=rs0
-# Or Atlas (free tier):
-# MONGO_URI=mongodb+srv://USER:PASS@cluster0.abc.mongodb.net/scp_dev?retryWrites=true&w=majority
-
 MONGO_MAX_POOL_SIZE=20
 MONGO_MIN_POOL_SIZE=5
-
-# === Redis (use ONE of these blocks) ===
-# Local
 REDIS_URL=redis://localhost:6379
 REDIS_TLS=false
-# Or Upstash (TLS):
-# REDIS_URL=rediss://default:PASS@us1-host-12345.upstash.io:6379
-# REDIS_TLS=true
 
-# === JWT (REQUIRED — generate fresh) ===
-JWT_ACCESS_SECRET=PASTE_OUTPUT_OF_openssl_rand_base64_48_HERE
-JWT_REFRESH_SECRET=PASTE_DIFFERENT_OUTPUT_HERE
+# JWT (generate fresh — see below)
+JWT_ACCESS_SECRET=PASTE_48_BYTE_SECRET
+JWT_REFRESH_SECRET=PASTE_DIFFERENT_48_BYTE_SECRET
 JWT_ACCESS_TTL=15m
 JWT_REFRESH_TTL=7d
 JWT_ISSUER=scp-platform
 JWT_AUDIENCE=scp-platform-clients
-
 BCRYPT_COST=12
 
-# === Cookies + CORS ===
+# Cookies + CORS (CORS must include your frontend + Socket.io origin)
 COOKIE_DOMAIN=localhost
 COOKIE_SECURE=false
 CORS_ORIGINS=http://localhost:3000,http://localhost:5173
 FRONTEND_BASE_URL=http://localhost:3000
 
-# === Rate limits (defaults are fine) ===
+# Rate limits (defaults fine)
 RATE_LIMIT_UNAUTH_PER_MIN=60
 RATE_LIMIT_AUTH_PER_MIN=600
 RATE_LIMIT_TENANT_PER_MIN=6000
 
-# === Optional services — add later as you wire them ===
+# Optional services — leave blank to run with safe stubs
 RESEND_API_KEY=
-EMAIL_FROM=noreply@factory.bd
-EMAIL_REPLY_TO=support@factory.bd
-
 GROQ_API_KEY=
-GROQ_MODEL=llama-3.3-70b-versatile
 GEMINI_API_KEY=
-GEMINI_MODEL=gemini-1.5-flash
-AI_PER_CALL_TIMEOUT_MS=30000
-AI_FAILURE_THRESHOLD=3
-AI_COOLDOWN_MS=60000
-
-FIELD_ENCRYPTION_KEY=
-FIELD_ENCRYPTION_KEY_PREVIOUS=
-
 R2_ACCOUNT_ID=
-R2_ACCESS_KEY_ID=
-R2_SECRET_ACCESS_KEY=
-R2_BUCKET=
-R2_ENDPOINT=
-R2_PUBLIC_URL_TTL_SECONDS=300
-
 STRIPE_SECRET_KEY=
-STRIPE_WEBHOOK_SECRET=
-SSLCOMMERZ_STORE_ID=
-SSLCOMMERZ_STORE_PASSWORD=
-SSLCOMMERZ_IS_LIVE=false
-
-SENTRY_DSN=
 ```
 
-**Generate the JWT secrets right now:**
-
+Generate the JWT secrets:
 ```bash
 echo "JWT_ACCESS_SECRET=$(openssl rand -base64 48)"
 echo "JWT_REFRESH_SECRET=$(openssl rand -base64 48)"
 ```
 
-Copy each line into the `.env` (without the `echo` prefix).
+**What happens with blank optional keys:** no `RESEND_API_KEY` → emails are logged, not
+sent. No `GROQ_API_KEY`/`GEMINI_API_KEY` → forecasts fall back to a deterministic math
+baseline (see §9). No `R2_*` → PDF URLs are `stub://...` but the PDF is still generated.
+No `STRIPE_*` → checkout returns 501. **Every endpoint still responds** — nothing 500s.
 
----
-
-## 5. Installing and starting the project
+## 5. Install + start (two terminals, both required)
 
 ```bash
 cd backend
 npm install
-```
 
-This installs ~900 packages including LangChain, BullMQ, Mongoose, PDFKit, AWS SDK, Resend, etc.
-
-**Two terminals.** Both must be running for full functionality:
-
-```bash
-# Terminal 1 — API server
+# Terminal 1 — API server (HTTP + WebSocket)
 npm run dev
-```
+#   look for: redis.ready ×4, socket.server_ready, server.listening (port 4000)
 
-You'll see Pino logs in pretty format. Look for:
-
-```
-{"event":"redis.connect","role":"cache"}
-{"event":"redis.connect","role":"queue"}
-{"event":"redis.connect","role":"sock-pub"}
-{"event":"redis.connect","role":"sock-sub"}
-{"event":"socket.server_ready"}
-{"event":"app.ready","port":4000}
-```
-
-If you see `redis.error` or the process exits with `Invalid environment variables`, fix the offending env var and restart.
-
-```bash
-# Terminal 2 — BullMQ worker
+# Terminal 2 — background worker (email, forecast, report, scheduled queues)
 npm run dev:worker
+#   look for: worker.ready  queues=[email,report,forecast,scheduled]
 ```
 
-You'll see:
+Why two? Slow work (AI, PDF, email) runs in the worker so it never blocks API requests.
+If the worker is off, endpoints still return instantly but their **side effects**
+(a forecast actually computing, an email sending) won't happen. See [BULL.md](./BULL.md).
 
-```
-{"event":"worker.ready","queues":["email","report","forecast","scheduled"]}
-```
-
-The worker is now listening for jobs. Most of the time it will be idle.
-
----
-
-## 6. Health checks
-
-Before opening Postman, run these:
+## 6. Health checks (before Postman)
 
 ```bash
-curl http://localhost:4000/healthz
-# Expected: {"status":"ok","uptime":12.3,"version":"local"}
+curl http://localhost:4000/healthz   # {"status":"ok",...}  liveness only
+curl http://localhost:4000/readyz    # {"ok":true,"deps":{"mongo":true,"redis":true}}
 ```
+If `readyz` shows `mongo:false`/`redis:false`, fix that first (§12).
 
-`healthz` is liveness — it confirms the process is running. It does **not** check Mongo/Redis.
+## 7. Import Postman
 
-```bash
-curl http://localhost:4000/readyz
-# Expected: {"ok":true,"deps":{"mongo":true,"redis":true}}
-```
+Files: [`postman/api.collection.json`](../postman/api.collection.json),
+[`postman/api.environment.json`](../postman/api.environment.json). See the
+[Postman README](../postman/README.md) for the auto-save variable map.
 
-`readyz` is readiness — it confirms Mongo + Redis are reachable. **If `mongo:false` or `redis:false`, fix that before testing.** A 503 here means the dependencies are not connected.
+1. **File → Import** both files.
+2. Select environment **SCP Platform - Local Dev**.
+3. Confirm `{{baseUrl}}` = `http://localhost:4000/api/v1`.
+
+The collection sets `Authorization: Bearer {{accessToken}}` automatically and auto-saves
+IDs (`tenantId`, `itemId`, `poId`, …) via test scripts, so you rarely copy-paste.
 
 ---
 
-## 7. Importing the Postman collection
+# PART B — THE COMPLETE ROUTE REFERENCE (every endpoint)
 
-Files (already in this repo):
+## 8.0 How to read this section
 
-- [`docs/postman/api.collection.json`](postman/api.collection.json) — 78 requests in 15 folders
-- [`docs/postman/api.environment.json`](postman/api.environment.json) — environment variables
+Every route below shows:
 
-In Postman:
+- **`METHOD /path`** — the endpoint (relative to `{{baseUrl}}`).
+- **Role** — the capability required. You register as **Owner**, who can do *everything*,
+  so as the default test user all routes pass. The role note tells you which routes a
+  *lower* role (Manager / Warehouse Staff / Viewer) would get **403** on.
+- **What & why** — what it does and why you hit it.
+- **Body** — exact JSON to send (from the real Zod schemas). GET routes show query params.
+- **Works when** — its prerequisites / state requirements.
 
-1. **File → Import** → drop both JSON files into the dialog.
-2. Top-right environment selector → choose **SCP Platform - Local Dev**.
-3. Confirm `{{baseUrl}}` is `http://localhost:4000/api/v1`.
+### The master sequence (run top to bottom)
 
-The collection sets `Authorization: Bearer {{accessToken}}` at the collection level. The Login/Register requests have test scripts that auto-save tokens, so subsequent calls work without manual copy-paste.
+Most routes depend on data created earlier. This is the dependency order:
 
----
-
-## 8. Phase-by-phase API testing playbook
-
-This is the critical section. **Follow the order strictly** — most phases depend on state from earlier phases.
-
-Each phase below has:
-
-- **Folder → Request** — exact path in the Postman collection
-- **What it does** — what the call accomplishes
-- **What to verify** — what success looks like
-- **What it proves** — the architectural concept the call validates
-
-### Phase 1 — Onboarding (creates the tenant + first user)
-
-| Step | Request                                                                   | What to verify                                                                                 | What it proves                                                                                                     |
-| ---- | ------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| 1    | `01 - Auth (Public)` → **Register Factory + Owner**                       | `201 Created`. Env vars `accessToken`, `refreshToken`, `tenantId`, `userId` are now populated. | Factory + Owner User + trial Subscription + first refresh-token family all created in one transaction. JWT issued. |
-| 2    | `02 - Auth (Private)` → **Get Me**                                        | `200`. Returns the user you just registered.                                                   | JWT verification works. `resolveTenant` middleware built `req.context` from JWT claims only.                       |
-| 3    | `01 - Auth (Public)` → **Refresh Token**                                  | `200`. `accessToken` and `refreshToken` change.                                                | Refresh-token rotation + family tracking works. The old refresh token is now revoked.                              |
-| 4    | `01 - Auth (Public)` → **Refresh Token** _(again with the now-old token)_ | `401`, code `AUTH_REFRESH_REUSE_DETECTED`.                                                     | Reuse detection fires. **The whole token family is revoked**, so the user must log in again.                       |
-| 5    | `01 - Auth (Public)` → **Login**                                          | `200`. New tokens issued.                                                                      | Recovery from a reuse event works.                                                                                 |
-
-After Phase 1: you have a tenant, an owner, and fresh tokens.
-
-### Phase 2 — Master data (3 requests, in order)
-
-| Step | Request                                              | Saves to env  | Why                                                                                |
-| ---- | ---------------------------------------------------- | ------------- | ---------------------------------------------------------------------------------- |
-| 6    | `03 - Inventory - Warehouses` → **Create Warehouse** | `warehouseId` | Stock has to live somewhere.                                                       |
-| 7    | `04 - Inventory - Categories` → **Create Category**  | `categoryId`  | Items belong to categories.                                                        |
-| 8    | `05 - Inventory - Items` → **Create Item**           | `itemId`      | The thing you'll order, stock, and forecast. The body references `{{categoryId}}`. |
-
-**What this phase proves:**
-
-- The `tenancyPlugin` auto-injects `tenantId` on every save (your request body never sent one).
-- Zod validation runs (try sending `unit: "wxyz"` — you get 400 with `VALIDATION_FAILED`).
-- The `Capability` matrix is enforced — Owner role has `inventory.item.create`, so this passes.
-
-### Phase 3 — Stock the warehouse (3 requests)
-
-| Step | Request                                                                          | Quantity | What runs internally                                                                                       |
-| ---- | -------------------------------------------------------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
-| 9    | `06 - Inventory - Stock & Reports` → **Adjust Stock (positive opening balance)** | +500     | New `StockMovement` row (append-only ledger). `StockBalance` upserted to 500 via atomic CAS. Audit logged. |
-| 10   | `06 - Inventory - Stock & Reports` → **Item Balances (per warehouse)**           | —        | Reads materialised view. Shows 500 in your warehouse.                                                      |
-| 11   | `06 - Inventory - Stock & Reports` → **Item Movement History**                   | —        | Reads ledger. One row, type `adjustment`, qty 500.                                                         |
-
-**What this phase proves:** the append-only ledger pattern + materialised balance + atomic CAS upserts. Now the AI has data to read in Phase 7.
-
-### Phase 4 — Suppliers (3 requests)
-
-| Step | Request                                       | Saves              |
-| ---- | --------------------------------------------- | ------------------ |
-| 12   | `07 - Suppliers` → **Create Supplier**        | `supplierId`       |
-| 13   | `07 - Suppliers` → **Create Second Supplier** | `secondSupplierId` |
-| 14   | `07 - Suppliers` → **Compare Suppliers**      | — (read only)      |
-
-You can also test embedded array operations:
-
-- `Add Contact` → adds to the supplier's `contacts[]`
-- `Update Contact (by index)` → mutates a specific position
-- `Remove Contact (by index)` → removes by index
-
-These prove the embedded-array CRUD pattern.
-
-### Phase 5 — RFQ → quote acceptance → auto-PO (5 requests)
-
-| Step | Request                                                            | What happens                                                                                                                                                                         |
-| ---- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 15   | `08 - Quotations (Private)` → **Create Quotation Request**         | RFQ created with two invited suppliers. Each invitation has a one-time `responseToken`. **A scheduled expiry job is enqueued** with delay = `validUntil - now`. Saves `quotationId`. |
-| 16   | `08 - Quotations (Private)` → **Get Quotation**                    | Reads RFQ. Note: `responseToken` is **NOT exposed** by the API (it's PII).                                                                                                           |
-| 17   | _(manual)_                                                         | **Harvest the response token from MongoDB** so you can test the public endpoint. See note below.                                                                                     |
-| 18   | `09 - Quotations (Public, no JWT)` → **Submit Quotation Response** | Public endpoint, no JWT. Uses `{{quoteToken}}`. Run twice (once per supplier) by changing the token.                                                                                 |
-| 19   | `08 - Quotations (Private)` → **Compare Quotes**                   | Returns numeric ranking + AI prose summary (or numeric-only without AI keys).                                                                                                        |
-| 20   | `08 - Quotations (Private)` → **Accept Quotation**                 | Auto-builds a draft PO from the chosen supplier's response. Test script auto-saves `poId`.                                                                                           |
-
-**Harvesting the response token:**
-
-```bash
-mongosh "$MONGO_URI" --eval '
-  db.quotationrequests.findOne({}, { number: 1, supplierInvitations: 1 })
-'
+```
+AUTH (register/login)                         → gets your token
+  └─ INVENTORY: warehouse → category → item   → the nouns
+       └─ stock adjust (seed balance)         → so forecasts have history
+  └─ SUPPLIERS: supplier ×2                    → who you buy from
+       └─ QUOTATION (RFQ) → response → compare → accept  → auto-creates a PO
+            └─ PURCHASE ORDER: submit→approve→dispatch→receive→close
+                 └─ updates inventory, re-triggers forecast
+  └─ AI: forecast → get → override → batch → usage
+  └─ REPORTS / NOTIFICATIONS / BILLING        → analytics & account (any time after auth)
 ```
 
-Copy `responseToken` from the output → paste into the env var `quoteToken`.
-
-**What this phase proves:**
-
-- Public token-gated endpoints work without JWT.
-- The AI text pipeline runs (or gracefully returns numeric ranking when keys missing).
-- Cross-module orchestration: `quotation.service.accept` → `po.service.create` builds a PO programmatically.
-- Scheduled jobs are enqueued with delay (BullMQ delayed job).
-
-### Phase 6 — PO state machine (8 requests, strict order)
-
-This is the core procurement workflow. **Order matters.**
-
-| Step | Request                                               | State transition                        | Side effects                                                                                                                 |
-| ---- | ----------------------------------------------------- | --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| 21   | `10 - Purchase Orders` → **Get PO**                   | — (state should be `draft`)             | —                                                                                                                            |
-| 22   | `10 - Purchase Orders` → **Submit PO for Approval**   | `draft` → `pending_approval`            | `approval.submittedAt` set. Email enqueued to managers/owner.                                                                |
-| 23   | `10 - Purchase Orders` → **Approve PO**               | `pending_approval` → `approved`         | `approvedAt` set. **Background:** PDF rendered + uploaded to R2 (or stub URL). Email enqueued to requester.                  |
-| 24   | `10 - Purchase Orders` → **Get PO** _(refresh)_       | —                                       | `pdfUrl` is now set.                                                                                                         |
-| 25   | `10 - Purchase Orders` → **Dispatch PO**              | `approved` → `sent`                     | `dispatch.sentAt` set. Supplier email with PDF link. **Scheduled overdue check enqueued** for `expectedDeliveryAt + 7 days`. |
-| 26   | `10 - Purchase Orders` → **Record Receipt (partial)** | `sent` → `partially_received`           | Body has `quantity: 50` (half). Stock balance increases. **Forecast retrigger enqueued.**                                    |
-| 27   | `10 - Purchase Orders` → **Record Receipt (final)**   | `partially_received` → `fully_received` | Receive remaining 50. Owner gets confirmation email. Low-stock alert clears. Forecast retrigger again.                       |
-| 28   | `10 - Purchase Orders` → **Close PO**                 | `fully_received` → `closed`             | `closedAt` set. Terminal state.                                                                                              |
-
-**Try a CAS race**: open two Postman tabs. After step 22, click **Approve** in both nearly simultaneously. One returns 200; the other returns 409 with `PO_STATE_RACE`. **This proves optimistic locking works.**
-
-**Try an invalid transition**: try **Approve** on a PO that's still `draft` (skip step 22). You get 409 with `PO_INVALID_STATE_TRANSITION`. Same if you try to receive against a `cancelled` PO.
-
-### Phase 7 — AI forecasts (5 requests)
-
-Now that you have stock + movement history, the AI has real data to learn from.
-
-| Step | Request                                                 | What it tests                                                                                                                                              |
-| ---- | ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 29   | `11 - AI - Forecasts` → **Generate Single Forecast**    | Full forecast pipeline. Saves `forecastId`. See §9 for what happens with/without AI keys.                                                                  |
-| 30   | `11 - AI - Forecasts` → **Get Forecast**                | Returns the persisted forecast with full provenance (`provider`, `model`, `latencyMs`, `promptTokens`, `completionTokens`, `cacheHit`, `failoverInvoked`). |
-| 31   | `11 - AI - Forecasts` → **Override Forecast**           | Manual override with justification. Audit-logged.                                                                                                          |
-| 32   | `11 - AI - Forecasts` → **AI Usage Snapshot**           | Shows `used` vs `cap` for tokens, forecast calls, report calls, and estimated cost USD.                                                                    |
-| 33   | `11 - AI - Forecasts` → **Run Batch Forecast (subset)** | Enqueues `forecast.batch` job. Body: `{ "itemIds": ["{{itemId}}"] }`. **Watch Terminal 2** — the worker logs progress per item.                            |
-
-**Try the per-tenant rate limit:** call step 29 ten times in 60 seconds. The 11th returns `RATE_LIMITED`. This is the sliding-window AI limiter (10/min per tenant).
-
-**Try the per-item lock:** call step 29 twice for the same `itemId` within 6 hours. The second returns 429 with a hint to read the cached result. The cached result is in Redis (24h TTL).
-
-### Phase 8 — Analytics (5 requests, all read-only)
-
-| Step | Request                                                   |
-| ---- | --------------------------------------------------------- |
-| 34   | `12 - Reports (Analytics)` → **Inventory Turnover**       |
-| 35   | `12 - Reports (Analytics)` → **Spend by Supplier**        |
-| 36   | `12 - Reports (Analytics)` → **Supplier Cost Comparison** |
-| 37   | `12 - Reports (Analytics)` → **Cash Flow Projection**     |
-| 38   | `12 - Reports (Analytics)` → **Dead Stock**               |
-
-These pull from MongoDB aggregation pipelines (`rpt.aggregations.ts`). With limited test data they may return small or empty arrays — that's fine.
-
-### Phase 9 — Notifications + Billing (4 quick checks)
-
-| Step | Request                                       | What to expect                                                              |
-| ---- | --------------------------------------------- | --------------------------------------------------------------------------- |
-| 39   | `13 - Notifications` → **List Notifications** | Empty unless you've configured Resend or other notification triggers fired. |
-| 40   | `13 - Notifications` → **Unread Count**       | `{ count: 0 }` for a fresh tenant.                                          |
-| 41   | `14 - Billing` → **List Plans**               | Returns the four-tier catalogue (trial / starter / growth / enterprise).    |
-| 42   | `14 - Billing` → **Get Subscription**         | Returns the trial subscription created at registration.                     |
-
-**Skip these in folder 14 unless you've wired gateway adapters:**
-
-- `Create Checkout Session` returns 501 (intentional stub).
-- The webhook endpoints (folder 15) accept and audit-log but don't yet verify signatures or process events.
-
-### Phase 10 — Auth tear-down (3 requests)
-
-Verify revocation works.
-
-| Step | Request                                          | What to verify                                                 |
-| ---- | ------------------------------------------------ | -------------------------------------------------------------- |
-| 43   | `02 - Auth (Private)` → **Logout Everywhere**    | Revokes every session + denylists access tokens for this user. |
-| 44   | `02 - Auth (Private)` → **Get Me** _(run again)_ | `401` with `AUTH_TOKEN_INVALID` — denylist is honoured.        |
-| 45   | `01 - Auth (Public)` → **Login**                 | `200` — fresh tokens issued.                                   |
-
-**This proves**: the Redis access-token denylist (per-user "revoked-at" watermark) works correctly.
+> **Golden rule:** create *nouns* (warehouse, item, supplier) first, then *workflows*
+> (quotation, PO), then *analytics*. Calling a workflow step out of order returns a clear
+> state error **by design** — that's the system protecting your data, not a bug.
 
 ---
 
-## 9. How AI behaves
+## 8.1 Auth — `/auth`
 
-The AI module is the most-asked-about piece. Its behaviour depends on which env vars you've set.
+### Public (no token). Test these first.
 
-### Mode 1: No AI keys (`GROQ_API_KEY` and `GEMINI_API_KEY` both empty)
-
-**Forecast generation (`POST /ai/forecasts`):**
-
-1. Data prep runs normally — reads 180 days of stock movements, computes features.
-2. Pipeline tries Groq → no key → moves to Gemini.
-3. Gemini → no key → falls through to **deterministic baseline**.
-4. Returns: a forecast row with:
-   - `provenance.provider = "groq"` (the attempted provider)
-   - `provenance.failoverInvoked = true`
-   - `confidence = "low"`
-   - `reasoning` includes "Deterministic fallback used because the LLM response could not be parsed..."
-   - `predictedQuantity30Day = avg × 30` (extrapolation of historical mean)
-   - Range widens based on coefficient of variation.
-
-**Quote comparison (`GET /quotations/:id/compare`):**
-
-- Numeric ranking still works (deterministic sort by total cost).
-- `aiSummary: null` (no prose).
-- `recommendedSupplierId` = cheapest complete response.
-
-**Weekly report:**
-
-- The metrics are aggregated.
-- The AI text pipeline throws because both providers are unavailable.
-- The report job fails. The user gets no email until at least one key is configured.
-
-**This is the safe default.** You can run the entire backend with no AI keys and every endpoint will respond without 500-erroring.
-
-### Mode 2: Groq only
-
-- Forecasts succeed via Groq.
-- If Groq's circuit breaker trips (3 consecutive failures), pipeline falls through to deterministic baseline (no Gemini).
-- Token counts in `provenance.promptTokens` / `completionTokens` are real Groq numbers.
-- Cost in `aiUsage.estimatedCostMicroUsd` reflects Groq's pricing.
-
-### Mode 3: Both Groq and Gemini
-
-- Forecasts go to Groq first.
-- On Groq error, parse failure, or breaker open → automatic Gemini fallback.
-- `provenance.failoverInvoked = true` indicates a fallback occurred.
-- This is the production-recommended mode.
-
-### Mode 4: Gemini only
-
-- Pipeline tries Groq → no key → moves to Gemini.
-- Gemini handles every call (slower than Groq but still acceptable).
-- `provenance.provider = "gemini"`.
-
-### What gets persisted on every forecast
-
-Every successful forecast (whether AI or baseline) creates a `Forecast` row with:
-
-```ts
+**1. `POST /auth/register` — create factory + owner** 🔑 *start here*
+- Role: public.
+- What & why: creates your tenant (Factory) + an Owner user + a trial subscription, and
+  returns tokens. This is the very first call; it auto-saves `accessToken`, `refreshToken`,
+  `tenantId`, `userId`.
+- Body:
+```json
 {
-  itemId,
-  horizonDays: 30,
-  predictedQuantity,             // integer, rounded
-  predictedRange: { lower, upper }, // integers, monotonic-checked
-  confidence: 'low' | 'medium' | 'high',
-  reasoning,                     // string
-  seasonalityDetected,
-  reorderPointSuggestion: { quantity, safetyStockFactor, leadTimeDaysAssumed } | null,
-  provenance: {
-    provider, model, promptVersion,
-    failoverInvoked, latencyMs, cacheHit,
-    promptTokens, completionTokens
-  },
-  rawPrompt,                     // truncated 32k
-  rawResponse,                   // truncated 32k
-  generatedAt, expiresAt,
-  inputSeries: [...]             // last 30 days for traceability
+  "factory": { "name": "Dhaka Denim Ltd", "businessType": "rmg", "country": "BD", "timeZone": "Asia/Dhaka" },
+  "owner": { "fullName": "Owner One", "email": "owner@dhakadenim.test", "password": "Password123!" }
+}
+```
+- Works when: always (email + factory slug must be unique). `businessType` ∈
+  `rmg|textile|leather|light_manufacturing|other`. Password ≥10 chars.
+
+**2. `POST /auth/login` — get tokens for an existing user**
+- Role: public. Body: `{ "email": "owner@dhakadenim.test", "password": "Password123!" }`
+- What & why: re-issues access + refresh tokens. Use it after register, or any time your
+  token expires. **Rate-limited**: 5/15min per IP + 10/15min per email.
+
+**3. `POST /auth/refresh` — rotate the access token**
+- Role: public, but **requires the `X-CSRF` header** (env `csrfToken`, defaults
+  `dev-csrf-token`) and the refresh cookie/token. Body: `{}` (empty).
+- What & why: get a fresh access token without logging in. Each refresh **rotates** the
+  refresh token; presenting an old (already-rotated) one trips reuse-detection and
+  **kills the whole token family** → you must log in again. (Great to test security.)
+
+**4. `POST /auth/logout` — clear the refresh cookie**
+- Role: public. Body: `{}`. Invalidates the current refresh session.
+
+**5. `POST /auth/forgot-password` — start reset**
+- Role: public. Body: `{ "email": "owner@dhakadenim.test" }`. Always returns 200 (never
+  reveals if the email exists). Emails a reset token (worker must run to actually send).
+
+**6. `POST /auth/reset-password` — finish reset**
+- Role: public. Body: `{ "token": "<from email>", "newPassword": "NewPassword123!" }`.
+  Works only with a valid, unexpired token.
+
+**7. `POST /auth/verify-email` — confirm address**
+- Role: public. Body: `{ "token": "<from registration email>" }`.
+
+### Private (token required).
+
+**8. `GET /auth/me` — current user + factory**
+- Role: any authenticated. Why: confirms your token works and shows your context. Good
+  smoke test right after register.
+
+**9. `PATCH /auth/me` — update your own profile / notification prefs**
+- Role: any. Body (all optional):
+```json
+{ "fullName": "Owner Renamed", "notificationPrefs": { "lowStock": { "email": true, "inApp": true } } }
+```
+
+**10. `POST /auth/change-password` — change your own password**
+- Role: any. Body: `{ "currentPassword": "Password123!", "newPassword": "Password456!" }`
+  (current password is verified).
+
+**11. `GET /auth/users` — list team members**
+- Role: **`user.invite`** (Owner, Manager). Query: `?limit=20&role=manager&status=active`.
+
+**12. `POST /auth/invite` — invite a user by email**
+- Role: **`user.invite`** (Owner, Manager). Body:
+```json
+{ "email": "manager@dhakadenim.test", "fullName": "Manager One", "role": "manager" }
+```
+- Roles: `owner|manager|warehouse_staff|viewer`. A Manager can only invite manager-or-lower.
+
+**13. `PATCH /auth/users/:userId/role` — change someone's role**
+- Role: **`user.role.assign`** (**Owner only**). Body: `{ "role": "warehouse_staff" }`.
+  Guards: can't demote the last Owner, can't change your own role.
+
+**14. `DELETE /auth/users/:userId` — disable a user**
+- Role: **`user.role.assign`** (Owner only). Disables (not hard-deletes) the user.
+
+**15. `POST /auth/logout-everywhere` — revoke all your sessions**
+- Role: any. Body: `{}`. Denylists your access tokens (Redis watermark) + kills all
+  refresh sessions. After this, `GET /auth/me` with the old token returns 401 — proving
+  the denylist works. Then `POST /auth/login` to get fresh tokens.
+
+---
+
+## 8.2 Inventory — `/inventory`
+
+> Create order: **warehouse → category → item → seed stock**.
+
+### Warehouses
+
+**16. `GET /inventory/warehouses` — list** · Role `inventory.item.read` (all) ·
+Query `?limit=20&isActive=true&q=main`.
+
+**17. `POST /inventory/warehouses` — create** 🔑 · Role **`inventory.warehouse.manage`
+(Owner only — Manager gets 403 here)** · auto-saves `warehouseId`. Body:
+```json
+{ "name": "Main Warehouse", "code": "WH1", "address": { "street": "Plot 1", "city": "Dhaka", "country": "BD" }, "isActive": true }
+```
+Why: stock must live in a warehouse, so this comes before items/stock.
+
+**18. `GET /inventory/warehouses/:id` — get one** · Role `inventory.item.read`.
+
+**19. `PATCH /inventory/warehouses/:id` — update** · Role `inventory.warehouse.manage`
+(Owner). Body: any subset, e.g. `{ "name": "Main WH (renamed)" }`.
+
+**20. `DELETE /inventory/warehouses/:id` — archive** · Role `inventory.warehouse.manage`
+(Owner). Soft-delete (sets `archivedAt`).
+
+### Categories
+
+**21. `GET /inventory/categories` — list** · `inventory.item.read` · `?limit=20&q=fabric`.
+
+**22. `POST /inventory/categories` — create** · Role **`inventory.item.create`** (Owner,
+Manager) · auto-saves `categoryId`. Body:
+```json
+{ "name": "Raw Fabric", "description": "Cotton & blends" }
+```
+
+**23. `GET /inventory/categories/:id`** · read. ·
+**24. `PATCH /inventory/categories/:id`** · `inventory.item.update` · Body `{ "name": "..." }`. ·
+**25. `DELETE /inventory/categories/:id`** · `inventory.item.archive`.
+
+### Low-stock & bulk (declared before `/items/:id` so the paths don't clash)
+
+**26. `GET /inventory/low-stock` — items below reorder level** · `inventory.item.read` ·
+`?limit=20&warehouseId={{warehouseId}}`. Returns rows only once something is actually low.
+
+**27. `POST /inventory/bulk-import` — create many items at once** · Role
+`inventory.item.create`. Body:
+```json
+{
+  "atomic": true,
+  "items": [
+    { "sku": "COTTON-001", "name": "Raw Cotton", "unit": "kg", "type": "raw_material", "reorderLevel": 100,
+      "openingBalance": { "warehouseCode": "WH1", "quantity": 500, "unitCost": 2.5 } }
+  ]
+}
+```
+`atomic:true` = abort on first bad row; `false` = skip bad rows, import the rest.
+
+### Items
+
+**28. `GET /inventory/items` — list/filter** · read · `?limit=20&type=raw_material&q=cotton`.
+
+**29. `POST /inventory/items` — create** 🔑 · Role `inventory.item.create` · auto-saves
+`itemId`. Body:
+```json
+{
+  "sku": "COTTON-001", "name": "Raw Cotton", "unit": "kg", "type": "raw_material",
+  "categoryId": "{{categoryId}}", "reorderLevel": 100, "currency": "BDT"
+}
+```
+`unit` and `type` are enums (e.g. type ∈ `raw_material|finished_good|packaging|consumable`).
+SKU is auto-uppercased and unique **per tenant** (two factories may share a SKU).
+
+**30. `GET /inventory/items/:id`** · read. ·
+**31. `PATCH /inventory/items/:id`** · `inventory.item.update` · Body any subset, e.g.
+`{ "reorderLevel": 150 }`. ·
+**32. `DELETE /inventory/items/:id`** · `inventory.item.archive` (item stays in history).
+
+### Item-scoped stock operations
+
+**33. `POST /inventory/items/:id/adjust` — change stock (+/−)** 🔑 · Role
+**`inventory.movement.create`** (Owner, Manager, **Warehouse Staff**). Body (seed opening
+balance):
+```json
+{ "warehouseId": "{{warehouseId}}", "quantityDelta": 500, "reasonCode": "opening", "notes": "Opening stock" }
+```
+Why this matters: it writes the first **StockMovement** (append-only ledger) and upserts
+the **StockBalance**. **Forecasts read movement history**, so seed stock here before §8.6.
+`quantityDelta` is signed (negative = decrease, e.g. `count_correction`); must be non-zero.
+
+**34. `POST /inventory/items/:id/transfer` — move stock between warehouses** · Role
+`inventory.movement.create`. Body:
+```json
+{ "fromWarehouseId": "{{warehouseId}}", "toWarehouseId": "{{warehouseId2}}", "quantity": 50 }
+```
+Needs a **second** warehouse (create one, set `warehouseId2` manually) and enough source
+balance.
+
+**35. `GET /inventory/items/:id/history` — movement ledger** · read · `?limit=50&type=adjustment`.
+Append-only; shows every in/out.
+
+**36. `GET /inventory/items/:id/balances` — current qty per warehouse** · read.
+
+---
+
+## 8.3 Suppliers — `/suppliers`
+
+**37. `GET /suppliers/compare` — compare 2–5 suppliers** · Role `supplier.read` ·
+`?ids={{supplierId}},{{secondSupplierId}}`. (Declared first so it doesn't clash with `/:id`.)
+
+**38. `GET /suppliers` — list** · read · `?limit=20&status=active&tier=preferred`.
+
+**39. `POST /suppliers` — create** 🔑 · Role **`supplier.create`** (Owner, Manager) ·
+auto-saves `supplierId`. Body:
+```json
+{
+  "legalName": "Cotton Source Co", "tradingName": "CottonSrc", "status": "active",
+  "paymentTermsDays": 30, "leadTimeDays": 14, "tier": "preferred",
+  "contacts": [{ "name": "Sales Rep", "email": "sales@cottonsrc.test", "isPrimary": true }]
 }
 ```
 
-The `rawPrompt` + `rawResponse` are kept so you can audit any past forecast — what the LLM actually saw and said.
+**39b. Create a *second* supplier** (run #39 again with a different `legalName`/email) →
+auto-saves `secondSupplierId`. Needed so quote comparison has ≥2 offers.
 
-### How the per-tenant cost gate works
+**40. `GET /suppliers/:id`** · read. ·
+**41. `PATCH /suppliers/:id`** · `supplier.update` · Body any subset, e.g. `{ "leadTimeDays": 10 }`. ·
+**42. `DELETE /suppliers/:id`** · `supplier.archive` · soft-delete.
 
-Before every LLM call:
+**43. `GET /suppliers/:id/performance` — on-time rate, scoring** · read. Meaningful only
+after POs exist; early on returns mostly nulls + `sampleSize: 0`.
 
-1. Look up `AiUsage` row for `(tenantId, currentMonth)`.
-2. Compute `usedTokens = promptTokens + completionTokens`.
-3. Compare against `monthlyTokenCap` for the tenant's tier:
-   - `trial`: 100k tokens, 50 forecast calls, 4 reports
-   - `starter`: 500k tokens, 500 forecast calls, 8 reports
-   - `growth`: 5M tokens, 5k forecast calls, 32 reports
-   - `enterprise`: 50M tokens, 50k forecast calls, 200 reports
-4. If `used + estimated > cap` → reject with `AI_QUOTA_EXCEEDED` **before** the LLM call.
-5. If `(used + estimated) / cap >= 0.8` → set `softAlert = true` and log a warn line.
+**44. `POST /suppliers/:id/contacts` — add a contact** · `supplier.update`. Body:
+```json
+{ "name": "Logistics Lead", "email": "logi@cottonsrc.test", "phone": "+8801...", "isPrimary": false }
+```
 
-After every successful call:
+**45. `PATCH /suppliers/:id/contacts/:contactIndex` — edit contact by array index** ·
+`supplier.update` · e.g. `/contacts/0`. Body: any subset of the contact fields. Contacts
+are an embedded array edited **by position (0,1,2…)**, not by id.
 
-- Roll up tokens, calls, and cost (USD micros) into the `AiUsage` row.
+**46. `DELETE /suppliers/:id/contacts/:contactIndex` — remove contact by index** · `supplier.update`.
 
-You can see the snapshot any time via `GET /ai/usage`.
+**47. `POST /suppliers/:id/documents` — attach a document** · `supplier.update`. Body:
+```json
+{ "kind": "contract", "url": "https://example.com/contract.pdf" }
+```
+`kind` ∈ `contract|cert|nda|invoice|other`.
 
-### How forecast retriggers work after a PO receipt
-
-When you record a receipt in Phase 6:
-
-1. `po.service.receive` posts the stock movement.
-2. `applyPostReceiptSideEffects` runs (best-effort, never blocks the receipt):
-   - For each affected item, calls `aiRepository.findLatestForItem`.
-   - **6h staleness check**: if the latest forecast is < 6 hours old, skip the retrigger (avoid spam during a 200-line GRN).
-   - Else, `enqueueForecast('forecast.single_item', { itemId })`.
-3. Worker picks up the job. Runs the full pipeline. Persists a fresh forecast.
-4. Socket.io emits `ai.forecast.completed` to the tenant room.
-5. The dashboard (when built) updates the chart in place.
+**48. `DELETE /suppliers/:id/documents/:documentIndex` — remove document by index** · `supplier.update`.
 
 ---
 
-## 10. How to verify the worker
+## 8.4 Quotations (RFQ) — `/quotations` + public response
 
-While running Phase 6 + 7, watch Terminal 2 (`npm run dev:worker`).
+> Flow/state: `open → (accepted | cancelled/closed)`.
 
-**On PO receipt (Phase 6, step 26):**
+**49. `GET /quotations` — list** · Role `supplier.read` · `?limit=20&status=open`.
 
+**50. `POST /quotations` — create an RFQ** 🔑 · Role **`supplier.quote.send`** (Owner,
+Manager) · auto-saves `quotationId`. Body:
+```json
+{
+  "validUntil": "2026-12-31T23:59:59Z",
+  "lines": [{ "itemId": "{{itemId}}", "quantity": 1000 }],
+  "invitedSuppliers": [
+    { "supplierId": "{{supplierId}}", "contactEmail": "sales@cottonsrc.test" },
+    { "supplierId": "{{secondSupplierId}}", "contactEmail": "sales@other.test" }
+  ]
+}
 ```
-{"event":"forecast.single.start","tenantId":"...","itemId":"..."}
-{"event":"forecast.single.complete","forecastId":"..."}
-{"event":"email.send","to":"...","subject":"PO ... fully received","delivered":true}
+What happens: an RFQ opens, each invited supplier gets a one-time response **token**
+(emailed), and a **scheduled expiry job** is enqueued for `validUntil`.
+
+**51. `GET /quotations/:id` — read RFQ** · read. Note: the response **token is PII and is
+NOT returned** here. The Postman test script extracts it for you; otherwise harvest from
+Mongo (see below).
+
+**52. `POST /quotations/:id/cancel` — cancel an open RFQ** · Role `supplier.quote.send` ·
+Body `{}`. Works only while `open`.
+
+**53. `POST /quotations/:id/accept` — pick a supplier → auto-create a draft PO** 🔑 · Role
+`supplier.quote.send` · auto-saves `poId`. Body: `{ "supplierId": "{{supplierId}}" }`.
+Works only while `open`. **This is where quotation → PO connects.**
+
+**54. `GET /quotations/:id/compare` — ranking + AI prose** · Role `supplier.read`.
+Returns suppliers ranked by real numbers (total cost, lead time) + an AI text summary.
+Most useful **after** suppliers respond. With no AI key → `aiSummary: null`, ranking still
+works. The AI never picks the supplier — it only explains.
+
+**55. `POST /public/quotations/responses/:token` — supplier submits their quote (NO JWT)** ·
+public, token-gated. Path uses `{{quoteToken}}`. Body:
+```json
+{
+  "lines": [{ "itemId": "{{itemId}}", "unitPrice": 2.6, "currency": "BDT", "moq": 100, "leadTimeDays": 12, "validityDays": 30 }],
+  "comments": "Best price for bulk"
+}
 ```
-
-**On batch forecast (Phase 7, step 33):**
-
-```
-{"event":"forecast.batch.start","tenantId":"...","count":1}
-{"event":"forecast.single.start","tenantId":"...","itemId":"..."}
-{"event":"forecast.single.complete","forecastId":"..."}
-{"event":"forecast.batch.complete","total":1,"succeeded":1,"failed":0,"durationMs":1234}
-```
-
-**If the worker shows nothing during these phases:**
-
-- Worker process not running → start `npm run dev:worker`.
-- Worker can't reach Redis → check `REDIS_URL` matches the API's value.
-- Job is queued but stuck → `redis-cli LRANGE bull:forecast:wait 0 -1` shows pending job IDs.
-
-**Clearing a stuck queue (dev only):**
-
+Works only while the RFQ is `open` and before `validUntil`. **Harvest the token** if not
+auto-saved:
 ```bash
-redis-cli FLUSHDB
+mongosh "$MONGO_URI" --eval 'db.quotationrequests.findOne({}, { supplierInvitations: 1 })'
 ```
-
-This wipes everything: queues, rate-limit counters, idempotency cache, AI cache. Don't do this in production.
+Copy a `responseToken` → env `quoteToken`. (Run once per supplier to make `compare` meaningful.)
 
 ---
 
-## 11. Testing real-time events
+## 8.5 Purchase Orders — `/purchase-orders`
 
-WebSocket events fire during Phases 6, 7, and 9. Postman doesn't speak WebSocket, so use a separate client.
+> State machine (each step works **only** from the listed state):
+> `draft → pending_approval → approved → sent → partially_received → fully_received → closed`
+> with `reject` (→rejected→draft) and `cancel` (→cancelled) branches.
 
-### Quick check with `wscat`
+**56. `GET /purchase-orders` — list** · Role `po.read` · `?limit=20&state=draft&supplierId=...`.
 
-```bash
-npm install -g wscat
+**57. `POST /purchase-orders` — create a PO manually** · Role **`po.create`** (Owner,
+Manager) · auto-saves `poId`, `poLineId`. Body:
+```json
+{
+  "supplierId": "{{supplierId}}", "warehouseId": "{{warehouseId}}", "currency": "BDT",
+  "paymentTermsDays": 30, "expectedDeliveryAt": "2026-09-01T00:00:00Z", "taxRate": 0.0,
+  "lines": [{ "itemId": "{{itemId}}", "quantityOrdered": 100, "unitPrice": 2.5 }]
+}
+```
+(Or skip this — `Accept Quotation` already made a draft PO.)
 
-# Connect with JWT in handshake auth
-wscat -c "ws://localhost:4000/realtime" \
-  --header "Authorization: Bearer $ACCESS_TOKEN"
+**58. `POST /purchase-orders/from-forecast` — AI-suggested PO** · Role `po.create`. Body:
+```json
+{ "itemId": "{{itemId}}", "warehouseId": "{{warehouseId}}", "expectedDeliveryAt": "2026-09-01T00:00:00Z" }
+```
+Builds a draft PO using the item's latest forecast for the quantity. Needs a forecast to exist.
+
+**59. `GET /purchase-orders/:id` — get one** · `po.read`. Re-fetch after each transition to
+see `state`, `pdfUrl`, etc.
+
+**60. `PATCH /purchase-orders/:id` — edit** · Role `po.update` · **only when `draft` or
+`rejected`**. Body: any subset of create fields (lines, dates, taxRate…).
+
+**61. `POST /purchase-orders/:id/submit` — draft → pending_approval** · Role `po.submit` ·
+Body `{}`. Emails approvers.
+
+**62. `POST /purchase-orders/:id/approve` — pending_approval → approved** · Role
+`po.approve` (Manager is **monetary-threshold-capped**; above the cap only Owner). Body:
+`{ "thresholdRule": "auto" }` (optional). Background: PDF render + upload.
+
+**63. `POST /purchase-orders/:id/reject` — pending_approval → rejected** · Role `po.reject` ·
+Body `{ "reason": "Budget exceeded" }`. Rejected PO can be edited back to draft.
+
+**64. `POST /purchase-orders/:id/dispatch` — approved → sent** · Role `po.dispatch` · Body
+`{ "sentTo": "sales@cottonsrc.test" }`. Generates/sends the PDF to the supplier, schedules
+a 7-day-overdue check. (`/:id/send` is the identical canonical alias — #69.)
+
+**65. `POST /purchase-orders/:id/cancel` — any pre-closed state → cancelled** · Role
+`po.cancel` · Body `{ "reason": "No longer needed" }`.
+
+**66. `POST /purchase-orders/:id/close` — fully_received → closed** · Role `po.update` ·
+Body `{}`. Terminal state.
+
+**67. `POST /purchase-orders/:id/receipts` — record a delivery (partial/full)** 🔑 · Role
+**`po.receive`** (incl. Warehouse Staff) · works from `sent`/`partially_received`. Body:
+```json
+{
+  "warehouseId": "{{warehouseId}}",
+  "lines": [{ "poLineId": "{{poLineId}}", "itemId": "{{itemId}}", "quantity": 50 }],
+  "grnDocumentUrl": null, "notes": "First half"
+}
+```
+Run **twice** (50 + 50 against a qty-100 line): first → `partially_received`, second →
+`fully_received`. Each receipt **increases inventory, clears low-stock, and re-triggers a
+forecast**. Over-receiving (more than remaining) is rejected.
+
+**68. `GET /purchase-orders/:id/receipts` — list receipts for a PO** · `po.read`.
+
+**69. `POST /purchase-orders/:id/send` — canonical dispatch (alias of #64)** · Role
+`po.dispatch` · Body `{ "sentTo": "sales@cottonsrc.test" }`.
+
+**70. `GET /purchase-orders/:id/pdf` — get a download URL for the PO PDF** · `po.read`.
+Re-presigns the R2 URL (or generates on demand). Returns `stub://...` if R2 isn't configured.
+
+> **Try the safety nets:** (a) Approve a still-`draft` PO → `PO_INVALID_STATE_TRANSITION`.
+> (b) Open two tabs, Approve simultaneously after submit → one 200, one `PO_STATE_RACE`.
+
+---
+
+## 8.6 AI Forecasts — `/ai`
+
+> Needs an item **with stock-movement history** (you seeded it in #33). Worker must run
+> for the **batch** route to actually compute.
+
+**71. `GET /ai/forecasts` — list** · Role `ai.forecast.generate` · `?limit=20&itemId=...&horizonDays=30`.
+
+**72. `POST /ai/forecasts` — generate one forecast** 🔑 · Role `ai.forecast.generate` ·
+auto-saves `forecastId`. Body:
+```json
+{ "itemId": "{{itemId}}", "horizonDays": 30 }
+```
+`horizonDays` ∈ `7|14|30|60|90`. **Rate-limited** 10/min per tenant; a 2nd call for the
+same item within 6h returns the cached result (Redis). Runs synchronously (no worker
+needed), but calls the real LLM if keys are set.
+
+**73. `GET /ai/forecasts/:id` — get one** · read. Shows full `provenance` (provider, model,
+latency, tokens, cacheHit, failoverInvoked).
+
+**74. `POST /ai/forecasts/:id/override` — human corrects the number** · Role
+**`ai.forecast.override`** (Owner, Manager) · audited. Body:
+```json
+{ "quantity": 1200, "justification": "Known seasonal spike for Eid orders" }
 ```
 
-Once connected, you'll see:
+**75. `POST /ai/forecasts/batch` — forecast many items (async)** · Role
+`ai.forecast.generate`. Body (omit `itemIds` to forecast all non-archived items):
+```json
+{ "itemIds": ["{{itemId}}"] }
+```
+Returns `{ batchJobId, itemCount, estimatedCostUsd }` immediately; the **worker** processes
+it and streams Socket.io progress (see §11). Checks your monthly quota first.
+
+**76. `GET /ai/usage` — quota snapshot** · read. Shows tokens/forecast-calls/report-calls
+used vs your tier cap, plus estimated cost USD.
+
+---
+
+## 8.7 Reports (Analytics) — `/reports`
+
+All read-only aggregations (no AI, no writes). Role **`rpt.read`** (Owner, Manager,
+Viewer — not Warehouse Staff). Numbers are only interesting after you have movements + POs.
+
+**77. `GET /reports/inventory-turnover`** · `?from=2026-01-01T00:00:00Z&to=2026-06-30T23:59:59Z`
+(both required, ISO datetime).
+**78. `GET /reports/spend-by-supplier`** · same `from`/`to`.
+**79. `GET /reports/supplier-cost-comparison`** · same `from`/`to`.
+**80. `GET /reports/cash-flow-projection`** · **no params** (projects forward from open POs).
+**81. `GET /reports/dead-stock`** · same `from`/`to` (items with no movement in range).
+
+---
+
+## 8.8 Notifications — `/notifications`
+
+No special role (any authenticated user; feed is per-user).
+
+**82. `GET /notifications` — list** · `?limit=20&unreadOnly=true&category=...`. Populated as
+the workflow fires events (PO submitted/approved, low stock, etc.).
+**83. `GET /notifications/unread-count` — badge count** · returns `{ count }`.
+**84. `POST /notifications/mark-read` — mark read** · Body is **either** specific ids **or**
+all:
+```json
+{ "ids": ["{{notificationId}}"] }
+```
+or `{ "all": true }`. (Copy a `notificationId` from #82 into the env to test the ids form.)
+
+---
+
+## 8.9 Billing — `/billing`
+
+**85. `GET /billing/plans` — plan catalogue** · **no role** (public-ish). Lists tiers +
+prices + seat limits.
+**86. `GET /billing/subscription` — current subscription** · Role **`billing.read`**
+(**Owner only** — Manager gets 403). Shows tier, status, seats, trial end.
+**87. `POST /billing/checkout-session` — start payment** · Role
+`billing.subscription.change` (Owner). Body:
+```json
+{ "tier": "starter", "gateway": "stripe", "successUrl": "https://app.test/ok", "cancelUrl": "https://app.test/cancel" }
+```
+⚠️ **Returns 501 NotImplemented today** — the payment gateway isn't wired yet.
+**88. `POST /billing/subscription/change` — schedule a tier change** · Owner · Body
+`{ "tier": "growth" }`. Applies at period end.
+**89. `POST /billing/subscription/cancel` — cancel** · Owner · Body
+`{ "cancelImmediately": false }` (default = cancel at period end).
+**90. `GET /billing/invoices` — list invoices** · Role `billing.read` (Owner) ·
+`?limit=20&status=paid`.
+
+---
+
+## 8.10 Webhooks — `/webhooks` (public, no JWT)
+
+Inbound payment-gateway callbacks. They verify a signature on the **raw** body, so a
+hand-made request without a valid signature is rejected (expected).
+
+**91. `POST /webhooks/stripe`** · **92. `POST /webhooks/sslcommerz`**.
+
+> ⚠️ **Path note:** these mount at **`{{baseUrl}}/webhooks/...`** (i.e.
+> `http://localhost:4000/api/v1/webhooks/...`). The Postman collection uses
+> `{{baseUrl}}/../webhooks/...` which resolves to `/api/webhooks/...` and will 404 — fix
+> the request URL to `{{baseUrl}}/webhooks/stripe`. These are currently **stubs** (they
+> audit-log but don't verify signatures yet).
+
+---
+
+## 8.11 Health (outside `/api/v1`)
+
+- `GET http://localhost:4000/healthz` — liveness (process up). No auth.
+- `GET http://localhost:4000/readyz` — readiness (Mongo + Redis reachable). Returns 503 if
+  a dependency is down. Use these in load-balancer/Kubernetes probes.
+
+---
+
+# §9–§12 — Behaviour, worker, real-time, troubleshooting
+
+## 9. How AI behaves (with / without keys)
+
+| Keys set | Forecast (`POST /ai/forecasts`) | Quote compare | Weekly report |
+|---|---|---|---|
+| **None** | Groq→Gemini both skipped → **deterministic baseline**, `confidence: "low"`, `failoverInvoked: true` | numeric ranking only, `aiSummary: null` | text step fails → no email until a key is set |
+| **Groq only** | succeeds via Groq; breaker-trip → baseline | full AI prose | works |
+| **Both** (recommended) | Groq, falls back to Gemini on error | full | works |
+| **Gemini only** | Groq skipped → Gemini handles all | full | works |
+
+Every forecast (AI or baseline) is persisted with `provenance` (provider, model, latency,
+tokens, cacheHit) + truncated `rawPrompt`/`rawResponse` for audit. Before each call,
+`checkQuota` enforces the tenant's monthly tier cap and **rejects with `AI_QUOTA_EXCEEDED`
+before** spending money. After a PO receipt, a forecast re-trigger is enqueued unless a
+forecast for that item is <6h old (avoids spamming a 200-line delivery).
+
+## 10. Verify the worker is doing its job
+
+Watch **Terminal 2** while testing PO receipt (#67) and batch forecast (#75):
 
 ```
-{"event":"system.connected","data":{"serverTime":"2026-...","sessionId":"..."}}
+{"event":"forecast.single.start","itemId":"..."}
+{"event":"forecast.single.complete","forecastId":"..."}
+{"event":"forecast.batch.complete","total":1,"succeeded":1,"failed":0}
+{"event":"email.sent",...}
 ```
+Silent worker → it isn't running (`npm run dev:worker`), or its `REDIS_URL` differs from
+the API's. Inspect a stuck queue: `redis-cli LRANGE bull:forecast:wait 0 -1`. Dev reset:
+`redis-cli FLUSHDB` (wipes queues, rate-limit counters, caches — never in prod).
 
-Then in another terminal, run Phase 6 step 26 (Record Receipt). Back in `wscat`:
+## 11. Testing real-time events (WebSocket)
 
-```
-{"event":"po.state.changed","data":{"poId":"...","fromState":"sent","toState":"partially_received",...}}
-{"event":"ai.forecast.batch.progress","data":{...}}
-{"event":"ai.forecast.completed","data":{"forecastId":"...","itemId":"...","horizonDays":30,...}}
-```
-
-### Alternative: browser devtools
-
-Open browser console:
-
+Postman can't do Socket.io. Use the browser console or a client (see [SOCKET.md](./SOCKET.md)
+for the full event catalog). Quick check:
 ```js
-const ws = new WebSocket("ws://localhost:4000/realtime", [], {
-  headers: { Authorization: "Bearer " + accessToken },
-});
-ws.onmessage = (e) => console.log("msg:", JSON.parse(e.data));
+const s = io('http://localhost:4000', { path:'/realtime', transports:['websocket'], auth:{ token: '<accessToken>' }});
+s.onAny((e, ...a) => console.log('EVENT', e, a));
 ```
-
-(Browsers actually use Socket.io client lib — install it if you want strict event handling.)
-
----
+Then run #67 or #75. Live events today: `system.connected`, `ai.forecast.completed`,
+`ai.forecast.batch.progress`, `ai.forecast.batch.completed`. (Others like
+`po.state.changed`, `notification.created` are defined but not emitted yet — see SOCKET.md.)
 
 ## 12. Troubleshooting
 
-### "MONGO_URI is required" / "REDIS_URL is required" at startup
-
-Your `.env` is missing or malformed. Check:
-
-1. The file is at `backend/.env` (NOT project root).
-2. No spaces around `=` (e.g. `MONGO_URI=mongo...` not `MONGO_URI = mongo...`).
-3. No quotes around URLs unless they contain special chars.
-
-### `readyz` returns `mongo: false`
-
-- Mongo isn't running. Start your container or check Atlas Network Access whitelist.
-- Wrong `MONGO_URI`. Test with `mongosh "$MONGO_URI"`.
-- Replica set not initialized (Docker single-node). Run `rs.initiate()` once.
-
-### `readyz` returns `redis: false`
-
-- Redis isn't running. Test with `redis-cli PING`.
-- Wrong `REDIS_URL` or `REDIS_TLS` mismatch. Upstash needs `rediss://` and `REDIS_TLS=true`.
-- Firewall blocking 6379.
-
-### `AUTH_TOKEN_MISSING` on every request
-
-- Env var `accessToken` is empty. Re-run **Login** (Phase 1 step 5).
-- Postman environment not selected. Top-right → choose **SCP Platform - Local Dev**.
-
-### `RATE_LIMITED` on auth endpoints
-
-- 5 logins per 15 min per IP. Wait or `redis-cli FLUSHDB` (dev only).
-
-### `PO_INVALID_STATE_TRANSITION`
-
-- You skipped a step in Phase 6. Read the response — `details` shows current state.
-
-### `AUTH_REFRESH_REUSE_DETECTED` after a successful login
-
-- You ran the **Refresh Token** request twice with the same (now-rotated) `refreshToken`. The whole token family is revoked. Re-run **Login**.
-
-### Forecast returns the same generic reasoning every time
-
-- Both `GROQ_API_KEY` and `GEMINI_API_KEY` empty → deterministic baseline. Fix by adding at least one key and restarting both processes.
-
-### Worker terminal silent during Phase 7
-
-- Worker process isn't running. Start `npm run dev:worker` in Terminal 2.
-
-### `validate` returns 400 with `Invalid request body`
-
-- Check the response `details` — it lists which Zod field failed and why. Common causes: missing required field, wrong type (e.g. number sent as string), enum mismatch.
-
-### "Cannot find module 'puppeteer-core'" when running weekly report
-
-- Expected on dev boxes without Chromium. The report falls back to Markdown email. Install `puppeteer` (full bundle) or skip this test.
-
-### Postman pre-request script errors
-
-- The collection uses `pm.variables.replaceIn('{{$guid}}')` for Idempotency-Key. If your Postman is < v9, upgrade it.
+| Symptom | Cause / fix |
+|---|---|
+| `MONGO_URI/REDIS_URL is required` at boot | `.env` missing/typo. File at `backend/.env`, no spaces around `=`. |
+| `readyz` → `mongo:false` | Mongo down, wrong URI, or replica set not initiated (`rs.initiate()`). |
+| `readyz` → `redis:false` | Redis down, wrong URL, or TLS mismatch (Upstash needs `rediss://` + `REDIS_TLS=true`). |
+| `401 AUTH_TOKEN_MISSING` everywhere | No/expired `accessToken` → run Login (#2). Postman env not selected. |
+| `403 Forbidden` | Your role lacks that capability — see the Role note on the route (e.g. warehouse create & all billing = Owner only). |
+| `404` on an id you "know" exists | Wrong/empty id variable, or it belongs to another tenant (cross-tenant → 404 by design). |
+| `PO_INVALID_STATE_TRANSITION` / `PO_STATE_RACE` | You called a PO step from the wrong state, or two writers raced. Check current `state` via #59. |
+| `429 RATE_LIMITED` | Hit a limit (login 5/15min; AI 10/min). Wait, or `redis-cli FLUSHDB` (dev). |
+| `AUTH_REFRESH_REUSE_DETECTED` | You reused an already-rotated refresh token → family revoked → Login again. |
+| Forecast always generic reasoning | No AI keys → deterministic baseline. Add `GROQ_API_KEY` or `GEMINI_API_KEY` + restart. |
+| Batch forecast / emails do nothing | Worker (`npm run dev:worker`) isn't running. |
+| Webhook returns 404 | Use `{{baseUrl}}/webhooks/...` (the collection's `/../webhooks` is wrong). |
+| `400 VALIDATION_FAILED` | Response `details` lists the exact Zod field that failed (missing field, wrong type, bad enum). |
 
 ---
 
-## Appendix — total time to complete the playbook
+## Appendix — route count by module
 
-| Phase                                       | Approx. time                |
-| ------------------------------------------- | --------------------------- |
-| Setup (Redis + Mongo + .env + install)      | 15-30 min (first time)      |
-| Phase 1 (auth)                              | 2 min                       |
-| Phase 2-3 (master data + stock)             | 3 min                       |
-| Phase 4 (suppliers)                         | 2 min                       |
-| Phase 5 (RFQ + accept)                      | 5 min (incl. token harvest) |
-| Phase 6 (PO state machine)                  | 5 min                       |
-| Phase 7 (AI forecasts)                      | 3 min                       |
-| Phase 8 (analytics)                         | 1 min                       |
-| Phase 9-10 (notifications + auth tear-down) | 2 min                       |
-| **Total testing**                           | **~25 minutes**             |
+| Module | Routes | Highlights |
+|---|---|---|
+| Auth | 15 (7 public + 8 private) | register, login, refresh, users, roles |
+| Inventory | 21 | warehouses (5), categories (5), low-stock+bulk (2), items (5), stock ops (4) |
+| Suppliers | 12 | CRUD, compare, performance, contacts/docs by index |
+| Quotations | 7 (6 private + 1 public) | RFQ, response (token), compare, accept→PO |
+| Purchase Orders | 15 | full state machine + receipts + pdf + from-forecast |
+| AI | 6 | forecast, override, batch, usage |
+| Reports | 5 | turnover, spend, cost-compare, cash-flow, dead-stock |
+| Notifications | 3 | list, unread-count, mark-read |
+| Billing | 6 | plans, subscription, change/cancel, invoices |
+| Webhooks | 2 | stripe, sslcommerz (stubs) |
+| Health | 2 | healthz, readyz |
+| **Total** | **~94** | every one documented above |
 
-You will have validated tenant isolation, JWT rotation, refresh-token reuse detection, capability-based RBAC, append-only ledger + atomic CAS balance, optimistic locking on the PO state machine, BullMQ queue + worker fan-out, AI pipeline with circuit breaker + deterministic fallback, AI cost governance, audit logging, idempotency, rate limiting, and Socket.io events.
-
-That's the whole system.
+Follow §8 top-to-bottom and you will have exercised **every endpoint** in the backend,
+plus tenant isolation, RBAC, the PO state machine, BullMQ workers, the AI pipeline with
+fallback, idempotency, rate limiting, and Socket.io events.
+</content>
