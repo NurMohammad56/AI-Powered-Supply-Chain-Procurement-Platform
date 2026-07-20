@@ -20,7 +20,7 @@ export async function connectDatabase(): Promise<typeof mongoose> {
       socketTimeoutMS: 20_000,
       retryWrites: true,
       autoIndex: !isProduction,
-      compressors: ['zstd', 'zlib'],
+      compressors: ['zlib'],
     })
     .then((m) => {
       logger.info({ event: 'mongo.connected', host: m.connection.host }, 'MongoDB connected');

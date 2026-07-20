@@ -4,11 +4,11 @@ services:
     container_name: scp-mongo
     restart: unless-stopped
     ports:
-      - '27017:27017'
+      - "27017:27017"
     volumes:
       - mongo_data:/data/db
     healthcheck:
-      test: ['CMD', 'mongosh', '--quiet', '--eval', 'db.adminCommand({ping:1})']
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand({ping:1})"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -17,13 +17,13 @@ services:
     image: redis:7-alpine
     container_name: scp-redis
     restart: unless-stopped
-    command: ['redis-server', '--appendonly', 'yes']
+    command: ["redis-server", "--appendonly", "yes"]
     ports:
-      - '6379:6379'
+      - "6379:6379"
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ['CMD', 'redis-cli', 'ping']
+      test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -40,7 +40,7 @@ services:
       redis:
         condition: service_healthy
     ports:
-      - '4000:4000'
+      - "4000:4000"
     env_file:
       - .env
     environment:
@@ -54,6 +54,8 @@ services:
       dockerfile: Dockerfile
     container_name: scp-worker
     restart: unless-stopped
+    healthcheck:
+      disable: true
     depends_on:
       mongo:
         condition: service_healthy
@@ -65,7 +67,7 @@ services:
       MONGO_URI: mongodb://mongo:27017/scp_dev
       REDIS_URL: redis://redis:6379
       NODE_ENV: development
-    command: ['node', 'dist/worker.js']
+    command: ["node", "dist/worker.js"]
 
 volumes:
   mongo_data:
