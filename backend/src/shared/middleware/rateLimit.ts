@@ -56,7 +56,7 @@ export const rateLimitTenant: RateLimitRequestHandler = rateLimit({
  */
 export const rateLimitLogin: RateLimitRequestHandler = rateLimit({
   windowMs: 15 * 60_000,
-  limit: 10,
+  limit: 100,
   standardHeaders: 'draft-7',
   legacyHeaders: false,
   store: buildStore('rl:login:'),
@@ -75,7 +75,7 @@ export const rateLimitLogin: RateLimitRequestHandler = rateLimit({
  */
 export const rateLimitRefresh: RateLimitRequestHandler = rateLimit({
   windowMs: 60_000,
-  limit: 12,
+  limit: 100,
   standardHeaders: 'draft-7',
   legacyHeaders: false,
   store: buildStore('rl:refresh:'),
@@ -91,7 +91,7 @@ export const rateLimitRefresh: RateLimitRequestHandler = rateLimit({
  */
 export const rateLimitAuthSensitive: RateLimitRequestHandler = rateLimit({
   windowMs: 15 * 60_000,
-  limit: 5,
+  limit: 100,
   standardHeaders: 'draft-7',
   legacyHeaders: false,
   store: buildStore('rl:auth-sensitive:'),
@@ -193,7 +193,7 @@ export const rateLimitAi: RequestHandler = slidingWindowLimiter({
  */
 export const rateLimitFileUpload: RequestHandler = slidingWindowLimiter({
   windowMs: 60 * 60_000,
-  limit: 20,
+  limit: 100,
   prefix: 'rl:upload:tenant:',
   keyGenerator: (req) => req.context?.tenantId.toString() ?? req.ip ?? 'unknown',
 });

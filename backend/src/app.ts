@@ -52,9 +52,10 @@ export function createApp(): Express {
       crossOriginEmbedderPolicy: false,
       crossOriginResourcePolicy: { policy: 'same-site' },
       referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
-      hsts: env.NODE_ENV === 'production'
-        ? { maxAge: 31_536_000, includeSubDomains: true, preload: true }
-        : false,
+      hsts:
+        env.NODE_ENV === 'production'
+          ? { maxAge: 31_536_000, includeSubDomains: true, preload: true }
+          : false,
       frameguard: { action: 'deny' },
       noSniff: true,
       xssFilter: true,
