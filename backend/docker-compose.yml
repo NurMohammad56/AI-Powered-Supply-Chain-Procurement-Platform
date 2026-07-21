@@ -1,18 +1,4 @@
 services:
-  mongo:
-    image: mongo:7
-    container_name: scp-mongo
-    restart: unless-stopped
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongo_data:/data/db
-    healthcheck:
-      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand({ping:1})"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
   redis:
     image: redis:7-alpine
     container_name: scp-redis
@@ -35,8 +21,6 @@ services:
     container_name: scp-api
     restart: unless-stopped
     depends_on:
-      mongo:
-        condition: service_healthy
       redis:
         condition: service_healthy
     ports:
@@ -44,7 +28,6 @@ services:
     env_file:
       - .env
     environment:
-      MONGO_URI: mongodb://mongo:27017/scp_dev
       REDIS_URL: redis://redis:6379
       NODE_ENV: development
 
@@ -57,18 +40,14 @@ services:
     healthcheck:
       disable: true
     depends_on:
-      mongo:
-        condition: service_healthy
       redis:
         condition: service_healthy
     env_file:
       - .env
     environment:
-      MONGO_URI: mongodb://mongo:27017/scp_dev
       REDIS_URL: redis://redis:6379
       NODE_ENV: development
     command: ["node", "dist/worker.js"]
 
 volumes:
-  mongo_data:
   redis_data:

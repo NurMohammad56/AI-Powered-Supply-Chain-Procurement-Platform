@@ -65,7 +65,11 @@ const envSchema = z.object({
   RATE_LIMIT_AUTH_PER_MIN: numericString(600),
   RATE_LIMIT_TENANT_PER_MIN: numericString(6000),
 
-  RESEND_API_KEY: z.string().default(''),
+  SMTP_HOST: z.string().default(''),
+  SMTP_PORT: numericString(587),
+  SMTP_SECURE: z.preprocess(truthy, z.boolean()).default(false),
+  SMTP_USER: z.string().default(''),
+  SMTP_PASS: z.string().default(''),
   EMAIL_FROM: z.string().email().default('noreply@factory.bd'),
   EMAIL_REPLY_TO: z.string().email().default('support@factory.bd'),
 

@@ -399,7 +399,10 @@ export class AuthService {
     const tenantId = stub.tenantId;
 
     await authRepository.withScope(tenantId, async () => {
-      const user = await authRepository.findUserById(userId);
+      const user = await User.findById(userId)
+        .select('+passwordResetExpiresAt')
+        .lean<UserDoc>()
+        .exec();
       if (
         !user ||
         !user.passwordResetExpiresAt ||
