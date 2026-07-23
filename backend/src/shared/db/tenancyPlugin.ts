@@ -94,7 +94,7 @@ export function tenancyPlugin(schema: Schema, opts: TenancyPluginOptions = {}): 
     });
   }
 
-  schema.pre('save', function preTenantSave(next) {
+  schema.pre('validate', function preTenantSave(next) {
     const store = tenantStorage.getStore();
     if (!store) {
       return next(new Error('TENANCY_SCOPE_MISSING: save without tenant context'));
