@@ -117,6 +117,15 @@ export const authController = {
     return ok(req, res, { ok: true });
   }),
 
+  acceptInvite: asyncHandler(async (req, res) => {
+    const result = await authService.acceptInvite(req.body, clientMeta(req));
+    setRefreshCookie(res, result.refreshToken, new Date(result.refreshTokenExpiresAt));
+    const { refreshToken: _r, refreshTokenExpiresAt: _e, ...response } = result;
+    void _r;
+    void _e;
+    return ok(req, res, response);
+  }),
+
   me: asyncHandler(async (req, res) => {
     const ctx = requireContext(req);
     const user = await authService.getMe(ctx.userId, ctx.tenantId);
