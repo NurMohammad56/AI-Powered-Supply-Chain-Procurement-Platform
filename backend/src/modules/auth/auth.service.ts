@@ -25,6 +25,7 @@ import { authRepository } from './auth.repository.js';
 import type { FactoryDoc } from './models/factory.model.js';
 import type { UserDoc } from './models/user.model.js';
 import type {
+  AcceptInviteRequest,
   AuthLoginResponse,
   AuthRefreshResponse,
   ForgotPasswordRequest,
@@ -448,6 +449,76 @@ export class AuthService {
     );
   }
 
+  async acceptInvite(input: AcceptInviteRequest, meta: ClientMeta): Promise<LoginResult> {
+    const policy = checkPasswordPolicy(input.password);
+    if (!policy.ok) {
+      throw new ValidationError({ password: policy.message }, policy.message);
+    }
+
+    const { User } = await import('./models/user.model.js');
+    const stub = await User.collection.findOne({ emailVerifyToken: input.token });
+    if (!stub) {
+      throw new UnauthorizedError(ErrorCodes.AUTH_INVITE_TOKEN_INVALID, 'Invite token invalid');
+    }
+    const expires = stub.emailVerifyTokenExpiresAt as Date | null;
+    if (!expires || expires.getTime() < Date.now()) {
+      throw new UnauthorizedError(ErrorCodes.AUTH_INVITE_TOKEN_INVALID, 'Invite token expired');
+    }
+    const userId = stub._id;
+    const tenantId = stub.tenantId;
+
+    const updated = await authRepository.withScope(tenantId, async () => {
+      const user = await authRepository.findUserById(userId);
+      if (!user || user.status === 'disabled') {
+        throw new UnauthorizedError(ErrorCodes.AUTH_INVITE_TOKEN_INVALID, 'Invite token invalid');
+      }
+      if (user.status !== 'invited') {
+        throw new UnauthorizedError(ErrorCodes.AUTH_INVITE_TOKEN_INVALID, 'Invite already accepted');
+      }
+
+      const passwordHash = await hashPassword(input.password);
+      const next = await authRepository.updateUser(userId, {
+        passwordHash,
+        status: 'active',
+        emailVerifiedAt: new Date(),
+        emailVerifyToken: null,
+        emailVerifyTokenExpiresAt: null,
+        failedLoginCount: 0,
+        lockedUntil: null,
+      });
+      if (!next) {
+        throw new UnauthorizedError(ErrorCodes.AUTH_INVITE_TOKEN_INVALID, 'Invite token invalid');
+      }
+      return next;
+    });
+
+    const factory = await authRepository.findFactoryById(tenantId);
+    if (!factory) {
+      throw new UnauthorizedError(ErrorCodes.AUTH_INVALID_CREDENTIALS, 'Tenant not found');
+    }
+    if (factory.status === 'suspended' || factory.status === 'cancelled') {
+      throw new ForbiddenError(ErrorCodes.AUTH_ACCOUNT_DISABLED, 'Tenant access suspended');
+    }
+
+    const tokens = await this.issueTokenPair({
+      userId: updated._id,
+      tenantId,
+      role: updated.role,
+      tier: this.tierFromFactoryStatus(factory.status),
+      family: newSessionFamily(),
+      meta,
+    });
+
+    return {
+      accessToken: tokens.accessToken,
+      accessTokenExpiresAt: tokens.accessTokenExpiresAt.toISOString(),
+      refreshToken: tokens.refreshToken,
+      refreshTokenExpiresAt: tokens.refreshTokenExpiresAt.toISOString(),
+      user: toUserView(updated),
+      factory: toFactoryView(factory),
+    };
+  }
+
   async changePassword(
     userId: Types.ObjectId,
     tenantId: Types.ObjectId,
@@ -736,7 +807,7 @@ export class AuthService {
 
   private renderInviteEmail(name: string, token: string, _inviterId: string): string {
     const url = `${env.FRONTEND_BASE_URL}/accept-invite?token=${encodeURIComponent(token)}`;
-    return `<p>Hi ${escapeHtml(name)},</p><p>You have been invited to join the SCP Platform. Accept here: <a href="${url}">${url}</a></p>`;
+    return `<p>Hi ${escapeHtml(name)},</p><p>You have been invited to join the SCP Platform. Accept the invite and set your password here: <a href="${url}">${url}</a></p><p>This link expires in 24 hours.</p>`;
   }
 }
 

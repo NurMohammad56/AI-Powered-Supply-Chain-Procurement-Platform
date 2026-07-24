@@ -17,6 +17,7 @@ import {
   ListUsersQuerySchema,
   LoginRequestSchema,
   RegisterFactoryRequestSchema,
+  AcceptInviteRequestSchema,
   ResetPasswordRequestSchema,
   UpdateMyProfileRequestSchema,
   UpdateUserRoleRequestSchema,
@@ -69,6 +70,13 @@ authPublicRouter.post(
   rateLimitUnauthenticated,
   validate(VerifyEmailRequestSchema),
   authController.verifyEmail,
+);
+
+authPublicRouter.post(
+  '/accept-invite',
+  rateLimitUnauthenticated,
+  validate(AcceptInviteRequestSchema),
+  authController.acceptInvite,
 );
 
 /**
