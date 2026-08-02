@@ -10,7 +10,7 @@ import { enqueueForecast, enqueueScheduled } from '../../shared/queue/queues.js'
 import type { TenantContext } from '../../shared/auth/types.js';
 import type { Page } from '../../shared/utils/pagination.js';
 import { runTextPipeline } from '../ai/forecastPipeline.js';
-import { Item } from '../inventory/models/item.model.js';
+import { inventoryRepository } from '../inventory/inventory.repository.js';
 import { poService } from '../po/po.service.js';
 import { quotationRepository } from './quotation.repository.js';
 import { supplierRepository } from './supplier.repository.js';
@@ -274,7 +274,7 @@ export class QuotationService {
     // create the PO manually as a fallback.
     let purchaseOrder: PoView | null = null;
     try {
-      purchaseOrder = await this.buildPoFromAcceptedQuote({ ctx, q: accepted, inv });
+      purchaseOrder = await this.buildPoFromAcceptedQuote({ ctx, q: accepted, inv, input });
     } catch (err) {
       logger.warn(
         { err, event: 'quote.accept.po_draft_failed', quotationId: id.toString() },
@@ -295,6 +295,7 @@ export class QuotationService {
     ctx: TenantContext;
     q: QuotationRequestDoc;
     inv: QuotationRequestDoc['supplierInvitations'][number];
+    input: AcceptQuotationRequest;
   }): Promise<PoView | null> {
     const response = args.inv.response;
     if (!response) return null;
@@ -304,17 +305,21 @@ export class QuotationService {
       responseLineByItem.set(rl.itemId.toString(), rl);
     }
 
-    // Default the warehouse to the first item's tenant default. Real
-    // implementation should accept a warehouse hint from the caller.
+    // Accept an explicit warehouse when the caller provides one; fall
+    // back to a tenant warehouse derived from current balances or the
+    // first active warehouse.
     const firstItem = args.q.lines[0];
     if (!firstItem) return null;
-    const item = await Item.findOne({
-      _id: firstItem.itemId,
-      tenantId: args.ctx.tenantId,
-    })
-      .lean()
-      .exec();
+    const item = await inventoryRepository.findItemById(firstItem.itemId);
     if (!item) return null;
+    assertTenantOwns(item, args.ctx);
+
+    const warehouseId = await this.resolveWarehouseIdForAcceptedQuote({
+      ctx: args.ctx,
+      itemId: firstItem.itemId,
+      requestedWarehouseId: args.input.warehouseId,
+    });
+    if (!warehouseId) return null;
 
     const supplier = await supplierRepository.findById(args.inv.supplierId);
     if (!supplier) return null;
@@ -341,9 +346,7 @@ export class QuotationService {
 
     return poService.create(args.ctx, {
       supplierId: supplier._id.toString(),
-      warehouseId: item.preferredSupplierId
-        ? item.preferredSupplierId.toString()
-        : firstItem.itemId.toString(),
+      warehouseId,
       // Currency follows the supplier response; assume single currency
       // across response lines (the RFQ enforces this in practice).
       currency: response.lines[0]?.currency ?? 'BDT',
@@ -352,6 +355,37 @@ export class QuotationService {
       lines,
       taxRate: 0,
     });
+  }
+
+  private async resolveWarehouseIdForAcceptedQuote(args: {
+    ctx: TenantContext;
+    itemId: Types.ObjectId;
+    requestedWarehouseId?: string;
+  }): Promise<string | null> {
+    if (args.requestedWarehouseId) {
+      const warehouse = await inventoryRepository.findWarehouseById(args.requestedWarehouseId);
+      assertTenantOwns(warehouse, args.ctx);
+      if (!warehouse.isActive) return null;
+      return warehouse._id.toString();
+    }
+
+    const balances = await inventoryRepository.listBalancesForItem(args.itemId);
+    for (const balance of balances) {
+      const warehouse = await inventoryRepository.findWarehouseById(balance.warehouseId);
+      if (!warehouse) continue;
+      if (!warehouse.tenantId.equals(args.ctx.tenantId)) continue;
+      if (!warehouse.isActive) continue;
+      return warehouse._id.toString();
+    }
+
+    const warehouses = await inventoryRepository.listWarehouses({
+      limit: 1,
+      isActive: true,
+    });
+    const warehouse = warehouses.rows[0] ?? null;
+    if (!warehouse) return null;
+    assertTenantOwns(warehouse, args.ctx);
+    return warehouse._id.toString();
   }
 
   /**

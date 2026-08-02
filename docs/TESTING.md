@@ -566,8 +566,10 @@ Mongo (see below).
 Body `{}`. Works only while `open`.
 
 **53. `POST /quotations/:id/accept` — pick a supplier → auto-create a draft PO** 🔑 · Role
-`supplier.quote.send` · auto-saves `poId`. Body: `{ "supplierId": "{{supplierId}}" }`.
-Works only while `open`. **This is where quotation → PO connects.**
+`supplier.quote.send` · auto-saves `poId`. Body: `{ "supplierId": "{{supplierId}}" }` or
+`{ "supplierId": "{{supplierId}}", "warehouseId": "{{warehouseId}}" }`.
+Works only while `open`. **This is where quotation → PO connects.** If `warehouseId` is
+omitted, the backend auto-picks an active warehouse from the same tenant.
 
 **54. `GET /quotations/:id/compare` — ranking + AI prose** · Role `supplier.read`.
 Returns suppliers ranked by real numbers (total cost, lead time) + an AI text summary.

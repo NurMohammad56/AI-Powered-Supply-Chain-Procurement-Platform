@@ -56,6 +56,7 @@ export type SubmitQuotationResponse = z.infer<typeof SubmitQuotationResponseSche
 
 export const AcceptQuotationRequestSchema = z.object({
   supplierId: objectIdStringSchema,
+  warehouseId: objectIdStringSchema.optional(),
 });
 export type AcceptQuotationRequest = z.infer<typeof AcceptQuotationRequestSchema>;
 
