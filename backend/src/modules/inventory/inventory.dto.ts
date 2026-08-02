@@ -102,7 +102,7 @@ export type ListItemsQuery = z.infer<typeof ListItemsQuerySchema>;
 export const StockAdjustmentRequestSchema = z.object({
   warehouseId: objectIdStringSchema,
   /** Signed delta - positive increases stock, negative decreases. */
-  quantityDelta: z.number().refine((v) => v !== 0, 'quantityDelta must be non-zero'),
+  quantityDelta: z.coerce.number().refine((v) => v !== 0, 'quantityDelta must be non-zero'),
   reasonCode: z.enum(REASON_CODES as unknown as [string, ...string[]]),
   notes: z.string().max(1000).optional(),
   attachmentUrl: z.string().url().max(2048).optional(),

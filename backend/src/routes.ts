@@ -12,6 +12,7 @@ import { aiRouter } from './modules/ai/ai.routes.js';
 import { rptRouter } from './modules/rpt/rpt.routes.js';
 import { notificationRouter } from './modules/notification/notification.routes.js';
 import { billingRouter, webhookRouter } from './modules/billing/billing.routes.js';
+import { uploadRouter } from './modules/upload/upload.routes.js';
 
 /**
  * Top-level v1 router. Mounts each module's public and private routers.
@@ -43,6 +44,7 @@ export function buildApiRouter(): Router {
   authenticated.use('/reports', rptRouter);
   authenticated.use('/notifications', notificationRouter);
   authenticated.use('/billing', billingRouter);
+  authenticated.use('/uploads', uploadRouter);
 
   router.use(authenticated);
 

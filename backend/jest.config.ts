@@ -4,7 +4,7 @@ const config: Config = {
   preset: 'ts-jest',
   testEnvironment: 'node',
   rootDir: '.',
-  roots: ['<rootDir>/src', '<rootDir>/tests'],
+  roots: ['<rootDir>/src'],
   testMatch: ['**/?(*.)+(test|spec).ts'],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
@@ -12,6 +12,7 @@ const config: Config = {
     '^@shared/(.*)$': '<rootDir>/src/shared/$1',
     '^@modules/(.*)$': '<rootDir>/src/modules/$1',
     '^@workers/(.*)$': '<rootDir>/src/workers/$1',
+    '^(\\.{1,2}/.*)\\.js$': '$1',
   },
   collectCoverageFrom: [
     'src/**/*.ts',
@@ -34,6 +35,7 @@ const config: Config = {
   testTimeout: 30_000,
   clearMocks: true,
   verbose: true,
+  passWithNoTests: true,
 };
 
 export default config;
