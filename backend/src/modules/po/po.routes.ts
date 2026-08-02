@@ -3,6 +3,12 @@ import { Router } from 'express';
 import { validate } from '../../shared/middleware/validate.js';
 import { rbacFor } from '../../shared/middleware/rbac.js';
 import { idempotencyKey } from '../../shared/middleware/idempotency.js';
+import { rateLimitFileUpload } from '../../shared/middleware/rateLimit.js';
+import {
+  parseMultipartJsonField,
+  parseSingleMultipartFile,
+  uploadMultipartFileToBody,
+} from '../../shared/uploads/multipart.js';
 import {
   ApprovePoRequestSchema,
   CancelPoRequestSchema,
@@ -99,6 +105,15 @@ poRouter.post(
   '/:id/receipts',
   rbacFor('po.receive'),
   idempotencyKey,
+  rateLimitFileUpload,
+  parseSingleMultipartFile('file'),
+  parseMultipartJsonField('payload'),
+  uploadMultipartFileToBody({
+    bodyField: 'grnDocumentUrl',
+    folder: 'po-grn-documents',
+    allowedKinds: ['image', 'document'],
+    optional: true,
+  }),
   validate(PoIdParamSchema, 'params'),
   validate(ReceivePoRequestSchema),
   poController.receive,

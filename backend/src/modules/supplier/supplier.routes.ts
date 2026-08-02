@@ -3,6 +3,8 @@ import { Router } from 'express';
 import { validate } from '../../shared/middleware/validate.js';
 import { rbacFor } from '../../shared/middleware/rbac.js';
 import { idempotencyKey } from '../../shared/middleware/idempotency.js';
+import { rateLimitFileUpload } from '../../shared/middleware/rateLimit.js';
+import { parseSingleMultipartFile, uploadMultipartFileToBody } from '../../shared/uploads/multipart.js';
 import {
   AddContactRequestSchema,
   AddDocumentRequestSchema,
@@ -90,6 +92,14 @@ supplierRouter.delete(
 supplierRouter.post(
   '/:id/documents',
   rbacFor('supplier.update'),
+  rateLimitFileUpload,
+  parseSingleMultipartFile('file'),
+  uploadMultipartFileToBody({
+    bodyField: 'url',
+    folder: 'supplier-documents',
+    allowedKinds: ['document'],
+    optional: true,
+  }),
   validate(SupplierIdParamSchema, 'params'),
   validate(AddDocumentRequestSchema),
   supplierController.addDocument,

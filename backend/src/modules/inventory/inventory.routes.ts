@@ -3,6 +3,8 @@ import { Router } from 'express';
 import { validate } from '../../shared/middleware/validate.js';
 import { rbacFor } from '../../shared/middleware/rbac.js';
 import { idempotencyKey } from '../../shared/middleware/idempotency.js';
+import { rateLimitFileUpload } from '../../shared/middleware/rateLimit.js';
+import { parseSingleMultipartFile, uploadMultipartFileToBody } from '../../shared/uploads/multipart.js';
 import {
   BulkImportRequestSchema,
   CategoryIdParamSchema,
@@ -148,6 +150,14 @@ inventoryRouter.post(
   '/items/:id/adjust',
   rbacFor('inventory.movement.create'),
   idempotencyKey,
+  rateLimitFileUpload,
+  parseSingleMultipartFile('file'),
+  uploadMultipartFileToBody({
+    bodyField: 'attachmentUrl',
+    folder: 'inventory-attachments',
+    allowedKinds: ['image', 'document'],
+    optional: true,
+  }),
   validate(ItemIdParamSchema, 'params'),
   validate(StockAdjustmentRequestSchema),
   inventoryController.adjustStock,
