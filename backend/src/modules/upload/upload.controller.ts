@@ -1,5 +1,3 @@
-import type { Request } from 'express';
-
 import { created } from '../../shared/http/apiResponse.js';
 import { asyncHandler } from '../../shared/http/asyncHandler.js';
 import { BadRequestError, UnauthorizedError } from '../../shared/errors/HttpErrors.js';
@@ -25,7 +23,7 @@ export const uploadController = {
       allowedKinds: [parsed.kind],
       metadata: {
         actorUserId: req.context.userId.toString(),
-        route: (req as Request).path,
+        route: req.path,
       },
     });
     return created(req, res, uploaded);

@@ -71,10 +71,10 @@ jest.mock('./po.pdf.js', () => ({
   renderPoPdf: jest.fn(),
 }));
 
-const { poService } = require('./po.service.js') as typeof import('./po.service.js');
-const { inventoryRepository } = require('../inventory/inventory.repository.js') as typeof import('../inventory/inventory.repository.js');
-const { aiRepository } = require('../ai/ai.repository.js') as typeof import('../ai/ai.repository.js');
-const { supplierRepository } = require('../supplier/supplier.repository.js') as typeof import('../supplier/supplier.repository.js');
+import { poService } from './po.service.js';
+import { inventoryRepository } from '../inventory/inventory.repository.js';
+import { aiRepository } from '../ai/ai.repository.js';
+import { supplierRepository } from '../supplier/supplier.repository.js';
 
 describe('poService.createFromForecast', () => {
   const tenantId = new Types.ObjectId();

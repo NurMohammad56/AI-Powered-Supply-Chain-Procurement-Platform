@@ -41,9 +41,9 @@ Thumbs.db
 tmp/
 temp/
 
-# Uploads (optional)
-uploads/
-public/uploads/
+# Uploads (optional, root-level only - do not shadow src/**/uploads source dirs)
+/uploads/
+/public/uploads/
 
 # TypeScript
 *.tsbuildinfo

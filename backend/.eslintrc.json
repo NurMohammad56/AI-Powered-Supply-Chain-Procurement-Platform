@@ -80,9 +80,10 @@
   },
   "overrides": [
     {
-      "files": ["tests/**/*.ts"],
+      "files": ["tests/**/*.ts", "src/**/*.spec.ts", "src/**/*.test.ts"],
       "rules": {
         "@typescript-eslint/no-explicit-any": "off",
+        "@typescript-eslint/unbound-method": "off",
         "boundaries/element-types": "off"
       }
     }
