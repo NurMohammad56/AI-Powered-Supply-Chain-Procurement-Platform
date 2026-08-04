@@ -22,6 +22,7 @@ import {
   estimateCostMicroUsd,
 } from './aiUsage.repository.js';
 import { listItemsForBatchForecast, prepareForecastContext } from './dataPreparation.js';
+import { fetchMovementHistoryInRange, sumConsumed } from './dataPreparation.js';
 import { runForecastPipeline, type PipelineResult } from './forecastPipeline.js';
 import type { ForecastDoc, ForecastHorizonDays } from './models/forecast.model.js';
 import type {
@@ -394,12 +395,14 @@ export class AiService {
   async getForecast(ctx: TenantContext, id: Types.ObjectId): Promise<ForecastView> {
     const f = await aiRepository.findById(id);
     assertTenantOwns(f, ctx);
-    return toView(f);
+    const reconciled = await this.reconcileForecastActuals(f);
+    return toView(reconciled);
   }
 
   async listForecasts(_ctx: TenantContext, query: ListForecastsQuery) {
     const page = await aiRepository.list(query);
-    return pagedView(page, toView);
+    const rows = await Promise.all(page.rows.map((row) => this.reconcileForecastActuals(row)));
+    return pagedView({ ...page, rows }, toView);
   }
 
   async overrideForecast(
@@ -427,12 +430,57 @@ export class AiService {
     });
     return toView(updated);
   }
+
+  private async reconcileForecastActuals(forecast: ForecastDoc): Promise<ForecastDoc> {
+    if (forecast.actualQuantity !== null && forecast.mape !== null) {
+      return forecast;
+    }
+
+    const forecastWindowEndsAt = new Date(
+      forecast.generatedAt.getTime() + forecast.horizonDays * 24 * 60 * 60 * 1000,
+    );
+    if (Date.now() < forecastWindowEndsAt.getTime()) {
+      return forecast;
+    }
+
+    const movements = await fetchMovementHistoryInRange({
+      tenantId: forecast.tenantId,
+      itemId: forecast.itemId,
+      from: forecast.generatedAt,
+      to: forecastWindowEndsAt,
+    });
+    const actualQuantity = sumConsumed(movements);
+    const mape = computeMape({
+      predictedQuantity: forecast.predictedQuantity,
+      actualQuantity,
+    });
+    const updated = await aiRepository.setActuals({
+      id: forecast._id,
+      actualQuantity,
+      mape,
+    });
+    return updated ?? forecast;
+  }
 }
 
 function pickHorizon(
   pipeline: PipelineResult,
   horizonDays: ForecastHorizonDays,
 ): { quantity: number; range: { lower: number; upper: number } } {
+  if (horizonDays === 7) {
+    return scaleRange({
+      quantity: pipeline.response.predictedQuantity30Day,
+      range: pipeline.response.predictedRange30Day,
+      factor: 7 / 30,
+    });
+  }
+  if (horizonDays === 14) {
+    return scaleRange({
+      quantity: pipeline.response.predictedQuantity30Day,
+      range: pipeline.response.predictedRange30Day,
+      factor: 14 / 30,
+    });
+  }
   if (horizonDays <= 30) {
     return {
       quantity: pipeline.response.predictedQuantity30Day,
@@ -449,6 +497,27 @@ function pickHorizon(
     quantity: pipeline.response.predictedQuantity90Day,
     range: pipeline.response.predictedRange90Day,
   };
+}
+
+function scaleRange(args: {
+  quantity: number;
+  range: { lower: number; upper: number };
+  factor: number;
+}): { quantity: number; range: { lower: number; upper: number } } {
+  return {
+    quantity: Math.max(0, Math.round(args.quantity * args.factor)),
+    range: {
+      lower: Math.max(0, Math.round(args.range.lower * args.factor)),
+      upper: Math.max(0, Math.round(args.range.upper * args.factor)),
+    },
+  };
+}
+
+function computeMape(args: { predictedQuantity: number; actualQuantity: number }): number {
+  if (args.actualQuantity === 0) {
+    return args.predictedQuantity === 0 ? 0 : 100;
+  }
+  return Math.round((Math.abs(args.actualQuantity - args.predictedQuantity) / args.actualQuantity) * 10_000) / 100;
 }
 
 /** Coerce JSON-revived dates back to Date objects. */

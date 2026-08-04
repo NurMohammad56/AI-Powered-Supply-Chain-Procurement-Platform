@@ -70,6 +70,25 @@ export class AiRepository {
       .lean<ForecastDoc>()
       .exec();
   }
+
+  async setActuals(args: {
+    id: Types.ObjectId;
+    actualQuantity: number;
+    mape: number;
+  }): Promise<ForecastDoc | null> {
+    return Forecast.findByIdAndUpdate(
+      args.id,
+      {
+        $set: {
+          actualQuantity: args.actualQuantity,
+          mape: args.mape,
+        },
+      },
+      { new: true, runValidators: true },
+    )
+      .lean<ForecastDoc>()
+      .exec();
+  }
 }
 
 export const aiRepository = new AiRepository();

@@ -107,7 +107,7 @@ export function coerceForecast(args: CoerceArgs): {
   const strictParse = StrictForecastResponseSchema.safeParse(args.rawJson);
   if (strictParse.success) {
     return {
-      response: enforceMonotonicHorizons(strictParse.data),
+      response: enrichDerivedFields(enforceMonotonicHorizons(strictParse.data), args),
       coerced: false,
       fallback: false,
     };
@@ -161,7 +161,7 @@ function repairFromLenient(
       : baseline.reorderPointSuggestion,
     anomalies: (parsed.anomalies ?? baseline.anomalies).map((s) => s.slice(0, 300)).slice(0, 20),
   };
-  return enforceMonotonicHorizons(candidate);
+  return enrichDerivedFields(enforceMonotonicHorizons(candidate), args);
 }
 
 function repairRange(
@@ -188,6 +188,20 @@ function enforceMonotonicHorizons(r: StrictForecastResponse): StrictForecastResp
 function roundOr(value: number | undefined, fallback: number): number {
   if (value === undefined || !Number.isFinite(value)) return fallback;
   return Math.max(0, Math.round(value));
+}
+
+function enrichDerivedFields(
+  response: StrictForecastResponse,
+  args: CoerceArgs,
+): StrictForecastResponse {
+  if (response.reorderPointSuggestion !== null) {
+    return response;
+  }
+  const baseline = deterministicBaseline(args);
+  return {
+    ...response,
+    reorderPointSuggestion: baseline.reorderPointSuggestion,
+  };
 }
 
 /**

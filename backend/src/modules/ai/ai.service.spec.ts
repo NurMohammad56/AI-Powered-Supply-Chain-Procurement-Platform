@@ -57,6 +57,7 @@ jest.mock('./ai.repository.js', () => ({
     findById: jest.fn(),
     list: jest.fn(),
     setOverride: jest.fn(),
+    setActuals: jest.fn(),
   },
 }));
 
@@ -76,6 +77,8 @@ jest.mock('./aiUsage.repository.js', () => ({
 jest.mock('./dataPreparation.js', () => ({
   prepareForecastContext: jest.fn(),
   listItemsForBatchForecast: jest.fn(),
+  fetchMovementHistoryInRange: jest.fn(),
+  sumConsumed: jest.fn(),
 }));
 
 jest.mock('./forecastPipeline.js', () => ({
@@ -89,6 +92,7 @@ import { Supplier } from '../supplier/models/supplier.model.js';
 import { aiRepository } from './ai.repository.js';
 import { aiUsageRepository, checkQuota, estimateCostMicroUsd } from './aiUsage.repository.js';
 import { prepareForecastContext } from './dataPreparation.js';
+import { fetchMovementHistoryInRange, sumConsumed } from './dataPreparation.js';
 import { runForecastPipeline } from './forecastPipeline.js';
 
 describe('aiService.generateForecast', () => {
@@ -249,5 +253,88 @@ describe('aiService.generateForecast', () => {
     expect(aiUsageRepository.increment).toHaveBeenCalled();
     expect(result.predictedQuantity).toBe(600);
     expect(result.provenance.provider).toBe('groq');
+  });
+
+  it('reconciles actualQuantity and mape after the forecast horizon has elapsed', async () => {
+    jest.spyOn(Date, 'now').mockReturnValue(new Date('2026-08-20T00:00:00.000Z').getTime());
+
+    jest.mocked(aiRepository.findById).mockResolvedValue({
+      _id: new Types.ObjectId(),
+      tenantId,
+      itemId,
+      horizonDays: 7,
+      predictedQuantity: 140,
+      predictedRange: { lower: 100, upper: 180 },
+      confidence: 'medium',
+      reasoning: 'test',
+      seasonalityDetected: false,
+      inputSeries: [],
+      reorderPointSuggestion: { quantity: 55, safetyStockFactor: 1.65, leadTimeDaysAssumed: 12 },
+      override: null,
+      provenance: {
+        provider: 'groq',
+        model: 'llama',
+        promptVersion: 'forecast-v1.0.1',
+        failoverInvoked: false,
+        latencyMs: 100,
+        cacheHit: false,
+        promptTokens: 100,
+        completionTokens: 20,
+      },
+      rawPrompt: null,
+      rawResponse: null,
+      generatedAt: new Date('2026-08-01T00:00:00.000Z'),
+      expiresAt: new Date('2026-08-02T00:00:00.000Z'),
+      actualQuantity: null,
+      mape: null,
+      createdAt: new Date('2026-08-01T00:00:00.000Z'),
+      updatedAt: new Date('2026-08-01T00:00:00.000Z'),
+    } as never);
+    jest.mocked(fetchMovementHistoryInRange).mockResolvedValue([] as never);
+    jest.mocked(sumConsumed).mockReturnValue(100);
+    jest.mocked(aiRepository.setActuals).mockResolvedValue({
+      _id: new Types.ObjectId(),
+      tenantId,
+      itemId,
+      horizonDays: 7,
+      predictedQuantity: 140,
+      predictedRange: { lower: 100, upper: 180 },
+      confidence: 'medium',
+      reasoning: 'test',
+      seasonalityDetected: false,
+      inputSeries: [],
+      reorderPointSuggestion: { quantity: 55, safetyStockFactor: 1.65, leadTimeDaysAssumed: 12 },
+      override: null,
+      provenance: {
+        provider: 'groq',
+        model: 'llama',
+        promptVersion: 'forecast-v1.0.1',
+        failoverInvoked: false,
+        latencyMs: 100,
+        cacheHit: false,
+        promptTokens: 100,
+        completionTokens: 20,
+      },
+      rawPrompt: null,
+      rawResponse: null,
+      generatedAt: new Date('2026-08-01T00:00:00.000Z'),
+      expiresAt: new Date('2026-08-02T00:00:00.000Z'),
+      actualQuantity: 100,
+      mape: 40,
+      createdAt: new Date('2026-08-01T00:00:00.000Z'),
+      updatedAt: new Date('2026-08-20T00:00:00.000Z'),
+    } as never);
+
+    const result = await aiService.getForecast(ctx, new Types.ObjectId());
+
+    expect(fetchMovementHistoryInRange).toHaveBeenCalled();
+    expect(aiRepository.setActuals).toHaveBeenCalledWith(
+      expect.objectContaining({
+        actualQuantity: 100,
+        mape: 40,
+      }),
+    );
+    expect(result.actualQuantity).toBe(100);
+    expect(result.mape).toBe(40);
   });
 });

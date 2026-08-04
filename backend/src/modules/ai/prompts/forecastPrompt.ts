@@ -37,6 +37,7 @@ predictedQuantity30Day = 40
 predictedQuantity60Day = 80
 predictedQuantity90Day = 120
 confidence = low
+reorderPointSuggestion.quantity = 18
 
 Example 3:
 INPUT:
@@ -48,6 +49,7 @@ predictedQuantity30Day = 0
 predictedQuantity60Day = 0
 predictedQuantity90Day = 0
 confidence = low
+reorderPointSuggestion = null
 `;
 
 export function renderForecastPrompt(context: ForecastContext): string {
@@ -84,7 +86,7 @@ Return ONLY valid JSON:
   "reasoning": string,
   "seasonalityDetected": boolean,
   "seasonalityNote": string | null,
-  "reorderPointSuggestion": null,
+  "reorderPointSuggestion": { "quantity": number, "safetyStockFactor": number, "leadTimeDaysAssumed": number } | null,
   "anomalies": string[]
 }
 `;

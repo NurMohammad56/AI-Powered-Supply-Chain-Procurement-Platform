@@ -61,17 +61,17 @@ interface MovementRow {
   quantity: number;
 }
 
-/** Fetch the last `windowDays` of stock movements for a tenant+item. */
-export async function fetchMovementHistory(args: {
+/** Fetch stock movements for a tenant+item between two instants. */
+export async function fetchMovementHistoryInRange(args: {
   tenantId: Types.ObjectId;
   itemId: Types.ObjectId;
-  windowDays: number;
+  from: Date;
+  to: Date;
 }): Promise<MovementRow[]> {
-  const since = new Date(Date.now() - args.windowDays * MS_PER_DAY);
   return StockMovement.find({
     tenantId: args.tenantId,
     itemId: args.itemId,
-    performedAt: { $gte: since },
+    performedAt: { $gte: args.from, $lt: args.to },
     // Consumption-relevant types only: outflows + adjustments.
     type: { $in: ['out', 'transfer_out', 'adjustment'] },
   })
@@ -79,6 +79,21 @@ export async function fetchMovementHistory(args: {
     .sort({ performedAt: 1 })
     .lean<MovementRow[]>()
     .exec();
+}
+
+/** Fetch the last `windowDays` of stock movements for a tenant+item. */
+export async function fetchMovementHistory(args: {
+  tenantId: Types.ObjectId;
+  itemId: Types.ObjectId;
+  windowDays: number;
+}): Promise<MovementRow[]> {
+  const since = new Date(Date.now() - args.windowDays * MS_PER_DAY);
+  return fetchMovementHistoryInRange({
+    tenantId: args.tenantId,
+    itemId: args.itemId,
+    from: since,
+    to: new Date(),
+  });
 }
 
 /**
@@ -212,6 +227,18 @@ export function computeFeatures(daily: DailyConsumptionPoint[]): ConsumptionFeat
     recencyBiasScore,
     dataSparsity,
   };
+}
+
+export function sumConsumed(movements: MovementRow[]): number {
+  let total = 0;
+  for (const m of movements) {
+    if (m.type === 'out' || m.type === 'transfer_out') {
+      total += m.quantity < 0 ? -m.quantity : m.quantity;
+    } else if (m.type === 'adjustment' && m.quantity < 0) {
+      total += -m.quantity;
+    }
+  }
+  return total;
 }
 
 /**
