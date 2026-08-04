@@ -82,18 +82,14 @@ jest.mock('./forecastPipeline.js', () => ({
   runForecastPipeline: jest.fn(),
 }));
 
-const { aiService } = require('./ai.service.js') as typeof import('./ai.service.js');
-const { redisCache } = require('../../config/redis.js') as typeof import('../../config/redis.js');
-const { Item } = require('../inventory/models/item.model.js') as typeof import('../inventory/models/item.model.js');
-const { Supplier } = require('../supplier/models/supplier.model.js') as typeof import('../supplier/models/supplier.model.js');
-const { aiRepository } = require('./ai.repository.js') as typeof import('./ai.repository.js');
-const {
-  aiUsageRepository,
-  checkQuota,
-  estimateCostMicroUsd,
-} = require('./aiUsage.repository.js') as typeof import('./aiUsage.repository.js');
-const { prepareForecastContext } = require('./dataPreparation.js') as typeof import('./dataPreparation.js');
-const { runForecastPipeline } = require('./forecastPipeline.js') as typeof import('./forecastPipeline.js');
+import { aiService } from './ai.service.js';
+import { redisCache } from '../../config/redis.js';
+import { Item } from '../inventory/models/item.model.js';
+import { Supplier } from '../supplier/models/supplier.model.js';
+import { aiRepository } from './ai.repository.js';
+import { aiUsageRepository, checkQuota, estimateCostMicroUsd } from './aiUsage.repository.js';
+import { prepareForecastContext } from './dataPreparation.js';
+import { runForecastPipeline } from './forecastPipeline.js';
 
 describe('aiService.generateForecast', () => {
   const tenantId = new Types.ObjectId();
@@ -119,8 +115,8 @@ describe('aiService.generateForecast', () => {
     const now = new Date('2026-08-02T12:00:00.000Z');
     jest.spyOn(Date, 'now').mockReturnValue(now.getTime());
 
-    jest.mocked(redisCache.set).mockResolvedValue('OK' as never);
-    jest.mocked(redisCache.get).mockResolvedValue(null as never);
+    jest.mocked(redisCache.set).mockResolvedValue('OK');
+    jest.mocked(redisCache.get).mockResolvedValue(null);
 
     jest.mocked(Item.findOne).mockReturnValue({
       lean: () => ({
@@ -168,7 +164,7 @@ describe('aiService.generateForecast', () => {
       allowed: true,
       softAlert: false,
       remaining: { tokens: 9000, forecastCalls: 99, reportCalls: 10 },
-    } as never);
+    });
 
     jest.mocked(runForecastPipeline).mockResolvedValue({
       response: {

@@ -51,11 +51,11 @@ jest.mock('../po/po.service.js', () => ({
   },
 }));
 
-const { quotationService } = require('./quotation.service.js') as typeof import('./quotation.service.js');
-const { quotationRepository } = require('./quotation.repository.js') as typeof import('./quotation.repository.js');
-const { supplierRepository } = require('./supplier.repository.js') as typeof import('./supplier.repository.js');
-const { inventoryRepository } = require('../inventory/inventory.repository.js') as typeof import('../inventory/inventory.repository.js');
-const { poService } = require('../po/po.service.js') as typeof import('../po/po.service.js');
+import { quotationService } from './quotation.service.js';
+import { quotationRepository } from './quotation.repository.js';
+import { supplierRepository } from './supplier.repository.js';
+import { inventoryRepository } from '../inventory/inventory.repository.js';
+import { poService } from '../po/po.service.js';
 
 describe('quotationService.accept', () => {
   const tenantId = new Types.ObjectId();
