@@ -1,12 +1,13 @@
 import { randomBytes } from 'node:crypto';
 import { Types } from 'mongoose';
 
+import { env } from '../../config/env.js';
 import { BadRequestError, ConflictError, NotFoundError, UnauthorizedError } from '../../shared/errors/HttpErrors.js';
 import { ErrorCodes } from '../../shared/errors/errorCodes.js';
 import { assertTenantOwns } from '../../shared/auth/assertTenantOwns.js';
 import { recordAudit, AuditActions } from '../../shared/audit/index.js';
 import { logger } from '../../config/logger.js';
-import { enqueueForecast, enqueueScheduled } from '../../shared/queue/queues.js';
+import { enqueueEmail, enqueueForecast, enqueueScheduled } from '../../shared/queue/queues.js';
 import type { TenantContext } from '../../shared/auth/types.js';
 import type { Page } from '../../shared/utils/pagination.js';
 import { runTextPipeline } from '../ai/forecastPipeline.js';
@@ -153,6 +154,42 @@ export class QuotationService {
       );
     });
 
+    const supplierById = new Map<string, typeof suppliers[number]>();
+    for (const supplier of suppliers) {
+      supplierById.set(supplier._id.toString(), supplier);
+    }
+    for (const invitation of created.supplierInvitations) {
+      const supplier = supplierById.get(invitation.supplierId.toString()) ?? null;
+      await enqueueEmail('email.send', {
+        tenantId: ctx.tenantId.toString(),
+        to: invitation.invitedContactEmail,
+        subject: `RFQ invitation: ${created.number}`,
+        html: this.renderSupplierInvitationEmail({
+          supplierName: supplier?.tradingName ?? supplier?.legalName ?? invitation.invitedContactEmail,
+          rfqNumber: created.number,
+          token: invitation.responseToken,
+          validUntil: created.validUntil,
+          lineCount: created.lines.length,
+        }),
+        template: 'quotation.invite_supplier',
+        tags: {
+          quotationId: created._id.toString(),
+          supplierId: invitation.supplierId.toString(),
+        },
+      }).catch((err: unknown) => {
+        logger.warn(
+          {
+            err,
+            event: 'quote.create.invite_email_enqueue_failed',
+            quotationId: created._id.toString(),
+            supplierId: invitation.supplierId.toString(),
+            to: invitation.invitedContactEmail,
+          },
+          'quotation invite email enqueue failed',
+        );
+      });
+    }
+
     return toView(created);
   }
 
@@ -183,54 +220,61 @@ export class QuotationService {
    * the quotation document found by token.
    */
   async submitResponse(token: string, input: SubmitQuotationResponse): Promise<QuotationView> {
-    const q = await quotationRepository.findByToken(token);
-    if (!q) {
+    const stub = await quotationRepository.findByTokenGlobal(token);
+    if (!stub) {
       throw new UnauthorizedError(ErrorCodes.QUOTE_INVALID_TOKEN, 'Invalid response token');
     }
-    if (q.status !== 'open') {
-      throw new ConflictError(ErrorCodes.RESOURCE_STATE_RACE, 'Quotation is not open');
-    }
-    const inv = q.supplierInvitations.find((i) => i.responseToken === token);
-    if (!inv) {
-      throw new UnauthorizedError(ErrorCodes.QUOTE_INVALID_TOKEN, 'Invalid response token');
-    }
-    if (inv.response) {
-      throw new ConflictError(ErrorCodes.QUOTE_ALREADY_RESPONDED, 'A response has already been recorded');
-    }
-    const now = new Date();
-    if (q.validUntil.getTime() < now.getTime()) {
-      throw new BadRequestError(ErrorCodes.QUOTE_EXPIRED, 'Quotation has expired');
-    }
-    const updated = await quotationRepository.setInvitationResponse({
-      id: q._id,
-      token,
-      response: {
-        submittedAt: now,
-        lines: input.lines.map((l) => ({
-          itemId: new Types.ObjectId(l.itemId),
-          unitPrice: l.unitPrice,
-          currency: l.currency,
-          moq: l.moq,
-          leadTimeDays: l.leadTimeDays,
-          validityDays: l.validityDays,
-          remarks: l.remarks ?? null,
-        })),
-        isLate: false,
-        comments: input.comments ?? null,
-      },
+
+    return quotationRepository.withScope(stub.tenantId, async () => {
+      const q = await quotationRepository.findByToken(token);
+      if (!q) {
+        throw new UnauthorizedError(ErrorCodes.QUOTE_INVALID_TOKEN, 'Invalid response token');
+      }
+      if (q.status !== 'open') {
+        throw new ConflictError(ErrorCodes.RESOURCE_STATE_RACE, 'Quotation is not open');
+      }
+      const inv = q.supplierInvitations.find((i) => i.responseToken === token);
+      if (!inv) {
+        throw new UnauthorizedError(ErrorCodes.QUOTE_INVALID_TOKEN, 'Invalid response token');
+      }
+      if (inv.response) {
+        throw new ConflictError(ErrorCodes.QUOTE_ALREADY_RESPONDED, 'A response has already been recorded');
+      }
+      const now = new Date();
+      if (q.validUntil.getTime() < now.getTime()) {
+        throw new BadRequestError(ErrorCodes.QUOTE_EXPIRED, 'Quotation has expired');
+      }
+      const updated = await quotationRepository.setInvitationResponse({
+        id: q._id,
+        token,
+        response: {
+          submittedAt: now,
+          lines: input.lines.map((l) => ({
+            itemId: new Types.ObjectId(l.itemId),
+            unitPrice: l.unitPrice,
+            currency: l.currency,
+            moq: l.moq,
+            leadTimeDays: l.leadTimeDays,
+            validityDays: l.validityDays,
+            remarks: l.remarks ?? null,
+          })),
+          isLate: false,
+          comments: input.comments ?? null,
+        },
+      });
+      if (!updated) {
+        throw new ConflictError(ErrorCodes.RESOURCE_STATE_RACE, 'Response could not be recorded');
+      }
+      void recordAudit({
+        tenantId: q.tenantId,
+        actorUserId: null,
+        actorRole: 'supplier',
+        action: AuditActions.QuoteResponseReceived,
+        target: { kind: 'quotation', id: q._id },
+        payload: { supplierId: inv.supplierId.toString() },
+      });
+      return toView(updated);
     });
-    if (!updated) {
-      throw new ConflictError(ErrorCodes.RESOURCE_STATE_RACE, 'Response could not be recorded');
-    }
-    void recordAudit({
-      tenantId: q.tenantId,
-      actorUserId: null,
-      actorRole: 'supplier',
-      action: AuditActions.QuoteResponseReceived,
-      target: { kind: 'quotation', id: q._id },
-      payload: { supplierId: inv.supplierId.toString() },
-    });
-    return toView(updated);
   }
 
   async accept(
@@ -484,11 +528,37 @@ Respond with the recommendation only, no preamble.`;
       recommendedSupplierId: recommended?.supplierId ?? null,
     };
   }
+
+  private renderSupplierInvitationEmail(args: {
+    supplierName: string;
+    rfqNumber: string;
+    token: string;
+    validUntil: Date;
+    lineCount: number;
+  }): string {
+    const url = `${env.FRONTEND_BASE_URL}/supplier/quotation-response?token=${encodeURIComponent(args.token)}`;
+    return [
+      `<p>Hi ${escapeHtml(args.supplierName)},</p>`,
+      `<p>You have been invited to respond to RFQ <strong>${escapeHtml(args.rfqNumber)}</strong>.</p>`,
+      `<p>This RFQ contains <strong>${args.lineCount}</strong> line(s) and expires on <strong>${escapeHtml(args.validUntil.toISOString())}</strong>.</p>`,
+      `<p>Submit your quotation here: <a href="${url}">${url}</a></p>`,
+      '<p>If the frontend is not hosted yet, the same token can be used directly against the public quotation response API.</p>',
+    ].join('');
+  }
 }
 
 // Reference imports kept intentionally to silence "unused" lint - the
 // forecast retrigger hook below is used when a quote auto-PO is drafted
 // against an item the dashboard is currently viewing.
 void enqueueForecast;
+
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
 
 export const quotationService = new QuotationService();
