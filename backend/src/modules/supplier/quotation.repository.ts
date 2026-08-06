@@ -1,5 +1,6 @@
 import type { FilterQuery, Types } from 'mongoose';
 
+import { tenantStorage } from '../../shared/db/tenancyPlugin.js';
 import { decodeCursor, paginate, type Page } from '../../shared/utils/pagination.js';
 import { QuotationRequest, type QuotationRequestDoc } from './models/quotationRequest.model.js';
 
@@ -12,6 +13,18 @@ export class QuotationRepository {
     return QuotationRequest.findOne({ 'supplierInvitations.responseToken': token })
       .lean<QuotationRequestDoc>()
       .exec();
+  }
+
+  async findByTokenGlobal(token: string): Promise<{ _id: Types.ObjectId; tenantId: Types.ObjectId } | null> {
+    const raw = await QuotationRequest.collection.findOne(
+      { 'supplierInvitations.responseToken': token },
+      { projection: { _id: 1, tenantId: 1 } },
+    );
+    if (!raw) return null;
+    return {
+      _id: raw._id as Types.ObjectId,
+      tenantId: raw.tenantId as Types.ObjectId,
+    };
   }
 
   async create(input: Partial<QuotationRequestDoc>): Promise<QuotationRequestDoc> {
@@ -86,6 +99,14 @@ export class QuotationRepository {
 
   async countForTenant(): Promise<number> {
     return QuotationRequest.countDocuments({}).exec();
+  }
+
+  withScope<T>(tenantId: Types.ObjectId, fn: () => Promise<T>): Promise<T> {
+    return new Promise<T>((resolve, reject) => {
+      tenantStorage.run({ tenantId }, () => {
+        fn().then(resolve, reject);
+      });
+    });
   }
 }
 
