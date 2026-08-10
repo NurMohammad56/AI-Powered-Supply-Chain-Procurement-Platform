@@ -53,7 +53,7 @@ function canTransition(from: PurchaseOrderState, to: PurchaseOrderState): boolea
   return PURCHASE_ORDER_TRANSITIONS[from].includes(to);
 }
 
-function toView(po: PurchaseOrderDoc): PoView {
+async function toView(po: PurchaseOrderDoc): Promise<PoView> {
   return {
     id: po._id.toString(),
     number: po.number,
@@ -80,7 +80,7 @@ function toView(po: PurchaseOrderDoc): PoView {
       remarks: l.remarks,
     })),
     totals: po.totals,
-    pdfUrl: po.pdfUrl,
+    pdfUrl: await resolvePdfUrl(po),
     pdfGeneratedAt: po.pdfGeneratedAt ? po.pdfGeneratedAt.toISOString() : null,
     approval: po.approval
       ? {
@@ -139,6 +139,20 @@ function pagedView<T, V>(page: Page<T>, mapper: (row: T) => V) {
     hasMore: page.hasMore,
     limit: page.limit,
   };
+}
+
+function resolveStoredPdfKey(po: PurchaseOrderDoc): string | null {
+  if (!po.pdfUrl) return null;
+  if (po.pdfUrl.startsWith('stub://')) return po.pdfUrl;
+  if (po.pdfUrl.startsWith('tenants/')) return po.pdfUrl;
+  return tenantKey(po.tenantId.toString(), 'po-pdf', `${po.number}.pdf`);
+}
+
+async function resolvePdfUrl(po: PurchaseOrderDoc, ttlSeconds?: number): Promise<string | null> {
+  const stored = resolveStoredPdfKey(po);
+  if (!stored) return null;
+  if (stored.startsWith('stub://')) return stored;
+  return presignGet(stored, ttlSeconds);
 }
 
 export class PoService {
@@ -278,7 +292,12 @@ export class PoService {
       from: query.from ? new Date(query.from) : undefined,
       to: query.to ? new Date(query.to) : undefined,
     });
-    return pagedView(page, toView);
+    return {
+      rows: await Promise.all(page.rows.map((row) => toView(row))),
+      nextCursor: page.nextCursor,
+      hasMore: page.hasMore,
+      limit: page.limit,
+    };
   }
 
   async submit(ctx: TenantContext, id: Types.ObjectId): Promise<PoView> {
@@ -435,7 +454,7 @@ export class PoService {
       toState: 'sent',
       extraSet: {
         dispatch: { sentAt: at, sentTo: input.sentTo, emailDeliveryId: null },
-        pdfUrl: pdfUrl ?? po.pdfUrl,
+        pdfUrl: resolveStoredPdfKey(po),
         pdfGeneratedAt: pdfUrl ? at : po.pdfGeneratedAt,
       },
     });
@@ -655,7 +674,7 @@ export class PoService {
       receivedItemIds: input.lines.map((l) => new Types.ObjectId(l.itemId)),
     });
 
-    return { po: toView(transitioned), receipt: toReceiptView(receipt) };
+    return { po: await toView(transitioned), receipt: toReceiptView(receipt) };
   }
 
   /**
@@ -853,10 +872,10 @@ export class PoService {
       });
       // Persist the storage key so subsequent reads can re-presign cheaply.
       await poRepository.update(po._id, {
-        pdfUrl: upload.url,
+        pdfUrl: key,
         pdfGeneratedAt: new Date(),
       });
-      return upload.url;
+      return await presignGet(key, 7 * 24 * 60 * 60);
     } catch (err) {
       logger.warn(
         { err, event: 'po.pdf.generation_failed', poId: po._id.toString() },
@@ -879,14 +898,7 @@ export class PoService {
       const url = await this.generateAndStorePdf(po);
       return { url };
     }
-    // The persisted URL is presigned and may be stale; re-derive the
-    // storage key and presign again. We accept a stub URL passthrough
-    // for dev environments.
-    if (po.pdfUrl.startsWith('stub://')) {
-      return { url: po.pdfUrl };
-    }
-    const key = tenantKey(po.tenantId.toString(), 'po-pdf', `${po.number}.pdf`);
-    return { url: await presignGet(key) };
+    return { url: await resolvePdfUrl(po) };
   }
 }
 
