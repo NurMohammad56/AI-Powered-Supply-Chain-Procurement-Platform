@@ -789,13 +789,19 @@ prices + seat limits.
 ```json
 {
   "tier": "starter",
-  "gateway": "stripe",
+  "gateway": "sslcommerz",
   "successUrl": "https://app.test/ok",
-  "cancelUrl": "https://app.test/cancel"
+  "cancelUrl": "https://app.test/cancel",
+  "failUrl": "https://app.test/fail",
+  "ipnUrl": "https://your-public-domain.test/api/v1/webhooks/sslcommerz"
 }
 ```
 
-⚠️ **Returns 501 NotImplemented today** — the payment gateway isn't wired yet.
+Returns a `redirectUrl` to the SSLCommerz hosted checkout page. In sandbox mode, use
+`SSLCOMMERZ_IS_LIVE=false` plus your sandbox store id/password in `.env`.
+If you are only demoing the checkout, you can also use the sandbox sample credentials
+shown in the official docs (`testbox` / `qwerty`) while you wait for your own merchant
+panel values.
 **88. `POST /billing/subscription/change` — schedule a tier change** · Owner · Body
 `{ "tier": "growth" }`. Applies at period end.
 **89. `POST /billing/subscription/cancel` — cancel** · Owner · Body
@@ -815,8 +821,8 @@ hand-made request without a valid signature is rejected (expected).
 > ⚠️ **Path note:** these mount at **`{{baseUrl}}/webhooks/...`** (i.e.
 > `http://localhost:4000/api/v1/webhooks/...`). The Postman collection uses
 > `{{baseUrl}}/../webhooks/...` which resolves to `/api/webhooks/...` and will 404 — fix
-> the request URL to `{{baseUrl}}/webhooks/stripe`. These are currently **stubs** (they
-> audit-log but don't verify signatures yet).
+> the request URL to `{{baseUrl}}/webhooks/sslcommerz`. SSLCommerz is wired to validate
+> the payment server-side; Stripe still remains a stub in this branch.
 
 ---
 
@@ -911,7 +917,7 @@ Then run #67 or #75. Live events today: `system.connected`, `ai.forecast.complet
 | Reports         | 5                         | turnover, spend, cost-compare, cash-flow, dead-stock                         |
 | Notifications   | 3                         | list, unread-count, mark-read                                                |
 | Billing         | 6                         | plans, subscription, change/cancel, invoices                                 |
-| Webhooks        | 2                         | stripe, sslcommerz (stubs)                                                   |
+| Webhooks        | 2                         | stripe stub, sslcommerz validated                                            |
 | Health          | 2                         | healthz, readyz                                                              |
 | **Total**       | **~94**                   | every one documented above                                                   |
 

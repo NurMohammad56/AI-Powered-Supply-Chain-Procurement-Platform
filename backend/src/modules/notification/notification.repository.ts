@@ -1,5 +1,6 @@
 import type { FilterQuery, Types } from 'mongoose';
 
+import { tenantStorage } from '../../shared/db/tenancyPlugin.js';
 import { decodeCursor, paginate, type Page } from '../../shared/utils/pagination.js';
 import { Notification, type NotificationDoc } from './models/notification.model.js';
 
@@ -28,6 +29,15 @@ export class NotificationRepository {
     return Notification.countDocuments({ userId, readAt: null }).exec();
   }
 
+  async create(
+    input: Omit<NotificationDoc, '_id' | 'tenantId' | 'createdAt' | 'updatedAt'> & {
+      tenantId?: Types.ObjectId;
+    },
+  ): Promise<NotificationDoc> {
+    const doc = await Notification.create(input);
+    return doc.toObject();
+  }
+
   async markRead(userId: Types.ObjectId, ids: Types.ObjectId[]): Promise<number> {
     const at = new Date();
     const result = await Notification.updateMany(
@@ -44,6 +54,14 @@ export class NotificationRepository {
       { $set: { readAt: at } },
     ).exec();
     return result.modifiedCount ?? 0;
+  }
+
+  withScope<T>(tenantId: Types.ObjectId, fn: () => Promise<T>): Promise<T> {
+    return new Promise<T>((resolve, reject) => {
+      tenantStorage.run({ tenantId }, () => {
+        fn().then(resolve, reject);
+      });
+    });
   }
 }
 
