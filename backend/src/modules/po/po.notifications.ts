@@ -2,8 +2,11 @@ import type { Types } from 'mongoose';
 
 import { logger } from '../../config/logger.js';
 import { enqueueEmail } from '../../shared/queue/queues.js';
+import { SocketEvents, userRoom } from '../../shared/realtime/events.js';
+import { getIo } from '../../shared/realtime/socketServer.js';
 import { User } from '../auth/models/user.model.js';
 import { Factory } from '../auth/models/factory.model.js';
+import { notificationRepository } from '../notification/notification.repository.js';
 import {
   renderDeliveryOverdueEmail,
   renderPoApprovedEmail,
@@ -21,10 +24,12 @@ import type { PurchaseOrderDoc } from './models/purchaseOrder.model.js';
  * must not break a state transition).
  */
 
-async function findManagersForApproval(tenantId: Types.ObjectId): Promise<Array<{ email: string; fullName: string }>> {
+async function findManagersForApproval(
+  tenantId: Types.ObjectId,
+): Promise<Array<{ _id: Types.ObjectId; email: string; fullName: string }>> {
   return User.find({ tenantId, role: { $in: ['owner', 'manager'] }, status: 'active' })
     .select({ email: 1, fullName: 1 })
-    .lean<Array<{ email: string; fullName: string }>>()
+    .lean<Array<{ _id: Types.ObjectId; email: string; fullName: string }>>()
     .exec();
 }
 
@@ -38,6 +43,49 @@ async function findUserById(tenantId: Types.ObjectId, userId: Types.ObjectId): P
 function dashboardLink(po: PurchaseOrderDoc): string {
   // FRONTEND_BASE_URL ships the dashboard; deep-link to the PO detail page.
   return `${process.env.FRONTEND_BASE_URL ?? 'http://localhost:3000'}/purchase-orders/${po._id.toString()}`;
+}
+
+async function createNotification(args: {
+  tenantId: Types.ObjectId;
+  userId: Types.ObjectId;
+  category: 'po_status' | 'delivery_reminder' | 'system';
+  title: string;
+  body: string;
+  link: string | null;
+  metadata: Record<string, unknown>;
+}): Promise<void> {
+  try {
+    const notification = await notificationRepository.withScope(args.tenantId, () =>
+      notificationRepository.create({
+        tenantId: args.tenantId,
+        userId: args.userId,
+        category: args.category,
+        title: args.title,
+        body: args.body,
+        link: args.link,
+        metadata: args.metadata,
+        readAt: null,
+        expiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
+      }),
+    );
+
+    try {
+      getIo().to(userRoom(args.userId.toString())).emit(SocketEvents.NotificationCreated, {
+        notificationId: notification._id.toString(),
+        category: notification.category,
+        title: notification.title,
+        link: notification.link ?? '',
+        createdAt: notification.createdAt.toISOString(),
+      });
+    } catch {
+      // Socket is optional for testing; the feed still persists.
+    }
+  } catch (err) {
+    logger.warn(
+      { err, event: 'notification.create_failed', tenantId: args.tenantId.toString(), userId: args.userId.toString() },
+      'failed to create in-app notification',
+    );
+  }
 }
 
 export async function notifyPoSubmitted(args: {
@@ -56,6 +104,15 @@ export async function notifyPoSubmitted(args: {
         approverName: approver.fullName,
         submitterName,
         approveLink: dashboardLink(args.po),
+      });
+      void createNotification({
+        tenantId: args.po.tenantId,
+        userId: approver._id,
+        category: 'po_status',
+        title: `PO submitted: ${args.po.number}`,
+        body: `${submitterName} submitted purchase order ${args.po.number} for approval.`,
+        link: dashboardLink(args.po),
+        metadata: { kind: 'po_submitted', poId: args.po._id.toString() },
       });
       await enqueueEmail('email.send', {
         tenantId: args.po.tenantId.toString(),
@@ -87,6 +144,15 @@ export async function notifyPoApproved(args: {
       approverName: approver?.fullName ?? 'A manager',
       pdfUrl: args.pdfUrl,
     });
+    void createNotification({
+      tenantId: args.po.tenantId,
+      userId: requesterId,
+      category: 'po_status',
+      title: `PO approved: ${args.po.number}`,
+      body: `Your purchase order ${args.po.number} was approved by ${approver?.fullName ?? 'a manager'}.`,
+      link: dashboardLink(args.po),
+      metadata: { kind: 'po_approved', poId: args.po._id.toString() },
+    });
     await enqueueEmail('email.send', {
       tenantId: args.po.tenantId.toString(),
       to: requester.email,
@@ -115,6 +181,15 @@ export async function notifyPoRejected(args: {
       requesterName: requester.fullName,
       approverName: approver?.fullName ?? 'A manager',
       reason: args.reason,
+    });
+    void createNotification({
+      tenantId: args.po.tenantId,
+      userId: requesterId,
+      category: 'po_status',
+      title: `PO rejected: ${args.po.number}`,
+      body: `Your purchase order ${args.po.number} was rejected. Reason: ${args.reason}`,
+      link: dashboardLink(args.po),
+      metadata: { kind: 'po_rejected', poId: args.po._id.toString(), reason: args.reason },
     });
     await enqueueEmail('email.send', {
       tenantId: args.po.tenantId.toString(),
@@ -169,6 +244,15 @@ export async function notifyPoFullyReceived(args: {
       po: args.po,
       recipientName: recipient.fullName,
       receivedQuantity: args.receivedQuantity,
+    });
+    void createNotification({
+      tenantId: args.po.tenantId,
+      userId: recipientId,
+      category: 'po_status',
+      title: `PO received: ${args.po.number}`,
+      body: `Purchase order ${args.po.number} was fully received (${args.receivedQuantity} units).`,
+      link: dashboardLink(args.po),
+      metadata: { kind: 'po_received', poId: args.po._id.toString(), receivedQuantity: args.receivedQuantity },
     });
     await enqueueEmail('email.send', {
       tenantId: args.po.tenantId.toString(),

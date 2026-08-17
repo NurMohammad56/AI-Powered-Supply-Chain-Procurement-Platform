@@ -8,6 +8,8 @@ export const CreateCheckoutSessionRequestSchema = z.object({
   gateway: z.enum(['stripe', 'sslcommerz']),
   successUrl: z.string().url().max(2048),
   cancelUrl: z.string().url().max(2048),
+  failUrl: z.string().url().max(2048).optional(),
+  ipnUrl: z.string().url().max(2048).optional(),
 });
 export type CreateCheckoutSessionRequest = z.infer<typeof CreateCheckoutSessionRequestSchema>;
 
