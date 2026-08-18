@@ -21,7 +21,7 @@ export class BillingRepository {
   ): Promise<SubscriptionDoc | null> {
     return Subscription.findOneAndUpdate(
       { tenantId },
-      { $set: patch },
+      { $set: { ...patch, tenantId } },
       { new: true, upsert: true, runValidators: true, setDefaultsOnInsert: true },
     )
       .lean<SubscriptionDoc>()
@@ -51,7 +51,17 @@ export class BillingRepository {
 
   async findInvoiceByGatewayIdGlobal(
     id: string,
-  ): Promise<Pick<InvoiceDoc, '_id' | 'tenantId' | 'subscriptionId' | 'amountTotal' | 'currency' | 'status' | 'gatewayInvoiceId' | 'gatewayPaymentIntentId'> | null> {
+  ): Promise<Pick<
+    InvoiceDoc,
+    | '_id'
+    | 'tenantId'
+    | 'subscriptionId'
+    | 'amountTotal'
+    | 'currency'
+    | 'status'
+    | 'gatewayInvoiceId'
+    | 'gatewayPaymentIntentId'
+  > | null> {
     const raw = await Invoice.collection.findOne(
       { gatewayInvoiceId: id },
       {
@@ -81,12 +91,18 @@ export class BillingRepository {
   }
 
   async upsertInvoiceByGatewayId(
+    tenantId: Types.ObjectId, // ADD this parameter
     gatewayInvoiceId: string,
     patch: Partial<InvoiceDoc>,
   ): Promise<InvoiceDoc | null> {
+    // gatewayInvoiceId/tenantId are also set via $setOnInsert below - Mongo
+    // rejects an update where the same path appears in both $set and
+    // $setOnInsert (ConflictingUpdateOperators), so they must never appear in
+    // $set too, whether hardcoded here or smuggled in through a caller's patch.
+    const { gatewayInvoiceId: _ignoredId, tenantId: _ignoredTenant, ...rest } = patch;
     return Invoice.findOneAndUpdate(
       { gatewayInvoiceId },
-      { $set: patch, $setOnInsert: { gatewayInvoiceId } },
+      { $set: rest, $setOnInsert: { gatewayInvoiceId, tenantId } },
       { new: true, upsert: true, runValidators: true, setDefaultsOnInsert: true },
     )
       .lean<InvoiceDoc>()
@@ -94,12 +110,16 @@ export class BillingRepository {
   }
 
   async upsertPaymentAttemptByGatewayId(
+    tenantId: Types.ObjectId,
     gatewayPaymentIntentId: string,
     patch: Partial<PaymentAttemptDoc>,
   ): Promise<PaymentAttemptDoc | null> {
+    // Same conflict as above: gatewayPaymentIntentId/tenantId must only be set
+    // via $setOnInsert, never duplicated into $set.
+    const { gatewayPaymentIntentId: _ignoredId, tenantId: _ignoredTenant, ...rest } = patch;
     return PaymentAttempt.findOneAndUpdate(
       { gatewayPaymentIntentId },
-      { $set: patch, $setOnInsert: { gatewayPaymentIntentId } },
+      { $set: rest, $setOnInsert: { gatewayPaymentIntentId, tenantId } },
       { new: true, upsert: true, runValidators: true, setDefaultsOnInsert: true },
     )
       .lean<PaymentAttemptDoc>()

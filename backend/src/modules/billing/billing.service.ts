@@ -112,7 +112,10 @@ function toInvoiceView(i: InvoiceDoc): InvoiceView {
   };
 }
 
-function pagedView<T, V>(page: { rows: T[]; nextCursor: string | null; hasMore: boolean; limit: number }, mapper: (row: T) => V) {
+function pagedView<T, V>(
+  page: { rows: T[]; nextCursor: string | null; hasMore: boolean; limit: number },
+  mapper: (row: T) => V,
+) {
   return {
     rows: page.rows.map(mapper),
     nextCursor: page.nextCursor,
@@ -206,7 +209,7 @@ export class BillingService {
     if (!subscription) throw new InternalError('BILLING_SUBSCRIPTION_UPSERT_FAILED');
 
     const invoiceNumber = genReference('INV');
-    const invoice = await billingRepository.upsertInvoiceByGatewayId(tranId, {
+    const invoice = await billingRepository.upsertInvoiceByGatewayId(ctx.tenantId, tranId, {
       subscriptionId: subscription._id,
       number: invoiceNumber,
       amountSubtotal: plan.monthlyPrice.amount,
@@ -225,7 +228,7 @@ export class BillingService {
     });
     if (!invoice) throw new InternalError('BILLING_INVOICE_UPSERT_FAILED');
 
-    const attempt = await billingRepository.upsertPaymentAttemptByGatewayId(tranId, {
+    const attempt = await billingRepository.upsertPaymentAttemptByGatewayId(ctx.tenantId, tranId, {
       invoiceId: invoice._id,
       subscriptionId: subscription._id,
       amount: invoice.amountTotal,
@@ -286,15 +289,18 @@ export class BillingService {
     });
 
     void billingRepository
-      .upsertInvoiceByGatewayId(tranId, {
+      .upsertInvoiceByGatewayId(ctx.tenantId, tranId, {
         gatewayPaymentIntentId: session.sessionKey ?? tranId,
       })
       .catch((err: unknown) =>
-        logger.warn({ err, event: 'billing.invoice_session_update_failed', tranId }, 'failed to persist SSLCommerz session key'),
+        logger.warn(
+          { err, event: 'billing.invoice_session_update_failed', tranId },
+          'failed to persist SSLCommerz session key',
+        ),
       );
 
     void billingRepository
-      .upsertPaymentAttemptByGatewayId(tranId, {
+      .upsertPaymentAttemptByGatewayId(ctx.tenantId, tranId, {
         gatewayResponseSummary: {
           gateway: 'sslcommerz',
           sessionKey: session.sessionKey,
@@ -302,7 +308,10 @@ export class BillingService {
         },
       })
       .catch((err: unknown) =>
-        logger.warn({ err, event: 'billing.attempt_session_update_failed', tranId }, 'failed to persist SSLCommerz response summary'),
+        logger.warn(
+          { err, event: 'billing.attempt_session_update_failed', tranId },
+          'failed to persist SSLCommerz response summary',
+        ),
       );
 
     return { redirectUrl: session.gatewayPageUrl };
@@ -369,7 +378,10 @@ export class BillingService {
     signature: string | null;
   }): Promise<{ accepted: boolean }> {
     if (args.gateway === 'stripe') {
-      throw new NotImplementedError('billing.stripe.webhook', 'Stripe webhook handling is disabled');
+      throw new NotImplementedError(
+        'billing.stripe.webhook',
+        'Stripe webhook handling is disabled',
+      );
     }
 
     const payload = parseBody(args.rawBody);
@@ -406,7 +418,10 @@ export class BillingService {
         validation.amount === null || Number(validation.amount) === Number(invoice.amountTotal);
       const currencyOk =
         validation.currency === null || validation.currency.toUpperCase() === invoice.currency;
-      const isSuccess = (status === 'VALID' || status === 'VALIDATED' || status === 'SUCCESS') && amountOk && currencyOk;
+      const isSuccess =
+        (status === 'VALID' || status === 'VALIDATED' || status === 'SUCCESS') &&
+        amountOk &&
+        currencyOk;
 
       if (isSuccess) {
         const paidAt = new Date();
@@ -420,13 +435,18 @@ export class BillingService {
           paymentMethod: null,
           seats: PLAN_BY_TIER.get(nextTier)?.seatLimit ?? subscription.seats,
         });
-        await billingRepository.upsertInvoiceByGatewayId(tranId ?? invoice.number, {
-          status: 'paid',
-          paidAt,
-          gatewayPaymentIntentId: tranId ?? invoice.gatewayPaymentIntentId,
-          failureReason: null,
-        });
+        await billingRepository.upsertInvoiceByGatewayId(
+          invoiceRef.tenantId,
+          tranId ?? invoice.number,
+          {
+            status: 'paid',
+            paidAt,
+            gatewayPaymentIntentId: tranId ?? invoice.gatewayPaymentIntentId,
+            failureReason: null,
+          },
+        );
         await billingRepository.upsertPaymentAttemptByGatewayId(
+          invoiceRef.tenantId,
           tranId ?? invoice.gatewayPaymentIntentId ?? invoice.number,
           {
             invoiceId: invoice._id,
@@ -471,12 +491,13 @@ export class BillingService {
         'payment_failed';
 
       await Promise.all([
-        billingRepository.upsertInvoiceByGatewayId(tranId ?? invoice.number, {
+        billingRepository.upsertInvoiceByGatewayId(invoiceRef.tenantId, tranId ?? invoice.number, {
           status: 'failed',
           failureReason: String(failureReason),
           gatewayPaymentIntentId: tranId ?? invoice.gatewayPaymentIntentId,
         }),
         billingRepository.upsertPaymentAttemptByGatewayId(
+          invoiceRef.tenantId,
           tranId ?? invoice.gatewayPaymentIntentId ?? invoice.number,
           {
             invoiceId: invoice._id,

@@ -162,11 +162,25 @@ export async function validateSslCommerzTransaction(input: {
     `${gatewayBaseUrl()}${endpoint}?${params.toString()}`,
     { method: 'GET' },
   );
-  const raw = await readJsonResponse(res);
+  const rawResponse = await readJsonResponse(res);
+  // `merchantTransIDvalidationAPI.php` (the tran_id-only lookup, used when we
+  // don't have a val_id) wraps the actual transaction fields in an `element`
+  // array: { APIConnect, no_of_trans_found, element: [{...}] }. The val_id-based
+  // `validationserverAPI.php` returns those same fields flat at the top level.
+  // Normalise to the flat shape so the rest of this function doesn't care which
+  // endpoint answered.
+  const element = Array.isArray(rawResponse.element)
+    ? (rawResponse.element[0] as Record<string, unknown> | undefined)
+    : undefined;
+  const raw = element ?? rawResponse;
   return {
     status: stringOrNull(raw.status),
-    amount: stringOrNull(raw.amount),
-    currency: stringOrNull(raw.currency),
+    // `amount`/`currency` are the settlement values (auto-converted to the
+    // store's base currency, e.g. BDT); `currency_amount`/`currency_type` are
+    // what the customer was actually charged in. We invoiced in the latter,
+    // so validate against that - not the converted settlement figures.
+    amount: stringOrNull(raw.currency_amount) ?? stringOrNull(raw.amount),
+    currency: stringOrNull(raw.currency_type) ?? stringOrNull(raw.currency),
     tranId: stringOrNull(raw.tran_id) ?? stringOrNull(raw.tranId),
     sessionKey: stringOrNull(raw.sessionkey) ?? stringOrNull(raw.sessionKey),
     valId: stringOrNull(raw.val_id) ?? stringOrNull(raw.valId),
