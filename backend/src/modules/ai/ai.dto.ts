@@ -74,3 +74,55 @@ export interface ForecastView {
   actualQuantity: number | null;
   mape: number | null;
 }
+
+export interface ForecastModelMetricView {
+  model: 'ai' | 'moving_average' | 'exponential_smoothing';
+  predictedQuantity: number;
+  absoluteError: number | null;
+  squaredError: number | null;
+  mae: number | null;
+  rmse: number | null;
+  mape: number | null;
+  note: string | null;
+}
+
+export interface ForecastEvaluationView {
+  forecastId: string;
+  itemId: string;
+  horizonDays: number;
+  actualQuantity: number | null;
+  metrics: {
+    mae: number | null;
+    rmse: number | null;
+    mape: number | null;
+  };
+  modelComparison: ForecastModelMetricView[];
+  recommendation: string;
+}
+
+export interface ForecastVisualizationView {
+  forecastId: string;
+  itemId: string;
+  horizonDays: number;
+  historicalDailySeries: Array<{
+    date: string;
+    consumed: number;
+    movingAverage7: number;
+    exponentialSmoothing: number;
+  }>;
+  monthlySeries: Array<{
+    month: string;
+    consumed: number;
+    movementCount: number;
+  }>;
+  forecastSeries: Array<{
+    model: 'ai' | 'moving_average' | 'exponential_smoothing';
+    label: string;
+    quantity: number;
+    lower: number;
+    upper: number;
+  }>;
+  seasonalityDetected: boolean;
+  trendDirection: string;
+  confidence: string;
+}
