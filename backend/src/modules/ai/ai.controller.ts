@@ -30,6 +30,16 @@ export const aiController = {
     const result = await aiService.getForecast(ctx, objId(req.params.id ?? ''));
     return ok(req, res, result);
   }),
+  forecastEvaluation: asyncHandler(async (req, res) => {
+    const ctx = requireContext(req);
+    const result = await aiService.getForecastEvaluation(ctx, objId(req.params.id ?? ''));
+    return ok(req, res, result);
+  }),
+  forecastVisualization: asyncHandler(async (req, res) => {
+    const ctx = requireContext(req);
+    const result = await aiService.getForecastVisualization(ctx, objId(req.params.id ?? ''));
+    return ok(req, res, result);
+  }),
   listForecasts: asyncHandler(async (req, res) => {
     const ctx = requireContext(req);
     const result = await aiService.listForecasts(ctx, req.query as never);

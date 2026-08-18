@@ -1,6 +1,10 @@
 import { Types } from 'mongoose';
 
-import { BadRequestError, NotFoundError, TooManyRequestsError } from '../../shared/errors/HttpErrors.js';
+import {
+  BadRequestError,
+  NotFoundError,
+  TooManyRequestsError,
+} from '../../shared/errors/HttpErrors.js';
 import { ErrorCodes } from '../../shared/errors/errorCodes.js';
 import { assertTenantOwns } from '../../shared/auth/assertTenantOwns.js';
 import { recordAudit, AuditActions } from '../../shared/audit/index.js';
@@ -27,6 +31,9 @@ import { runForecastPipeline, type PipelineResult } from './forecastPipeline.js'
 import type { ForecastDoc, ForecastHorizonDays } from './models/forecast.model.js';
 import type {
   ForecastView,
+  ForecastEvaluationView,
+  ForecastModelMetricView,
+  ForecastVisualizationView,
   GenerateForecastRequest,
   ListForecastsQuery,
   OverrideForecastRequest,
@@ -73,7 +80,11 @@ function pagedView<T, V>(page: Page<T>, mapper: (row: T) => V) {
   };
 }
 
-function rateLimitKey(tenantId: Types.ObjectId, itemId: Types.ObjectId, horizonDays: number): string {
+function rateLimitKey(
+  tenantId: Types.ObjectId,
+  itemId: Types.ObjectId,
+  horizonDays: number,
+): string {
   return `${RATE_LIMIT_PREFIX}${tenantId.toString()}:${itemId.toString()}:${horizonDays}`;
 }
 
@@ -137,9 +148,7 @@ export class AiService {
     }
 
     // 3. Load the item + supplier lead time.
-    const item = await Item.findOne({ _id: itemId, tenantId: ctx.tenantId })
-      .lean()
-      .exec();
+    const item = await Item.findOne({ _id: itemId, tenantId: ctx.tenantId }).lean().exec();
     if (!item) throw new NotFoundError();
     let leadTimeDays: number | null = null;
     if (item.preferredSupplierId) {
@@ -324,17 +333,23 @@ export class AiService {
   async runForecastForAll(args: {
     ctx: TenantContext;
     itemIds?: string[];
-  }): Promise<{ batchJobId: string; itemCount: number; estimatedCostUsd: number; estimatedTokens: number }> {
-    const items = args.itemIds && args.itemIds.length > 0
-      ? await Item.find({
-          tenantId: args.ctx.tenantId,
-          _id: { $in: args.itemIds.map((id) => new Types.ObjectId(id)) },
-          archivedAt: null,
-        })
-          .select({ _id: 1 })
-          .lean()
-          .exec()
-      : await listItemsForBatchForecast(args.ctx.tenantId);
+  }): Promise<{
+    batchJobId: string;
+    itemCount: number;
+    estimatedCostUsd: number;
+    estimatedTokens: number;
+  }> {
+    const items =
+      args.itemIds && args.itemIds.length > 0
+        ? await Item.find({
+            tenantId: args.ctx.tenantId,
+            _id: { $in: args.itemIds.map((id) => new Types.ObjectId(id)) },
+            archivedAt: null,
+          })
+            .select({ _id: 1 })
+            .lean()
+            .exec()
+        : await listItemsForBatchForecast(args.ctx.tenantId);
 
     if (items.length === 0) {
       throw new BadRequestError(ErrorCodes.BAD_REQUEST, 'No items eligible for forecasting');
@@ -397,6 +412,84 @@ export class AiService {
     assertTenantOwns(f, ctx);
     const reconciled = await this.reconcileForecastActuals(f);
     return toView(reconciled);
+  }
+
+  async getForecastEvaluation(
+    ctx: TenantContext,
+    id: Types.ObjectId,
+  ): Promise<ForecastEvaluationView> {
+    const f = await aiRepository.findById(id);
+    assertTenantOwns(f, ctx);
+    const reconciled = await this.reconcileForecastActuals(f);
+    const series = reconciled.inputSeries.map((p) => ({
+      date: p.periodStart.toISOString().slice(0, 10),
+      consumed: p.consumed,
+    }));
+    const modelComparison = buildForecastModelComparison({
+      series,
+      horizonDays: reconciled.horizonDays,
+      aiQuantity: reconciled.override?.quantity ?? reconciled.predictedQuantity,
+      actualQuantity: reconciled.actualQuantity,
+    });
+    return {
+      forecastId: reconciled._id.toString(),
+      itemId: reconciled.itemId.toString(),
+      horizonDays: reconciled.horizonDays,
+      actualQuantity: reconciled.actualQuantity,
+      metrics: {
+        mae:
+          reconciled.actualQuantity === null
+            ? null
+            : computeMae(reconciled.actualQuantity, reconciled.predictedQuantity),
+        rmse:
+          reconciled.actualQuantity === null
+            ? null
+            : computeRmse(reconciled.actualQuantity, reconciled.predictedQuantity),
+        mape: reconciled.mape,
+      },
+      modelComparison,
+      recommendation: buildForecastRecommendation(modelComparison, reconciled.actualQuantity),
+    };
+  }
+  async getForecastVisualization(
+    ctx: TenantContext,
+    id: Types.ObjectId,
+  ): Promise<ForecastVisualizationView> {
+    const f = await aiRepository.findById(id);
+    assertTenantOwns(f, ctx);
+    const reconciled = await this.reconcileForecastActuals(f);
+    const daily = buildForecastDailySeries(reconciled.inputSeries);
+    const monthly = buildForecastMonthlySeries(daily);
+    const horizonDays = reconciled.horizonDays;
+    const comparison = buildForecastModelComparison({
+      series: daily.map((p) => ({ date: p.date, consumed: p.consumed })),
+      horizonDays,
+      aiQuantity: reconciled.override?.quantity ?? reconciled.predictedQuantity,
+      actualQuantity: reconciled.actualQuantity,
+    });
+
+    return {
+      forecastId: reconciled._id.toString(),
+      itemId: reconciled.itemId.toString(),
+      horizonDays,
+      historicalDailySeries: daily,
+      monthlySeries: monthly,
+      forecastSeries: comparison.map((row) => ({
+        model: row.model,
+        label:
+          row.model === 'ai'
+            ? 'AI forecast'
+            : row.model === 'moving_average'
+              ? 'Moving average'
+              : 'Exponential smoothing',
+        quantity: row.predictedQuantity,
+        lower: row.predictedQuantity,
+        upper: row.predictedQuantity,
+      })),
+      seasonalityDetected: reconciled.seasonalityDetected,
+      trendDirection: inferTrendDirection(daily),
+      confidence: reconciled.confidence,
+    };
   }
 
   async listForecasts(_ctx: TenantContext, query: ListForecastsQuery) {
@@ -517,7 +610,173 @@ function computeMape(args: { predictedQuantity: number; actualQuantity: number }
   if (args.actualQuantity === 0) {
     return args.predictedQuantity === 0 ? 0 : 100;
   }
-  return Math.round((Math.abs(args.actualQuantity - args.predictedQuantity) / args.actualQuantity) * 10_000) / 100;
+  return (
+    Math.round(
+      (Math.abs(args.actualQuantity - args.predictedQuantity) / args.actualQuantity) * 10_000,
+    ) / 100
+  );
+}
+
+function computeMae(actualQuantity: number, predictedQuantity: number): number {
+  return Math.abs(actualQuantity - predictedQuantity);
+}
+
+function computeRmse(actualQuantity: number, predictedQuantity: number): number {
+  return Math.sqrt((actualQuantity - predictedQuantity) ** 2);
+}
+
+function buildForecastModelComparison(args: {
+  series: Array<{ date: string; consumed: number }>;
+  horizonDays: number;
+  aiQuantity: number;
+  actualQuantity: number | null;
+}): ForecastModelMetricView[] {
+  const movingAverageDaily = movingAverageDailyPrediction(args.series, 7);
+  const exponentialDaily = exponentialSmoothingDailyPrediction(args.series, 0.5);
+  const models: Array<{
+    model: ForecastModelMetricView['model'];
+    predictedQuantity: number;
+    note: string;
+  }> = [
+    {
+      model: 'ai',
+      predictedQuantity: Math.max(0, Math.round(args.aiQuantity)),
+      note: 'Persisted AI forecast or manual override.',
+    },
+    {
+      model: 'moving_average',
+      predictedQuantity: Math.max(0, Math.round(movingAverageDaily * args.horizonDays)),
+      note: '7-day moving average projected across the horizon.',
+    },
+    {
+      model: 'exponential_smoothing',
+      predictedQuantity: Math.max(0, Math.round(exponentialDaily * args.horizonDays)),
+      note: 'Single-parameter exponential smoothing with alpha=0.5.',
+    },
+  ];
+
+  return models.map((model) => {
+    if (args.actualQuantity === null) {
+      return {
+        model: model.model,
+        predictedQuantity: model.predictedQuantity,
+        absoluteError: null,
+        squaredError: null,
+        mae: null,
+        rmse: null,
+        mape: null,
+        note: model.note,
+      };
+    }
+    const abs = computeMae(args.actualQuantity, model.predictedQuantity);
+    const squared = (args.actualQuantity - model.predictedQuantity) ** 2;
+    const mape = computeMape({
+      actualQuantity: args.actualQuantity,
+      predictedQuantity: model.predictedQuantity,
+    });
+    return {
+      model: model.model,
+      predictedQuantity: model.predictedQuantity,
+      absoluteError: abs,
+      squaredError: squared,
+      mae: abs,
+      rmse: Math.sqrt(squared),
+      mape,
+      note: model.note,
+    };
+  });
+}
+
+function buildForecastRecommendation(
+  comparisons: ForecastModelMetricView[],
+  actualQuantity: number | null,
+): string {
+  if (comparisons.length === 0) return 'No comparison data available.';
+  if (actualQuantity === null) {
+    return 'Actual demand is not yet available. Use the moving-average and exponential-smoothing baselines as comparison points.';
+  }
+  const ranked = [...comparisons]
+    .filter((row) => row.mae !== null)
+    .sort((a, b) => (a.mae ?? Number.POSITIVE_INFINITY) - (b.mae ?? Number.POSITIVE_INFINITY));
+  const best = ranked[0];
+  if (!best) return 'No comparable forecast models available.';
+  return `Best back-tested model for this horizon is ${best.model.replace('_', ' ')} with MAE ${best.mae}.`;
+}
+
+function buildForecastDailySeries(
+  inputSeries: Array<{ periodStart: Date; periodEnd: Date; consumed: number }>,
+): Array<{
+  date: string;
+  consumed: number;
+  movingAverage7: number;
+  exponentialSmoothing: number;
+}> {
+  const ordered = inputSeries
+    .map((p) => ({ date: p.periodStart.toISOString().slice(0, 10), consumed: p.consumed }))
+    .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+  const out: Array<{
+    date: string;
+    consumed: number;
+    movingAverage7: number;
+    exponentialSmoothing: number;
+  }> = [];
+  let smoothing = 0;
+  for (let i = 0; i < ordered.length; i += 1) {
+    const slice = ordered.slice(Math.max(0, i - 6), i + 1);
+    const movingAverage7 =
+      slice.length > 0 ? slice.reduce((sum, row) => sum + row.consumed, 0) / slice.length : 0;
+    smoothing = i === 0 ? ordered[i]!.consumed : 0.5 * ordered[i]!.consumed + 0.5 * smoothing;
+    out.push({
+      date: ordered[i]!.date,
+      consumed: ordered[i]!.consumed,
+      movingAverage7: Math.round(movingAverage7 * 100) / 100,
+      exponentialSmoothing: Math.round(smoothing * 100) / 100,
+    });
+  }
+  return out;
+}
+
+function buildForecastMonthlySeries(
+  daily: Array<{ date: string; consumed: number }>,
+): Array<{ month: string; consumed: number; movementCount: number }> {
+  const buckets = new Map<string, { consumed: number; movementCount: number }>();
+  for (const point of daily) {
+    const month = point.date.slice(0, 7);
+    const current = buckets.get(month) ?? { consumed: 0, movementCount: 0 };
+    current.consumed += point.consumed;
+    if (point.consumed > 0) current.movementCount += 1;
+    buckets.set(month, current);
+  }
+  return Array.from(buckets.entries())
+    .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+    .map(([month, value]) => ({ month, ...value }));
+}
+
+function movingAverageDailyPrediction(
+  series: Array<{ date: string; consumed: number }>,
+  windowSize: number,
+): number {
+  const slice = series.slice(-Math.max(1, windowSize));
+  if (slice.length === 0) return 0;
+  return slice.reduce((sum, row) => sum + row.consumed, 0) / slice.length;
+}
+
+function exponentialSmoothingDailyPrediction(
+  series: Array<{ date: string; consumed: number }>,
+  alpha: number,
+): number {
+  if (series.length === 0) return 0;
+  let level = series[0]!.consumed;
+  for (let i = 1; i < series.length; i += 1) {
+    level = alpha * series[i]!.consumed + (1 - alpha) * level;
+  }
+  return level;
+}
+
+function inferTrendDirection(series: Array<{ date: string; consumed: number }>): string {
+  if (series.length < 2) return 'flat';
+  const slope = series.reduce((sum, row, index) => sum + index * row.consumed, 0);
+  return slope === 0 ? 'flat' : slope > 0 ? 'increasing' : 'decreasing';
 }
 
 /** Coerce JSON-revived dates back to Date objects. */

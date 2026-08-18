@@ -35,6 +35,18 @@ aiRouter.get(
   validate(ForecastIdParamSchema, 'params'),
   aiController.getForecast,
 );
+aiRouter.get(
+  '/forecasts/:id/evaluation',
+  rbacFor('ai.forecast.generate'),
+  validate(ForecastIdParamSchema, 'params'),
+  aiController.forecastEvaluation,
+);
+aiRouter.get(
+  '/forecasts/:id/visualization',
+  rbacFor('ai.forecast.generate'),
+  validate(ForecastIdParamSchema, 'params'),
+  aiController.forecastVisualization,
+);
 aiRouter.post(
   '/forecasts/:id/override',
   rbacFor('ai.forecast.override'),
