@@ -42,7 +42,7 @@ export const rptController = {
   }),
   abcAnalysis: asyncHandler(async (req, res) => {
     const ctx = requireContext(req);
-    const result = await rptService.abcAnalysis(ctx, req.query as never);
+    const result = await rptService.abcAnalysis(ctx, req.query);
     return ok(req, res, result);
   }),
   eoq: asyncHandler(async (req, res) => {
@@ -52,7 +52,7 @@ export const rptController = {
   }),
   budgetStatus: asyncHandler(async (req, res) => {
     const ctx = requireContext(req);
-    const result = await rptService.getBudgetStatus(ctx, req.query as never);
+    const result = await rptService.getBudgetStatus(ctx, req.query);
     return ok(req, res, result);
   }),
   upsertBudget: asyncHandler(async (req, res) => {

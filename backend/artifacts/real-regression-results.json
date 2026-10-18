@@ -1,0 +1,2376 @@
+{
+  "generatedAt": "2026-10-18T07:12:36.199Z",
+  "passed": 218,
+  "failed": 0,
+  "results": [
+    {
+      "name": "POST /auth/login",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200
+        ]
+      }
+    },
+    {
+      "name": "GET /inventory/items?limit=1",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "GET /inventory/warehouses?isActive=true&q=Gazipur&limit=1",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "GET /inventory/warehouses?isActive=false&q=Missing",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "GET /inventory/categories?q=Knit&parentId=6ad469e1663965b6a909bb0f",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "GET /inventory/items?q=Cotton&type=raw_material&categoryId=6ad469e1663965b6a909bb0f&supplierId=6ad469e2663965b6a909bb20&archived=false&limit=1",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "GET /inventory/items?archived=true",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "GET /inventory/low-stock?warehouseId=6ad469e1663965b6a909bb00&limit=1",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "GET /inventory/items/6ad469e2663965b6a909bb41/history?warehouseId=6ad469e1663965b6a909bb00&type=out&from=2026-04-21T07%3A11%3A46.419Z&to=2026-10-18T07%3A11%3A46.419Z&limit=1",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "GET /suppliers?q=Meghna&status=active&tier=strategic&categoryId=6ad469e1663965b6a909bb0f&limit=1",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "GET /suppliers?status=inactive&tier=backup",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "GET /quotations?status=open&limit=1",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "GET /quotations?status=closed",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "GET /quotations?status=cancelled",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "GET /purchase-orders?state=sent&supplierId=6ad469e2663965b6a909bb20&q=PO&from=2026-04-21T07%3A11%3A46.419Z&to=2026-10-18T07%3A11%3A46.419Z&limit=1",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "GET /ai/forecasts?itemId=6ad469e2663965b6a909bb41&horizonDays=60&limit=1",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "GET /notifications?unreadOnly=true&category=system&limit=1",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "GET /notifications?unreadOnly=false&category=po_status",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "GET /billing/invoices?status=paid&limit=1",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "GET /auth/users?role=manager&status=active&limit=1",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "GET /inventory/items/000000000000000000000001",
+      "pass": true,
+      "detail": {
+        "status": 404,
+        "expected": [
+          404
+        ]
+      }
+    },
+    {
+      "name": "GET /inventory/warehouses/000000000000000000000001",
+      "pass": true,
+      "detail": {
+        "status": 404,
+        "expected": [
+          404
+        ]
+      }
+    },
+    {
+      "name": "GET /inventory/categories/000000000000000000000001",
+      "pass": true,
+      "detail": {
+        "status": 404,
+        "expected": [
+          404
+        ]
+      }
+    },
+    {
+      "name": "GET /suppliers/000000000000000000000001",
+      "pass": true,
+      "detail": {
+        "status": 404,
+        "expected": [
+          404
+        ]
+      }
+    },
+    {
+      "name": "GET /quotations/000000000000000000000001",
+      "pass": true,
+      "detail": {
+        "status": 404,
+        "expected": [
+          404
+        ]
+      }
+    },
+    {
+      "name": "GET /purchase-orders/000000000000000000000001",
+      "pass": true,
+      "detail": {
+        "status": 404,
+        "expected": [
+          404
+        ]
+      }
+    },
+    {
+      "name": "GET /ai/forecasts/000000000000000000000001",
+      "pass": true,
+      "detail": {
+        "status": 404,
+        "expected": [
+          404
+        ]
+      }
+    },
+    {
+      "name": "GET /billing/invoices/000000000000000000000001",
+      "pass": true,
+      "detail": {
+        "status": 404,
+        "expected": [
+          404
+        ]
+      }
+    },
+    {
+      "name": "GET /auth/me",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "GET /auth/users",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "GET /inventory/warehouses",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "GET /inventory/categories",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "GET /inventory/items?limit=100",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "GET /inventory/low-stock",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "GET /inventory/items/6ad469e2663965b6a909bb41/history",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "GET /inventory/items/6ad469e2663965b6a909bb41/balances",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "GET /suppliers",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "GET /quotations",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "GET /purchase-orders",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "GET /ai/usage",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "GET /ai/forecasts",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "GET /ai/insights",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "GET /billing/plans",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "GET /billing/subscription",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "GET /billing/invoices",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "GET /notifications",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "GET /notifications/unread-count",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "GET /reports/cash-flow-projection",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "GET /reports/budget",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "GET /reports/eoq?itemId=6ad469e2663965b6a909bb41",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "GET /reports/inventory-turnover?from=2026-04-21T07%3A11%3A47.751Z&to=2026-10-18T07%3A11%3A47.751Z",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "GET /reports/spend-by-supplier?from=2026-04-21T07%3A11%3A47.751Z&to=2026-10-18T07%3A11%3A47.751Z",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "GET /reports/supplier-cost-comparison?from=2026-04-21T07%3A11%3A47.751Z&to=2026-10-18T07%3A11%3A47.751Z",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "GET /reports/dead-stock?from=2026-04-21T07%3A11%3A47.751Z&to=2026-10-18T07%3A11%3A47.751Z",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "GET /reports/abc-analysis?from=2026-04-21T07%3A11%3A47.751Z&to=2026-10-18T07%3A11%3A47.751Z",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "GET /ai/forecasts/6ad46a00663965b6a909be03",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "GET /ai/forecasts/6ad46a00663965b6a909be03/evaluation",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "GET /ai/forecasts/6ad46a00663965b6a909be03/visualization",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "POST /ai/forecasts/6ad46a00663965b6a909be03/override",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "Real WebSocket authenticates demo user",
+      "pass": true
+    },
+    {
+      "name": "GET /inventory/items",
+      "pass": true,
+      "detail": {
+        "status": 401,
+        "expected": [
+          401
+        ]
+      }
+    },
+    {
+      "name": "Malformed JSON returns 400",
+      "pass": true,
+      "detail": 400
+    },
+    {
+      "name": "Oversize JSON returns 413",
+      "pass": true,
+      "detail": 413
+    },
+    {
+      "name": "GET /inventory/items",
+      "pass": true,
+      "detail": {
+        "status": 403,
+        "expected": [
+          403
+        ]
+      }
+    },
+    {
+      "name": "POST /inventory/warehouses",
+      "pass": true,
+      "detail": {
+        "status": 201,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "GET /inventory/warehouses/6ad4713603313fdffb24c580",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "PATCH /inventory/warehouses/6ad4713603313fdffb24c580",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "DELETE /inventory/warehouses/6ad4713603313fdffb24c580",
+      "pass": true,
+      "detail": {
+        "status": 204,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "POST /inventory/categories",
+      "pass": true,
+      "detail": {
+        "status": 201,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "GET /inventory/categories/6ad4713603313fdffb24c58c",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "PATCH /inventory/categories/6ad4713603313fdffb24c58c",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "DELETE /inventory/categories/6ad4713603313fdffb24c58c",
+      "pass": true,
+      "detail": {
+        "status": 204,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "POST /inventory/items",
+      "pass": true,
+      "detail": {
+        "status": 201,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "PATCH /inventory/items/6ad4713703313fdffb24c594",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "POST /inventory/items/6ad469e2663965b6a909bb41/adjust",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200
+        ]
+      }
+    },
+    {
+      "name": "POST /inventory/items/6ad469e2663965b6a909bb41/adjust",
+      "pass": true,
+      "detail": {
+        "status": 409,
+        "expected": [
+          409
+        ]
+      }
+    },
+    {
+      "name": "Idempotency rejects changed payload without extra stock",
+      "pass": true,
+      "detail": {
+        "before": 672,
+        "after": 673
+      }
+    },
+    {
+      "name": "POST /inventory/items/6ad4713703313fdffb24c594/adjust",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "POST /inventory/items/6ad4713703313fdffb24c594/adjust",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          400,
+          409
+        ]
+      }
+    },
+    {
+      "name": "POST /inventory/items/6ad4713703313fdffb24c594/adjust",
+      "pass": true,
+      "detail": {
+        "status": 400,
+        "expected": [
+          200,
+          400,
+          409
+        ]
+      }
+    },
+    {
+      "name": "Concurrent deductions never overspend stock",
+      "pass": true,
+      "detail": {
+        "statuses": [
+          400,
+          200
+        ],
+        "quantity": 2
+      }
+    },
+    {
+      "name": "POST /inventory/items/6ad4713703313fdffb24c594/transfer",
+      "pass": true,
+      "detail": {
+        "status": 400,
+        "expected": [
+          400
+        ]
+      }
+    },
+    {
+      "name": "POST /inventory/bulk-import",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "Atomic bulk import rolls back earlier rows",
+      "pass": true
+    },
+    {
+      "name": "POST /inventory/bulk-import",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "GET /suppliers/6ad469e2663965b6a909bb20",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "PATCH /suppliers/6ad469e2663965b6a909bb20",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "GET /suppliers/6ad469e2663965b6a909bb20/performance",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "GET /suppliers/compare?ids=6ad469e2663965b6a909bb20,6ad469e2663965b6a909bb24",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "POST /suppliers/6ad469e2663965b6a909bb20/contacts",
+      "pass": true,
+      "detail": {
+        "status": 201,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "PATCH /suppliers/6ad469e2663965b6a909bb20/contacts/1",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "DELETE /suppliers/6ad469e2663965b6a909bb20/contacts/1",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "POST /suppliers",
+      "pass": true,
+      "detail": {
+        "status": 201,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "DELETE /suppliers/6ad4713903313fdffb24c5da",
+      "pass": true,
+      "detail": {
+        "status": 204,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "POST /purchase-orders",
+      "pass": true,
+      "detail": {
+        "status": 201,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "PATCH /purchase-orders/6ad4713903313fdffb24c5e5",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "PATCH /purchase-orders/6ad4713903313fdffb24c5e5",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "Tax-only PO update recalculates totals",
+      "pass": true,
+      "detail": {
+        "subtotal": 4800,
+        "tax": 480,
+        "total": 5280
+      }
+    },
+    {
+      "name": "PATCH /purchase-orders/6ad4713903313fdffb24c5e5",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "Line and tax PO revision uses the supplied tax rate",
+      "pass": true,
+      "detail": {
+        "subtotal": 4800,
+        "tax": 240,
+        "total": 5040
+      }
+    },
+    {
+      "name": "POST /purchase-orders/6ad4713903313fdffb24c5e5/approve",
+      "pass": true,
+      "detail": {
+        "status": 409,
+        "expected": [
+          409
+        ]
+      }
+    },
+    {
+      "name": "POST /purchase-orders/6ad4713903313fdffb24c5e5/close",
+      "pass": true,
+      "detail": {
+        "status": 409,
+        "expected": [
+          409
+        ]
+      }
+    },
+    {
+      "name": "POST /purchase-orders/6ad4713903313fdffb24c5e5/submit",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "POST /purchase-orders/6ad4713903313fdffb24c5e5/approve",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "POST /purchase-orders/6ad4713903313fdffb24c5e5/send",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "POST /purchase-orders/6ad4713903313fdffb24c5e5/receipts",
+      "pass": true,
+      "detail": {
+        "status": 400,
+        "expected": [
+          400
+        ]
+      }
+    },
+    {
+      "name": "POST /purchase-orders/6ad4713903313fdffb24c5e5/receipts",
+      "pass": true,
+      "detail": {
+        "status": 400,
+        "expected": [
+          400
+        ]
+      }
+    },
+    {
+      "name": "POST /purchase-orders/6ad4713903313fdffb24c5e5/receipts",
+      "pass": true,
+      "detail": {
+        "status": 201,
+        "expected": [
+          200,
+          201,
+          400,
+          409
+        ]
+      }
+    },
+    {
+      "name": "POST /purchase-orders/6ad4713903313fdffb24c5e5/receipts",
+      "pass": true,
+      "detail": {
+        "status": 400,
+        "expected": [
+          200,
+          201,
+          400,
+          409
+        ]
+      }
+    },
+    {
+      "name": "Concurrent receipts do not over-receive",
+      "pass": true,
+      "detail": [
+        201,
+        400
+      ]
+    },
+    {
+      "name": "GET /purchase-orders/6ad4713903313fdffb24c5e5/receipts",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "POST /purchase-orders/6ad4713903313fdffb24c5e5/receipts",
+      "pass": true,
+      "detail": {
+        "status": 201,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "POST /purchase-orders/6ad4713903313fdffb24c5e5/close",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "POST /purchase-orders/6ad4713903313fdffb24c5e5/cancel",
+      "pass": true,
+      "detail": {
+        "status": 409,
+        "expected": [
+          409
+        ]
+      }
+    },
+    {
+      "name": "PATCH /purchase-orders/6ad4713903313fdffb24c5e5",
+      "pass": true,
+      "detail": {
+        "status": 409,
+        "expected": [
+          409
+        ]
+      }
+    },
+    {
+      "name": "POST /purchase-orders",
+      "pass": true,
+      "detail": {
+        "status": 201,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "POST /purchase-orders/6ad4713d03313fdffb24c656/reject",
+      "pass": true,
+      "detail": {
+        "status": 409,
+        "expected": [
+          409
+        ]
+      }
+    },
+    {
+      "name": "POST /purchase-orders/6ad4713d03313fdffb24c656/submit",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "POST /purchase-orders/6ad4713d03313fdffb24c656/reject",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "PATCH /purchase-orders/6ad4713d03313fdffb24c656",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "Rejected PO revision returns to draft",
+      "pass": true
+    },
+    {
+      "name": "POST /purchase-orders/6ad4713d03313fdffb24c656/cancel",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "POST /purchase-orders/from-forecast",
+      "pass": true,
+      "detail": {
+        "status": 201,
+        "expected": [
+          201
+        ]
+      }
+    },
+    {
+      "name": "GET /purchase-orders/6ad4713903313fdffb24c5e5/pdf",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "Real R2 PO PDF downloads with valid PDF header",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "size": 3468
+      }
+    },
+    {
+      "name": "POST /uploads",
+      "pass": true,
+      "detail": {
+        "status": 201,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "File upload stored in real object storage",
+      "pass": true,
+      "detail": true
+    },
+    {
+      "name": "Uploaded file downloads",
+      "pass": true,
+      "detail": 200
+    },
+    {
+      "name": "POST /suppliers/6ad469e2663965b6a909bb20/documents",
+      "pass": true,
+      "detail": {
+        "status": 201,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "DELETE /suppliers/6ad469e2663965b6a909bb20/documents/0",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "POST /uploads",
+      "pass": true,
+      "detail": {
+        "status": 400,
+        "expected": [
+          400,
+          415
+        ]
+      }
+    },
+    {
+      "name": "POST /quotations",
+      "pass": true,
+      "detail": {
+        "status": 201,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "POST /public/quotations/responses/949666680fafd32cfcd6424fb73dfcf74d08959c17b92eae248190636d625da7",
+      "pass": true,
+      "detail": {
+        "status": 400,
+        "expected": [
+          400
+        ]
+      }
+    },
+    {
+      "name": "POST /public/quotations/responses/949666680fafd32cfcd6424fb73dfcf74d08959c17b92eae248190636d625da7",
+      "pass": true,
+      "detail": {
+        "status": 400,
+        "expected": [
+          400
+        ]
+      }
+    },
+    {
+      "name": "POST /public/quotations/responses/949666680fafd32cfcd6424fb73dfcf74d08959c17b92eae248190636d625da7",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200
+        ]
+      }
+    },
+    {
+      "name": "POST /public/quotations/responses/949666680fafd32cfcd6424fb73dfcf74d08959c17b92eae248190636d625da7",
+      "pass": true,
+      "detail": {
+        "status": 409,
+        "expected": [
+          409
+        ]
+      }
+    },
+    {
+      "name": "GET /quotations/6ad4714003313fdffb24c68d",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "GET /quotations/6ad4714003313fdffb24c68d/compare",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "POST /quotations/6ad4714003313fdffb24c68d/accept",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "POST /quotations/6ad4714003313fdffb24c68d/accept",
+      "pass": true,
+      "detail": {
+        "status": 409,
+        "expected": [
+          409
+        ]
+      }
+    },
+    {
+      "name": "POST /quotations/6ad4714003313fdffb24c68d/cancel",
+      "pass": true,
+      "detail": {
+        "status": 409,
+        "expected": [
+          409
+        ]
+      }
+    },
+    {
+      "name": "POST /public/quotations/responses/invalid-token-123456789",
+      "pass": true,
+      "detail": {
+        "status": 401,
+        "expected": [
+          401
+        ]
+      }
+    },
+    {
+      "name": "POST /auth/invite",
+      "pass": true,
+      "detail": {
+        "status": 201,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "POST /auth/accept-invite",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200
+        ]
+      }
+    },
+    {
+      "name": "POST /auth/login",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200
+        ]
+      }
+    },
+    {
+      "name": "PATCH /auth/users/6ad4714203313fdffb24c6bb/role",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "GET /auth/me",
+      "pass": true,
+      "detail": {
+        "status": 401,
+        "expected": [
+          401
+        ]
+      }
+    },
+    {
+      "name": "POST /auth/login",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200
+        ]
+      }
+    },
+    {
+      "name": "POST /auth/change-password",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200
+        ]
+      }
+    },
+    {
+      "name": "GET /auth/me",
+      "pass": true,
+      "detail": {
+        "status": 401,
+        "expected": [
+          401
+        ]
+      }
+    },
+    {
+      "name": "DELETE /auth/users/6ad4714203313fdffb24c6bb",
+      "pass": true,
+      "detail": {
+        "status": 204,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "POST /auth/login",
+      "pass": true,
+      "detail": {
+        "status": 403,
+        "expected": [
+          403
+        ]
+      }
+    },
+    {
+      "name": "POST /auth/forgot-password",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200
+        ]
+      }
+    },
+    {
+      "name": "Password reset token received over real local SMTP",
+      "pass": true
+    },
+    {
+      "name": "POST /auth/reset-password",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200
+        ]
+      }
+    },
+    {
+      "name": "POST /auth/login",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200
+        ]
+      }
+    },
+    {
+      "name": "POST /auth/refresh",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200
+        ]
+      }
+    },
+    {
+      "name": "POST /auth/refresh",
+      "pass": true,
+      "detail": {
+        "status": 401,
+        "expected": [
+          401
+        ]
+      }
+    },
+    {
+      "name": "POST /auth/refresh",
+      "pass": true,
+      "detail": {
+        "status": 401,
+        "expected": [
+          401
+        ]
+      }
+    },
+    {
+      "name": "POST /auth/login",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200
+        ]
+      }
+    },
+    {
+      "name": "POST /auth/logout",
+      "pass": true,
+      "detail": {
+        "status": 204,
+        "expected": [
+          204
+        ]
+      }
+    },
+    {
+      "name": "POST /auth/refresh",
+      "pass": true,
+      "detail": {
+        "status": 401,
+        "expected": [
+          401
+        ]
+      }
+    },
+    {
+      "name": "POST /auth/login",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200
+        ]
+      }
+    },
+    {
+      "name": "POST /auth/logout-everywhere",
+      "pass": true,
+      "detail": {
+        "status": 204,
+        "expected": [
+          204,
+          200
+        ]
+      }
+    },
+    {
+      "name": "GET /auth/me",
+      "pass": true,
+      "detail": {
+        "status": 401,
+        "expected": [
+          401
+        ]
+      }
+    },
+    {
+      "name": "POST /webhooks/stripe",
+      "pass": true,
+      "detail": {
+        "status": 501,
+        "expected": [
+          501
+        ]
+      }
+    },
+    {
+      "name": "POST /webhooks/sslcommerz",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200
+        ]
+      }
+    },
+    {
+      "name": "POST /billing/checkout-session",
+      "pass": true,
+      "detail": {
+        "status": 501,
+        "expected": [
+          501
+        ]
+      }
+    },
+    {
+      "name": "POST /billing/checkout-session",
+      "pass": true,
+      "detail": {
+        "status": 400,
+        "expected": [
+          400
+        ]
+      }
+    },
+    {
+      "name": "POST /billing/subscription/change",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "POST /billing/checkout-session",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200
+        ]
+      }
+    },
+    {
+      "name": "Real SSLCommerz sandbox checkout URL",
+      "pass": true,
+      "detail": "https://sandbox.sslcommerz.com/EasyCheckOut/testcde7029e2cd38d0af7af40240dfd66e4203"
+    },
+    {
+      "name": "POST /billing/subscription/cancel",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "POST /purchase-orders",
+      "pass": true,
+      "detail": {
+        "status": 201,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "POST /purchase-orders/6ad4714d03313fdffb24c720/submit",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "POST /purchase-orders/6ad4714d03313fdffb24c720/approve",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "POST /purchase-orders/6ad4714d03313fdffb24c720/send",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "POST /purchase-orders",
+      "pass": true,
+      "detail": {
+        "status": 201,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "POST /purchase-orders/6ad4715003313fdffb24c746/submit",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "POST /purchase-orders/6ad4715003313fdffb24c746/approve",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "POST /purchase-orders/6ad4715003313fdffb24c746/send",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "POST /purchase-orders/6ad4715003313fdffb24c746/receipts",
+      "pass": true,
+      "detail": {
+        "status": 201,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "POST /purchase-orders",
+      "pass": true,
+      "detail": {
+        "status": 201,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "POST /purchase-orders/6ad4715203313fdffb24c784/submit",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "POST /purchase-orders/6ad4715203313fdffb24c784/approve",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "POST /purchase-orders/6ad4715203313fdffb24c784/send",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "POST /purchase-orders",
+      "pass": true,
+      "detail": {
+        "status": 201,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "POST /purchase-orders/6ad4715303313fdffb24c7a3/submit",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "POST /purchase-orders/6ad4715303313fdffb24c7a3/approve",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "POST /purchase-orders/6ad4715303313fdffb24c7a3/send",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "POST /purchase-orders/6ad4715303313fdffb24c7a3/receipts",
+      "pass": true,
+      "detail": {
+        "status": 201,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "POST /purchase-orders",
+      "pass": true,
+      "detail": {
+        "status": 201,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "POST /purchase-orders/6ad4715503313fdffb24c7e3/submit",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "POST /purchase-orders/6ad4715503313fdffb24c7e3/approve",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "POST /purchase-orders/6ad4715503313fdffb24c7e3/send",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "POST /purchase-orders",
+      "pass": true,
+      "detail": {
+        "status": 201,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "POST /purchase-orders/6ad4715603313fdffb24c808/submit",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "POST /purchase-orders/6ad4715603313fdffb24c808/approve",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "POST /purchase-orders/6ad4715603313fdffb24c808/send",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "POST /purchase-orders/6ad4715603313fdffb24c808/receipts",
+      "pass": true,
+      "detail": {
+        "status": 201,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "POST /purchase-orders",
+      "pass": true,
+      "detail": {
+        "status": 201,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "POST /purchase-orders/6ad4715703313fdffb24c842/submit",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "POST /purchase-orders/6ad4715703313fdffb24c842/approve",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "POST /purchase-orders/6ad4715703313fdffb24c842/send",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "POST /ai/forecasts/batch",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "Real forecast worker finishes queued job",
+      "pass": true,
+      "detail": {
+        "ok": true,
+        "total": 2,
+        "succeeded": 2,
+        "failed": 0
+      }
+    },
+    {
+      "name": "Real report worker finishes queued job",
+      "pass": true,
+      "detail": {
+        "ok": true,
+        "kind": "weekly_digest",
+        "emailSent": true,
+        "pdfRendered": true
+      }
+    },
+    {
+      "name": "Weekly AI report renders PDF and reaches SMTP",
+      "pass": true,
+      "detail": {
+        "ok": true,
+        "kind": "weekly_digest",
+        "emailSent": true,
+        "pdfRendered": true
+      }
+    },
+    {
+      "name": "Real scheduled worker finishes queued job",
+      "pass": true,
+      "detail": {
+        "ok": true,
+        "expired": false
+      }
+    },
+    {
+      "name": "GET /reports/artifacts",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "Weekly AI PDF is persisted as a ready report artifact",
+      "pass": true
+    },
+    {
+      "name": "GET /reports/artifacts/6ad4716103313fdffb24c891/download",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "Weekly report downloads from real R2 storage",
+      "pass": true
+    },
+    {
+      "name": "POST /reports/weekly-digest",
+      "pass": true,
+      "detail": {
+        "status": 202,
+        "expected": [
+          202
+        ]
+      }
+    },
+    {
+      "name": "Final ledger/balance reconciliation",
+      "pass": true
+    },
+    {
+      "name": "Real AI responses persisted for presentation",
+      "pass": true,
+      "detail": 59
+    },
+    {
+      "name": "AI text responses persisted for presentation",
+      "pass": true,
+      "detail": 36
+    },
+    {
+      "name": "Email delivery states persisted from real SMTP",
+      "pass": true,
+      "detail": 228
+    }
+  ]
+}

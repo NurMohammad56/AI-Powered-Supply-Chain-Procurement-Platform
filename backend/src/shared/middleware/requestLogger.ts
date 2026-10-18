@@ -12,15 +12,21 @@ export const requestLogger: RequestHandler = pinoHttp({
     return 'info';
   },
   customProps: (req) => {
-    const ctx = (req as { context?: { tenantId?: { toString(): string }; userId?: { toString(): string } } })
-      .context;
+    const ctx = (
+      req as { context?: { tenantId?: { toString(): string }; userId?: { toString(): string } } }
+    ).context;
     return {
       tenantId: ctx?.tenantId?.toString(),
       userId: ctx?.userId?.toString(),
     };
   },
   serializers: {
-    req: (req: { method: string; url: string; headers: Record<string, string>; remoteAddress?: string }) => ({
+    req: (req: {
+      method: string;
+      url: string;
+      headers: Record<string, string>;
+      remoteAddress?: string;
+    }) => ({
       method: req.method,
       url: req.url,
       ip: req.remoteAddress,

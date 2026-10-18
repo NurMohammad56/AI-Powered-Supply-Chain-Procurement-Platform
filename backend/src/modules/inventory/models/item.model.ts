@@ -5,18 +5,7 @@ import { softDeletePlugin } from '../../../shared/db/softDeletePlugin.js';
 import { auditPlugin } from '../../../shared/db/auditPlugin.js';
 
 export type ItemUnit =
-  | 'pcs'
-  | 'kg'
-  | 'g'
-  | 'm'
-  | 'cm'
-  | 'sqm'
-  | 'litre'
-  | 'ml'
-  | 'box'
-  | 'roll'
-  | 'sheet'
-  | 'pair';
+  'pcs' | 'kg' | 'g' | 'm' | 'cm' | 'sqm' | 'litre' | 'ml' | 'box' | 'roll' | 'sheet' | 'pair';
 
 export const ITEM_UNITS: readonly ItemUnit[] = [
   'pcs',

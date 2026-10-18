@@ -1,10 +1,7 @@
 import { Types } from 'mongoose';
+import { mongoose } from '../../config/database.js';
 
-import {
-  BadRequestError,
-  ConflictError,
-  NotFoundError,
-} from '../../shared/errors/HttpErrors.js';
+import { BadRequestError, ConflictError, NotFoundError } from '../../shared/errors/HttpErrors.js';
 import { ErrorCodes } from '../../shared/errors/errorCodes.js';
 import { assertTenantOwns } from '../../shared/auth/assertTenantOwns.js';
 import { recordAudit, AuditActions } from '../../shared/audit/index.js';
@@ -120,7 +117,10 @@ function toMovementView(m: StockMovementDoc): StockMovementView {
   };
 }
 
-function pagedView<T, V>(page: Page<T>, mapper: (row: T) => V): {
+function pagedView<T, V>(
+  page: Page<T>,
+  mapper: (row: T) => V,
+): {
   rows: V[];
   nextCursor: string | null;
   hasMore: boolean;
@@ -138,7 +138,8 @@ export class InventoryService {
   // =========================== Warehouses ===========================
   async createWarehouse(ctx: TenantContext, input: CreateWarehouseRequest): Promise<WarehouseView> {
     const dup = await inventoryRepository.findWarehouseByCode(input.code);
-    if (dup) throw new ConflictError(ErrorCodes.RESOURCE_DUPLICATE, 'Warehouse code already exists');
+    if (dup)
+      throw new ConflictError(ErrorCodes.RESOURCE_DUPLICATE, 'Warehouse code already exists');
     const created = await inventoryRepository.createWarehouse({
       name: input.name,
       code: input.code,
@@ -178,7 +179,8 @@ export class InventoryService {
     assertTenantOwns(w, ctx);
     if (patch.code && patch.code !== w.code) {
       const dup = await inventoryRepository.findWarehouseByCode(patch.code);
-      if (dup) throw new ConflictError(ErrorCodes.RESOURCE_DUPLICATE, 'Warehouse code already exists');
+      if (dup)
+        throw new ConflictError(ErrorCodes.RESOURCE_DUPLICATE, 'Warehouse code already exists');
     }
     const update: Partial<WarehouseDoc> = {};
     if (patch.name !== undefined) update.name = patch.name;
@@ -374,6 +376,14 @@ export class InventoryService {
     itemId: Types.ObjectId,
     input: StockAdjustmentRequest,
   ): Promise<{ balance: StockBalanceView; movement: StockMovementView }> {
+    return mongoose.connection.transaction(() => this.adjustStockInTransaction(ctx, itemId, input));
+  }
+
+  private async adjustStockInTransaction(
+    ctx: TenantContext,
+    itemId: Types.ObjectId,
+    input: StockAdjustmentRequest,
+  ): Promise<{ balance: StockBalanceView; movement: StockMovementView }> {
     const item = await inventoryRepository.findItemById(itemId);
     assertTenantOwns(item, ctx);
 
@@ -432,6 +442,16 @@ export class InventoryService {
   }
 
   async transferStock(
+    ctx: TenantContext,
+    itemId: Types.ObjectId,
+    input: StockTransferRequest,
+  ): Promise<{ outMovement: StockMovementView; inMovement: StockMovementView }> {
+    return mongoose.connection.transaction(() =>
+      this.transferStockInTransaction(ctx, itemId, input),
+    );
+  }
+
+  private async transferStockInTransaction(
     ctx: TenantContext,
     itemId: Types.ObjectId,
     input: StockTransferRequest,
@@ -505,11 +525,7 @@ export class InventoryService {
     };
   }
 
-  async getItemHistory(
-    ctx: TenantContext,
-    itemId: Types.ObjectId,
-    query: ItemHistoryQuery,
-  ) {
+  async getItemHistory(ctx: TenantContext, itemId: Types.ObjectId, query: ItemHistoryQuery) {
     const item = await inventoryRepository.findItemById(itemId);
     assertTenantOwns(item, ctx);
     const page = await inventoryRepository.listMovementsForItem({
@@ -524,10 +540,7 @@ export class InventoryService {
     return pagedView(page, toMovementView);
   }
 
-  async getItemBalances(
-    ctx: TenantContext,
-    itemId: Types.ObjectId,
-  ): Promise<StockBalanceView[]> {
+  async getItemBalances(ctx: TenantContext, itemId: Types.ObjectId): Promise<StockBalanceView[]> {
     const item = await inventoryRepository.findItemById(itemId);
     assertTenantOwns(item, ctx);
     const balances = await inventoryRepository.listBalancesForItem(itemId);
@@ -540,7 +553,25 @@ export class InventoryService {
   }
 
   // =========================== Bulk Import ===========================
-  async bulkImport(
+  async bulkImport(ctx: TenantContext, input: BulkImportRequest): Promise<BulkImportResult> {
+    if (!input.atomic) return this.bulkImportRows(ctx, input);
+    let failure: BulkImportResult | undefined;
+    try {
+      return await mongoose.connection.transaction(async () => {
+        const result = await this.bulkImportRows(ctx, input);
+        if (result.errors.length) {
+          failure = result;
+          throw new Error('ATOMIC_IMPORT_ABORTED');
+        }
+        return result;
+      });
+    } catch (err) {
+      if (failure) return failure;
+      throw err;
+    }
+  }
+
+  private async bulkImportRows(
     ctx: TenantContext,
     input: BulkImportRequest,
   ): Promise<BulkImportResult> {
@@ -563,6 +594,12 @@ export class InventoryService {
           continue;
         }
         let categoryId: Types.ObjectId | null = null;
+        if (
+          item.openingBalance &&
+          !(await inventoryRepository.findWarehouseByCode(item.openingBalance.warehouseCode))
+        ) {
+          throw new BadRequestError(ErrorCodes.BAD_REQUEST, 'Unknown opening balance warehouse');
+        }
         if (item.categoryName) {
           const cat = await inventoryRepository.findCategoryByName(item.categoryName);
           if (!cat) {

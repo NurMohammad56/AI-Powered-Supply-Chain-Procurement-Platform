@@ -13,7 +13,9 @@ export class SupplierRepository {
   }
 
   async findManyByIds(ids: Types.ObjectId[]): Promise<SupplierDoc[]> {
-    return Supplier.find({ _id: { $in: ids } }).lean<SupplierDoc[]>().exec();
+    return Supplier.find({ _id: { $in: ids } })
+      .lean<SupplierDoc[]>()
+      .exec();
   }
 
   async create(input: Partial<SupplierDoc>): Promise<SupplierDoc> {
@@ -28,7 +30,10 @@ export class SupplierRepository {
   }
 
   async archive(id: Types.ObjectId): Promise<boolean> {
-    const result = await Supplier.updateOne({ _id: id }, { $set: { archivedAt: new Date() } }).exec();
+    const result = await Supplier.updateOne(
+      { _id: id },
+      { $set: { archivedAt: new Date() } },
+    ).exec();
     return (result.modifiedCount ?? 0) > 0;
   }
 
@@ -61,7 +66,10 @@ export class SupplierRepository {
     return paginate(rows, args.limit);
   }
 
-  async pushContact(id: Types.ObjectId, contact: SupplierDoc['contacts'][number]): Promise<SupplierDoc | null> {
+  async pushContact(
+    id: Types.ObjectId,
+    contact: SupplierDoc['contacts'][number],
+  ): Promise<SupplierDoc | null> {
     return Supplier.findByIdAndUpdate(
       id,
       { $push: { contacts: contact } },

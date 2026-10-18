@@ -12,8 +12,19 @@ import {
   OverrideForecastRequestSchema,
 } from './ai.dto.js';
 import { aiController } from './ai.controller.js';
+import { AiInsight } from './models/aiInsight.model.js';
+import { asyncHandler } from '../../shared/http/asyncHandler.js';
 
 export const aiRouter = Router();
+
+aiRouter.get(
+  '/insights',
+  rbacFor('ai.forecast.generate'),
+  asyncHandler(async (_req, res) => {
+    const rows = await AiInsight.find().sort({ createdAt: -1 }).limit(100).lean().exec();
+    res.json({ data: rows });
+  }),
+);
 
 aiRouter.get(
   '/forecasts',
@@ -64,8 +75,4 @@ aiRouter.post(
   aiController.runBatch,
 );
 
-aiRouter.get(
-  '/usage',
-  rbacFor('ai.forecast.generate'),
-  aiController.getUsage,
-);
+aiRouter.get('/usage', rbacFor('ai.forecast.generate'), aiController.getUsage);

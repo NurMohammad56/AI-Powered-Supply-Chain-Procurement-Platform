@@ -32,8 +32,11 @@ export function softDeletePlugin(schema: Schema): void {
     });
   }
 
-  schema.method('softDelete', async function softDelete(this: { archivedAt: Date | null; save: () => Promise<unknown> }) {
-    this.archivedAt = new Date();
-    await this.save();
-  });
+  schema.method(
+    'softDelete',
+    async function softDelete(this: { archivedAt: Date | null; save: () => Promise<unknown> }) {
+      this.archivedAt = new Date();
+      await this.save();
+    },
+  );
 }

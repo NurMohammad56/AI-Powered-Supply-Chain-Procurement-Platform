@@ -10,7 +10,11 @@ jest.mock('./upload.service', () => ({
   storeTenantUpload: jest.fn(),
 }));
 
-import { parseMultipartJsonField, parseSingleMultipartFile, uploadMultipartFileToBody } from './multipart.js';
+import {
+  parseMultipartJsonField,
+  parseSingleMultipartFile,
+  uploadMultipartFileToBody,
+} from './multipart.js';
 import { storeTenantUpload } from './upload.service';
 
 const mockedStoreTenantUpload = jest.mocked(storeTenantUpload);

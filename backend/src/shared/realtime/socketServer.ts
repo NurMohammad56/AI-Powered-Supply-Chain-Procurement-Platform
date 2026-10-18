@@ -8,6 +8,7 @@ import { redisSockPub, redisSockSub } from '../../config/redis.js';
 import { env } from '../../config/env.js';
 import { logger } from '../../config/logger.js';
 import { verifyAccessToken } from '../auth/jwt.js';
+import { isAccessTokenDenied } from '../security/tokenDenylist.js';
 import { SocketEvents, tenantRoom, userRoom } from './events.js';
 import type { Role } from '../auth/types.js';
 
@@ -30,7 +31,8 @@ interface SocketData {
   context?: SocketAuthContext;
 }
 
-let io: IoServer<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData> | null = null;
+let io: IoServer<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData> | null =
+  null;
 
 /**
  * Builds the Socket.io server with Redis adapter for horizontal scaling
@@ -40,12 +42,9 @@ let io: IoServer<ClientToServerEvents, ServerToClientEvents, InterServerEvents, 
  * Strict posture (SDD §7.6): WebSocket-only transport (no long-polling
  * fallback), 1 MiB max frame, only `ping` accepted from clients.
  */
-export function createSocketServer(httpServer: HttpServer): IoServer<
-  ClientToServerEvents,
-  ServerToClientEvents,
-  InterServerEvents,
-  SocketData
-> {
+export function createSocketServer(
+  httpServer: HttpServer,
+): IoServer<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData> {
   if (io) return io;
 
   io = new IoServer<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>(
@@ -65,13 +64,23 @@ export function createSocketServer(httpServer: HttpServer): IoServer<
 
   io.adapter(createAdapter(redisSockPub, redisSockSub));
 
-  io.use((socket, next) => {
+  io.use(async (socket, next) => {
     try {
       const token = (socket.handshake.auth as { token?: unknown })?.token;
       if (typeof token !== 'string' || token.length === 0) {
         return next(new Error('AUTH_TOKEN_MISSING'));
       }
       const claims = verifyAccessToken(token);
+      if (
+        await isAccessTokenDenied({
+          jti: claims.jti,
+          userId: claims.sub,
+          issuedAtSec: claims.iat ?? 0,
+          issuedAtMs: claims.issuedAtMs,
+        })
+      ) {
+        return next(new Error('AUTH_TOKEN_INVALID'));
+      }
       socket.data.context = {
         tenantId: new Types.ObjectId(claims.tenantId),
         userId: new Types.ObjectId(claims.sub),
@@ -84,41 +93,47 @@ export function createSocketServer(httpServer: HttpServer): IoServer<
     }
   });
 
-  io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>) => {
-    const ctx = socket.data.context;
-    if (!ctx) {
-      socket.disconnect(true);
-      return;
-    }
-    void socket.join(tenantRoom(ctx.tenantId.toString()));
-    void socket.join(userRoom(ctx.userId.toString()));
+  io.on(
+    'connection',
+    (socket: Socket<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>) => {
+      const ctx = socket.data.context;
+      if (!ctx) {
+        socket.disconnect(true);
+        return;
+      }
+      void socket.join(tenantRoom(ctx.tenantId.toString()));
+      void socket.join(userRoom(ctx.userId.toString()));
 
-    socket.emit(SocketEvents.SystemConnected, {
-      serverTime: new Date().toISOString(),
-      sessionId: socket.id,
-    });
+      socket.emit(SocketEvents.SystemConnected, {
+        serverTime: new Date().toISOString(),
+        sessionId: socket.id,
+      });
 
-    // Strict allowlist: only `ping` from clients. Anything else gets the
-    // connection killed and an audit-grade log line.
-    socket.onAny((eventName: string) => {
-      if (eventName === 'ping') return;
-      logger.warn(
-        {
-          event: 'socket.unexpected_client_emit',
-          eventName,
-          socketId: socket.id,
-          tenantId: ctx.tenantId.toString(),
-          userId: ctx.userId.toString(),
-        },
-        'unexpected client emit; disconnecting',
-      );
-      socket.disconnect(true);
-    });
+      // Strict allowlist: only `ping` from clients. Anything else gets the
+      // connection killed and an audit-grade log line.
+      socket.onAny((eventName: string) => {
+        if (eventName === 'ping') return;
+        logger.warn(
+          {
+            event: 'socket.unexpected_client_emit',
+            eventName,
+            socketId: socket.id,
+            tenantId: ctx.tenantId.toString(),
+            userId: ctx.userId.toString(),
+          },
+          'unexpected client emit; disconnecting',
+        );
+        socket.disconnect(true);
+      });
 
-    socket.on('disconnect', (reason) => {
-      logger.debug({ event: 'socket.disconnect', socketId: socket.id, reason }, 'socket disconnected');
-    });
-  });
+      socket.on('disconnect', (reason) => {
+        logger.debug(
+          { event: 'socket.disconnect', socketId: socket.id, reason },
+          'socket disconnected',
+        );
+      });
+    },
+  );
 
   logger.info({ event: 'socket.server_ready' }, 'Socket.io server ready');
   return io;

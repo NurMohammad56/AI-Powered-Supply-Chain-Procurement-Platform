@@ -5,6 +5,7 @@ import { logger } from './logger.js';
 
 mongoose.set('strictQuery', true);
 mongoose.set('strictPopulate', true);
+mongoose.set('transactionAsyncLocalStorage', true);
 
 let connecting: Promise<typeof mongoose> | null = null;
 

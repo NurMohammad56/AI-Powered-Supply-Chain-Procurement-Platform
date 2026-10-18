@@ -224,6 +224,7 @@ export class AiService {
         cacheHit: false,
         promptTokens: pipeline.promptTokens,
         completionTokens: pipeline.completionTokens,
+        fallback: pipeline.fallback,
       },
       rawPrompt: pipeline.rawPrompt.slice(0, 32_000),
       rawResponse: pipeline.rawResponse.slice(0, 32_000),
@@ -259,12 +260,17 @@ export class AiService {
     }
 
     // 9. Cache + emit completion event.
-    await redisCache.set(
-      cacheKey(ctx.tenantId, itemId, horizon),
-      JSON.stringify(created),
-      'EX',
-      REDIS_PER_ITEM_TTL_SECONDS,
-    );
+    if (pipeline.fallback) {
+      // Preserve the failure in history, but allow a fresh provider attempt.
+      await redisCache.del(rateLimitKey(ctx.tenantId, itemId, horizon));
+    } else {
+      await redisCache.set(
+        cacheKey(ctx.tenantId, itemId, horizon),
+        JSON.stringify(created),
+        'EX',
+        REDIS_PER_ITEM_TTL_SECONDS,
+      );
+    }
 
     try {
       const io = getIo();
@@ -314,13 +320,14 @@ export class AiService {
     if (raw) {
       try {
         const parsed = JSON.parse(raw) as ForecastDoc;
-        return rehydrateForecast(parsed);
+        if (!parsed.provenance?.fallback) return rehydrateForecast(parsed);
       } catch {
         // Corrupt cache entry; ignore and fall through to Mongo.
       }
     }
     const latest = await aiRepository.findLatestForItem({ tenantId, itemId, horizonDays });
     if (!latest) return null;
+    if (latest.provenance.fallback) return null;
     if (latest.expiresAt && latest.expiresAt.getTime() < Date.now()) return null;
     return latest;
   }
@@ -330,10 +337,7 @@ export class AiService {
    * tenant. Returns the BullMQ job id so the caller can subscribe to
    * progress events on the dashboard.
    */
-  async runForecastForAll(args: {
-    ctx: TenantContext;
-    itemIds?: string[];
-  }): Promise<{
+  async runForecastForAll(args: { ctx: TenantContext; itemIds?: string[] }): Promise<{
     batchJobId: string;
     itemCount: number;
     estimatedCostUsd: number;

@@ -4,7 +4,10 @@ import { validate } from '../../shared/middleware/validate.js';
 import { rbacFor } from '../../shared/middleware/rbac.js';
 import { idempotencyKey } from '../../shared/middleware/idempotency.js';
 import { rateLimitFileUpload } from '../../shared/middleware/rateLimit.js';
-import { parseSingleMultipartFile, uploadMultipartFileToBody } from '../../shared/uploads/multipart.js';
+import {
+  parseSingleMultipartFile,
+  uploadMultipartFileToBody,
+} from '../../shared/uploads/multipart.js';
 import {
   BulkImportRequestSchema,
   CategoryIdParamSchema,

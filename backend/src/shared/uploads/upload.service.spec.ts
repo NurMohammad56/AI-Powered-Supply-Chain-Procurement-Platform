@@ -6,8 +6,10 @@ process.env.JWT_ACCESS_SECRET ??= '12345678901234567890123456789012';
 process.env.JWT_REFRESH_SECRET ??= '12345678901234567890123456789012';
 
 jest.mock('../storage/r2.client', () => ({
-  tenantKey: jest.fn((tenantId: string, folder: string, filename: string) =>
-    `tenants/${tenantId}/${folder}/2026-08-02/${filename}`),
+  tenantKey: jest.fn(
+    (tenantId: string, folder: string, filename: string) =>
+      `tenants/${tenantId}/${folder}/2026-08-02/${filename}`,
+  ),
   uploadObject: jest.fn(),
 }));
 

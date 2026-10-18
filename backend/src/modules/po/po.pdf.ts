@@ -62,7 +62,10 @@ export async function renderPoPdf(opts: PoPdfOptions): Promise<Buffer> {
 
 function drawHeader(doc: PDFKit.PDFDocument, opts: PoPdfOptions): void {
   const { factory, po } = opts;
-  doc.fillColor(factory.primaryColor || '#1E40AF').fontSize(20).font('Helvetica-Bold');
+  doc
+    .fillColor(factory.primaryColor || '#1E40AF')
+    .fontSize(20)
+    .font('Helvetica-Bold');
   doc.text(factory.name, { align: 'left' });
   doc.moveDown(0.2);
   doc.fontSize(9).fillColor('#4b5563').font('Helvetica');
@@ -71,13 +74,19 @@ function drawHeader(doc: PDFKit.PDFDocument, opts: PoPdfOptions): void {
 
   // Title block on the right side of the header.
   const startY = doc.y;
-  doc.fontSize(18).fillColor(factory.primaryColor || '#1E40AF').font('Helvetica-Bold');
+  doc
+    .fontSize(18)
+    .fillColor(factory.primaryColor || '#1E40AF')
+    .font('Helvetica-Bold');
   doc.text('PURCHASE ORDER', 350, startY - 50, { width: 200, align: 'right' });
   doc.moveDown(0.2);
   doc.fontSize(10).fillColor('#1f2937').font('Helvetica');
   doc.text(`PO #: ${po.number}`, 350, doc.y, { width: 200, align: 'right' });
   doc.text(`Date: ${formatDate(po.createdAt)}`, 350, doc.y, { width: 200, align: 'right' });
-  doc.text(`Expected: ${formatDate(po.expectedDeliveryAt)}`, 350, doc.y, { width: 200, align: 'right' });
+  doc.text(`Expected: ${formatDate(po.expectedDeliveryAt)}`, 350, doc.y, {
+    width: 200,
+    align: 'right',
+  });
 
   // Reset cursor to left under the header rule.
   doc.moveDown(1).x = 50;
@@ -99,7 +108,10 @@ function drawMeta(doc: PDFKit.PDFDocument, opts: PoPdfOptions): void {
 function drawSupplierBlock(doc: PDFKit.PDFDocument, opts: PoPdfOptions): void {
   const { po } = opts;
   doc.moveDown(0.8);
-  doc.fontSize(11).fillColor(opts.factory.primaryColor || '#1E40AF').font('Helvetica-Bold');
+  doc
+    .fontSize(11)
+    .fillColor(opts.factory.primaryColor || '#1E40AF')
+    .font('Helvetica-Bold');
   doc.text('Supplier');
   doc.fillColor('#1f2937').fontSize(10).font('Helvetica');
   doc.text(po.supplierSnapshot.legalName);
@@ -120,7 +132,10 @@ function drawLineItemsTable(doc: PDFKit.PDFDocument, opts: PoPdfOptions): void {
   const x0 = 50;
 
   // Header row
-  doc.fillColor(opts.factory.primaryColor || '#1E40AF').rect(x0, tableTop, sum(colWidths), 22).fill();
+  doc
+    .fillColor(opts.factory.primaryColor || '#1E40AF')
+    .rect(x0, tableTop, sum(colWidths), 22)
+    .fill();
   doc.fillColor('#ffffff').fontSize(9).font('Helvetica-Bold');
   let cx = x0 + 6;
   headers.forEach((h, idx) => {
@@ -168,7 +183,10 @@ function drawTotals(doc: PDFKit.PDFDocument, opts: PoPdfOptions): void {
   const valueX = 480;
   doc.fontSize(10).fillColor('#4b5563').font('Helvetica');
   doc.text('Subtotal', labelX, doc.y, { width: 90, align: 'right' });
-  doc.text(formatMoney(po.totals.subtotal, po.currency), valueX, doc.y, { width: 80, align: 'right' });
+  doc.text(formatMoney(po.totals.subtotal, po.currency), valueX, doc.y, {
+    width: 80,
+    align: 'right',
+  });
   doc.moveDown(0.2);
   doc.text('Tax', labelX, doc.y, { width: 90, align: 'right' });
   doc.text(formatMoney(po.totals.tax, po.currency), valueX, doc.y, { width: 80, align: 'right' });
@@ -182,7 +200,10 @@ function drawTotals(doc: PDFKit.PDFDocument, opts: PoPdfOptions): void {
 
 function drawTerms(doc: PDFKit.PDFDocument, opts: PoPdfOptions): void {
   const terms = (opts.termsAndConditions ?? DEFAULT_TERMS).trim();
-  doc.fillColor(opts.factory.primaryColor || '#1E40AF').fontSize(10).font('Helvetica-Bold');
+  doc
+    .fillColor(opts.factory.primaryColor || '#1E40AF')
+    .fontSize(10)
+    .font('Helvetica-Bold');
   doc.text('Terms and conditions');
   doc.fillColor('#374151').font('Helvetica').fontSize(8);
   doc.text(terms, { lineGap: 1 });

@@ -5,7 +5,11 @@ import type { AIMessageChunk } from '@langchain/core/messages';
 
 import { env } from '../../config/env.js';
 import { logger } from '../../config/logger.js';
-import { renderForecastPrompt, FORECAST_PROMPT_VERSION, estimatePromptTokens } from './prompts/forecastPrompt.js';
+import {
+  renderForecastPrompt,
+  FORECAST_PROMPT_VERSION,
+  estimatePromptTokens,
+} from './prompts/forecastPrompt.js';
 import {
   coerceForecast,
   extractJsonObject,
@@ -87,8 +91,10 @@ function getGroq(): BaseChatModel | null {
     apiKey: env.GROQ_API_KEY,
     model: env.GROQ_MODEL,
     temperature: 0.1,
-    maxTokens: 2048,
+    maxTokens: 4096,
+    ...(env.GROQ_MODEL.startsWith('openai/gpt-oss') ? { reasoningEffort: 'low' as const } : {}),
     timeout: env.AI_PER_CALL_TIMEOUT_MS,
+    maxRetries: 0,
   });
 }
 
@@ -98,7 +104,8 @@ function getGemini(): BaseChatModel | null {
     apiKey: env.GEMINI_API_KEY,
     model: env.GEMINI_MODEL,
     temperature: 0.1,
-    maxOutputTokens: 2048,
+    maxOutputTokens: 4096,
+    maxRetries: 0,
   });
 }
 
@@ -118,9 +125,12 @@ async function invokeProvider(args: {
   prompt: string;
 }): Promise<ProviderInvocation> {
   const start = Date.now();
-  const result = await args.client.invoke(args.prompt);
+  const result = await args.client.invoke(args.prompt, {
+    signal: AbortSignal.timeout(env.AI_PER_CALL_TIMEOUT_MS),
+  });
   const latencyMs = Date.now() - start;
-  const text = typeof result.content === 'string' ? result.content : extractContentText(result.content);
+  const text =
+    typeof result.content === 'string' ? result.content : extractContentText(result.content);
   const usage = readUsageMetadata(result);
   return {
     provider: args.provider,
@@ -137,7 +147,12 @@ function extractContentText(content: unknown): string {
     return content
       .map((c) => {
         if (typeof c === 'string') return c;
-        if (c && typeof c === 'object' && 'text' in c && typeof (c as { text: unknown }).text === 'string') {
+        if (
+          c &&
+          typeof c === 'object' &&
+          'text' in c &&
+          typeof (c as { text: unknown }).text === 'string'
+        ) {
           return (c as { text: string }).text;
         }
         return '';
@@ -148,22 +163,26 @@ function extractContentText(content: unknown): string {
 }
 
 function readUsageMetadata(msg: AIMessageChunk): { prompt: number; completion: number } {
-  const meta = (msg as unknown as {
-    usage_metadata?: { input_tokens?: number; output_tokens?: number };
-    response_metadata?: {
-      tokenUsage?: { promptTokens?: number; completionTokens?: number };
-      usage?: { input_tokens?: number; output_tokens?: number };
-    };
-  }).usage_metadata;
+  const meta = (
+    msg as unknown as {
+      usage_metadata?: { input_tokens?: number; output_tokens?: number };
+      response_metadata?: {
+        tokenUsage?: { promptTokens?: number; completionTokens?: number };
+        usage?: { input_tokens?: number; output_tokens?: number };
+      };
+    }
+  ).usage_metadata;
   if (meta?.input_tokens !== undefined || meta?.output_tokens !== undefined) {
     return { prompt: meta.input_tokens ?? 0, completion: meta.output_tokens ?? 0 };
   }
-  const respMeta = (msg as unknown as {
-    response_metadata?: {
-      tokenUsage?: { promptTokens?: number; completionTokens?: number };
-      usage?: { input_tokens?: number; output_tokens?: number };
-    };
-  }).response_metadata;
+  const respMeta = (
+    msg as unknown as {
+      response_metadata?: {
+        tokenUsage?: { promptTokens?: number; completionTokens?: number };
+        usage?: { input_tokens?: number; output_tokens?: number };
+      };
+    }
+  ).response_metadata;
   if (respMeta?.tokenUsage) {
     return {
       prompt: respMeta.tokenUsage.promptTokens ?? 0,
@@ -203,7 +222,7 @@ export async function runForecastPipeline(context: ForecastContext): Promise<Pip
         prompt,
       });
       const parsed = tryParseAndCoerce(invocation.text, context, leadTimeDays);
-      if (parsed) {
+      if (parsed && !parsed.fallback) {
         groqBreaker.recordSuccess();
         return buildResult({
           invocation,
@@ -230,7 +249,10 @@ export async function runForecastPipeline(context: ForecastContext): Promise<Pip
     }
   } else if (groq) {
     failoverInvoked = true;
-    logger.info({ event: 'ai.breaker_open', provider: 'groq' }, 'Groq breaker open; routing to Gemini');
+    logger.info(
+      { event: 'ai.breaker_open', provider: 'groq' },
+      'Groq breaker open; routing to Gemini',
+    );
   }
 
   const gemini = getGemini();
@@ -243,7 +265,7 @@ export async function runForecastPipeline(context: ForecastContext): Promise<Pip
         prompt,
       });
       const parsed = tryParseAndCoerce(invocation.text, context, leadTimeDays);
-      if (parsed) {
+      if (parsed && !parsed.fallback) {
         geminiBreaker.recordSuccess();
         return buildResult({
           invocation,
@@ -331,7 +353,8 @@ function buildResult(args: {
     failoverInvoked: args.failoverInvoked,
     latencyMs: args.invocation.latencyMs,
     promptTokens: args.invocation.promptTokens || args.fallbackPromptTokens,
-    completionTokens: args.invocation.completionTokens || Math.ceil(args.invocation.text.length / 4),
+    completionTokens:
+      args.invocation.completionTokens || Math.ceil(args.invocation.text.length / 4),
     rawPrompt: args.rawPrompt,
     rawResponse: args.invocation.text,
     coerced: args.parsed.coerced,
@@ -369,7 +392,10 @@ export async function runTextPipeline(prompt: string): Promise<{
     } catch (err) {
       groqBreaker.recordFailure();
       failoverInvoked = true;
-      logger.warn({ err, event: 'ai.text.groq_failed' }, 'Groq text invocation failed; failing over');
+      logger.warn(
+        { err, event: 'ai.text.groq_failed' },
+        'Groq text invocation failed; failing over',
+      );
     }
   } else if (groq) {
     failoverInvoked = true;

@@ -33,7 +33,10 @@ async function findManagersForApproval(
     .exec();
 }
 
-async function findUserById(tenantId: Types.ObjectId, userId: Types.ObjectId): Promise<{ email: string; fullName: string } | null> {
+async function findUserById(
+  tenantId: Types.ObjectId,
+  userId: Types.ObjectId,
+): Promise<{ email: string; fullName: string } | null> {
   return User.findOne({ _id: userId, tenantId })
     .select({ email: 1, fullName: 1 })
     .lean<{ email: string; fullName: string }>()
@@ -70,19 +73,26 @@ async function createNotification(args: {
     );
 
     try {
-      getIo().to(userRoom(args.userId.toString())).emit(SocketEvents.NotificationCreated, {
-        notificationId: notification._id.toString(),
-        category: notification.category,
-        title: notification.title,
-        link: notification.link ?? '',
-        createdAt: notification.createdAt.toISOString(),
-      });
+      getIo()
+        .to(userRoom(args.userId.toString()))
+        .emit(SocketEvents.NotificationCreated, {
+          notificationId: notification._id.toString(),
+          category: notification.category,
+          title: notification.title,
+          link: notification.link ?? '',
+          createdAt: notification.createdAt.toISOString(),
+        });
     } catch {
       // Socket is optional for testing; the feed still persists.
     }
   } catch (err) {
     logger.warn(
-      { err, event: 'notification.create_failed', tenantId: args.tenantId.toString(), userId: args.userId.toString() },
+      {
+        err,
+        event: 'notification.create_failed',
+        tenantId: args.tenantId.toString(),
+        userId: args.userId.toString(),
+      },
       'failed to create in-app notification',
     );
   }
@@ -124,7 +134,10 @@ export async function notifyPoSubmitted(args: {
       });
     }
   } catch (err) {
-    logger.warn({ err, event: 'po.notify_submitted_failed', poId: args.po._id.toString() }, 'failed to notify approvers');
+    logger.warn(
+      { err, event: 'po.notify_submitted_failed', poId: args.po._id.toString() },
+      'failed to notify approvers',
+    );
   }
 }
 
@@ -162,7 +175,10 @@ export async function notifyPoApproved(args: {
       tags: { kind: 'po_approved', poId: args.po._id.toString() },
     });
   } catch (err) {
-    logger.warn({ err, event: 'po.notify_approved_failed', poId: args.po._id.toString() }, 'failed to notify requester');
+    logger.warn(
+      { err, event: 'po.notify_approved_failed', poId: args.po._id.toString() },
+      'failed to notify requester',
+    );
   }
 }
 
@@ -200,7 +216,10 @@ export async function notifyPoRejected(args: {
       tags: { kind: 'po_rejected', poId: args.po._id.toString() },
     });
   } catch (err) {
-    logger.warn({ err, event: 'po.notify_rejected_failed', poId: args.po._id.toString() }, 'failed to notify requester');
+    logger.warn(
+      { err, event: 'po.notify_rejected_failed', poId: args.po._id.toString() },
+      'failed to notify requester',
+    );
   }
 }
 
@@ -228,7 +247,10 @@ export async function notifyPoSentToSupplier(args: {
       tags: { kind: 'po_sent_to_supplier', poId: args.po._id.toString() },
     });
   } catch (err) {
-    logger.warn({ err, event: 'po.notify_supplier_failed', poId: args.po._id.toString() }, 'failed to email supplier');
+    logger.warn(
+      { err, event: 'po.notify_supplier_failed', poId: args.po._id.toString() },
+      'failed to email supplier',
+    );
   }
 }
 
@@ -252,7 +274,11 @@ export async function notifyPoFullyReceived(args: {
       title: `PO received: ${args.po.number}`,
       body: `Purchase order ${args.po.number} was fully received (${args.receivedQuantity} units).`,
       link: dashboardLink(args.po),
-      metadata: { kind: 'po_received', poId: args.po._id.toString(), receivedQuantity: args.receivedQuantity },
+      metadata: {
+        kind: 'po_received',
+        poId: args.po._id.toString(),
+        receivedQuantity: args.receivedQuantity,
+      },
     });
     await enqueueEmail('email.send', {
       tenantId: args.po.tenantId.toString(),
@@ -263,7 +289,10 @@ export async function notifyPoFullyReceived(args: {
       tags: { kind: 'po_fully_received', poId: args.po._id.toString() },
     });
   } catch (err) {
-    logger.warn({ err, event: 'po.notify_received_failed', poId: args.po._id.toString() }, 'failed to notify on receipt');
+    logger.warn(
+      { err, event: 'po.notify_received_failed', poId: args.po._id.toString() },
+      'failed to notify on receipt',
+    );
   }
 }
 

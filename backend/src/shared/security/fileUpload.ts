@@ -158,10 +158,7 @@ export async function validateUpload(
     );
   }
   if (allow.magic.length > 0 && !matchesAnyMagic(input.body, allow.magic)) {
-    throw new FileValidationError(
-      'File content did not match declared MIME',
-      'CONTENT_MISMATCH',
-    );
+    throw new FileValidationError('File content did not match declared MIME', 'CONTENT_MISMATCH');
   }
   await scanForViruses(input.body, sanitisedFilename);
   return {
@@ -202,7 +199,9 @@ function matchesAnyMagic(
 ): boolean {
   return magic.some((sig) => {
     if (body.length < sig.offset + sig.bytes.length) return false;
-    return body.compare(sig.bytes, 0, sig.bytes.length, sig.offset, sig.offset + sig.bytes.length) === 0;
+    return (
+      body.compare(sig.bytes, 0, sig.bytes.length, sig.offset, sig.offset + sig.bytes.length) === 0
+    );
   });
 }
 
@@ -214,7 +213,10 @@ function matchesAnyMagic(
  */
 const EICAR_SIGNATURE = 'X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*';
 
-export type VirusScanner = (body: Buffer, filename: string) => Promise<{ clean: boolean; reason?: string }>;
+export type VirusScanner = (
+  body: Buffer,
+  filename: string,
+) => Promise<{ clean: boolean; reason?: string }>;
 
 let activeScanner: VirusScanner = async (body) => {
   // The dev/test scanner ONLY catches the EICAR signature. Real

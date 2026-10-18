@@ -44,10 +44,7 @@ const stockBalanceSchema = new Schema<StockBalanceDoc>(
 );
 
 // Atomic upsert key + the only operational lookup path
-stockBalanceSchema.index(
-  { tenantId: 1, itemId: 1, warehouseId: 1 },
-  { unique: true },
-);
+stockBalanceSchema.index({ tenantId: 1, itemId: 1, warehouseId: 1 }, { unique: true });
 // Low-stock dashboard: partial index over docs that have crossed threshold.
 stockBalanceSchema.index(
   { tenantId: 1, lowStockSince: 1 },

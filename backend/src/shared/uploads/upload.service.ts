@@ -40,14 +40,12 @@ export async function storeTenantUpload(args: {
   };
 
   let lastError: FileValidationError | null = null;
-  let matched:
-    | {
-        kind: FileKind;
-        sanitisedFilename: string;
-        size: number;
-        mime: string;
-      }
-    | null = null;
+  let matched: {
+    kind: FileKind;
+    sanitisedFilename: string;
+    size: number;
+    mime: string;
+  } | null = null;
 
   for (const kind of args.allowedKinds) {
     try {

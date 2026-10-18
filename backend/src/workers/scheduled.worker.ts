@@ -1,5 +1,7 @@
+import { env } from '../config/env.js';
 import { Worker, type Job } from 'bullmq';
 import { Types } from 'mongoose';
+import { tenantStorage } from '../shared/db/tenancyPlugin.js';
 
 import { redisQueue } from '../config/redis.js';
 import { logger } from '../config/logger.js';
@@ -25,27 +27,29 @@ const OVERDUE_FOLLOWUP_DAYS = 7;
 export function startScheduledWorker(): Worker<ScheduledJobMap[keyof ScheduledJobMap]> {
   const worker = new Worker<ScheduledJobMap[keyof ScheduledJobMap]>(
     QueueNames.Scheduled,
-    async (job: Job<ScheduledJobMap[keyof ScheduledJobMap]>) => {
-      const log = logger.child({
-        worker: QueueNames.Scheduled,
-        jobId: job.id,
-        jobName: job.name,
-      });
-      switch (job.name) {
-        case 'scheduled.quotation.expiry_check': {
-          const data = job.data as ScheduledJobMap['scheduled.quotation.expiry_check'];
-          return handleQuotationExpiry({ ...data, log });
+    async (job: Job<ScheduledJobMap[keyof ScheduledJobMap]>) =>
+      tenantStorage.run({ tenantId: new Types.ObjectId(job.data.tenantId) }, async () => {
+        const log = logger.child({
+          worker: QueueNames.Scheduled,
+          jobId: job.id,
+          jobName: job.name,
+        });
+        switch (job.name) {
+          case 'scheduled.quotation.expiry_check': {
+            const data = job.data as ScheduledJobMap['scheduled.quotation.expiry_check'];
+            return handleQuotationExpiry({ ...data, log });
+          }
+          case 'scheduled.po.delivery_overdue_check': {
+            const data = job.data as ScheduledJobMap['scheduled.po.delivery_overdue_check'];
+            return handlePoOverdue({ ...data, log });
+          }
+          default:
+            throw new Error(`Unknown scheduled job name: ${String(job.name)}`);
         }
-        case 'scheduled.po.delivery_overdue_check': {
-          const data = job.data as ScheduledJobMap['scheduled.po.delivery_overdue_check'];
-          return handlePoOverdue({ ...data, log });
-        }
-        default:
-          throw new Error(`Unknown scheduled job name: ${String(job.name)}`);
-      }
-    },
+      }),
     {
       connection: redisQueue,
+      prefix: env.QUEUE_PREFIX,
       concurrency: 4,
     },
   );
@@ -97,9 +101,14 @@ async function handlePoOverdue(args: {
 }): Promise<{ ok: true; alerted: boolean }> {
   const tenantObjectId = new Types.ObjectId(args.tenantId);
   const poObjectId = new Types.ObjectId(args.poId);
-  const po = await PurchaseOrder.findOne({ _id: poObjectId, tenantId: tenantObjectId }).lean().exec();
+  const po = await PurchaseOrder.findOne({ _id: poObjectId, tenantId: tenantObjectId })
+    .lean()
+    .exec();
   if (!po) {
-    args.log.debug({ event: 'scheduled.po.overdue.missing', poId: args.poId }, 'PO no longer exists');
+    args.log.debug(
+      { event: 'scheduled.po.overdue.missing', poId: args.poId },
+      'PO no longer exists',
+    );
     return { ok: true, alerted: false };
   }
   // Only alert when the PO is still awaiting full receipt.

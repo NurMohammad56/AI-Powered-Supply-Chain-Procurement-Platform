@@ -21,7 +21,9 @@ import type { TenantContext } from '../auth/types.js';
 export const resolveTenant: RequestHandler = (req, _res, next) => {
   const auth = req.header('authorization');
   if (!auth || !auth.startsWith('Bearer ')) {
-    return next(new UnauthorizedError(ErrorCodes.AUTH_TOKEN_MISSING, 'Authorization header missing'));
+    return next(
+      new UnauthorizedError(ErrorCodes.AUTH_TOKEN_MISSING, 'Authorization header missing'),
+    );
   }
   const token = auth.slice('Bearer '.length).trim();
   if (!token) {
@@ -37,6 +39,7 @@ export const resolveTenant: RequestHandler = (req, _res, next) => {
       jti: claims.jti,
       userId: claims.sub,
       issuedAtSec: claims.iat ?? 0,
+      issuedAtMs: claims.issuedAtMs,
     });
     if (denied) {
       return next(new UnauthorizedError(ErrorCodes.AUTH_TOKEN_INVALID, 'Access token revoked'));
@@ -63,7 +66,9 @@ export const resolveTenant: RequestHandler = (req, _res, next) => {
 export const tenantScope: RequestHandler = (req, _res, next) => {
   const ctx = req.context;
   if (!ctx) {
-    return next(new UnauthorizedError(ErrorCodes.AUTH_TOKEN_MISSING, 'Tenant context not resolved'));
+    return next(
+      new UnauthorizedError(ErrorCodes.AUTH_TOKEN_MISSING, 'Tenant context not resolved'),
+    );
   }
   tenantStorage.run({ tenantId: ctx.tenantId }, () => next());
 };

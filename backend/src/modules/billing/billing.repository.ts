@@ -79,7 +79,7 @@ export class BillingRepository {
     );
     if (!raw) return null;
     return {
-      _id: raw._id as InvoiceDoc['_id'],
+      _id: raw._id,
       tenantId: raw.tenantId as InvoiceDoc['tenantId'],
       subscriptionId: raw.subscriptionId as InvoiceDoc['subscriptionId'],
       amountTotal: raw.amountTotal as InvoiceDoc['amountTotal'],

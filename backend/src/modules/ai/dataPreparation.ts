@@ -59,6 +59,7 @@ interface MovementRow {
   performedAt: Date;
   type: string;
   quantity: number;
+  reasonCode?: string;
 }
 
 /** Fetch stock movements for a tenant+item between two instants. */
@@ -73,9 +74,9 @@ export async function fetchMovementHistoryInRange(args: {
     itemId: args.itemId,
     performedAt: { $gte: args.from, $lt: args.to },
     // Consumption-relevant types only: outflows + adjustments.
-    type: { $in: ['out', 'transfer_out', 'adjustment'] },
+    type: { $in: ['out', 'adjustment'] },
   })
-    .select({ performedAt: 1, type: 1, quantity: 1 })
+    .select({ performedAt: 1, type: 1, quantity: 1, reasonCode: 1 })
     .sort({ performedAt: 1 })
     .lean<MovementRow[]>()
     .exec();
@@ -98,10 +99,8 @@ export async function fetchMovementHistory(args: {
 
 /**
  * Convert raw signed-quantity movements into a daily-consumption series.
- * Outflows contribute as positive consumption (`-quantity` for `out`/
- * `transfer_out`); negative adjustments contribute their absolute value.
- * Positive adjustments are ignored - they represent restocks, not
- * consumption.
+ * Outflows and production-consume adjustments contribute positive demand.
+ * Warehouse transfers, damage and count corrections do not create demand.
  */
 export function buildDailySeries(
   movements: MovementRow[],
@@ -117,11 +116,12 @@ export function buildDailySeries(
 
   for (const m of movements) {
     const key = toIsoDate(m.performedAt);
+    if (!buckets.has(key)) continue;
     const existing = buckets.get(key) ?? 0;
     let consumed = 0;
-    if (m.type === 'out' || m.type === 'transfer_out') {
+    if (m.type === 'out') {
       consumed = m.quantity < 0 ? -m.quantity : m.quantity;
-    } else if (m.type === 'adjustment' && m.quantity < 0) {
+    } else if (m.type === 'adjustment' && m.quantity < 0 && m.reasonCode === 'production_consume') {
       consumed = -m.quantity;
     }
     if (consumed > 0) buckets.set(key, existing + consumed);
@@ -166,8 +166,8 @@ export function computeFeatures(daily: DailyConsumptionPoint[]): ConsumptionFeat
     sorted.length === 0
       ? 0
       : sorted.length % 2 === 0
-      ? round4(((sorted[midPoint - 1] ?? 0) + (sorted[midPoint] ?? 0)) / 2)
-      : round4(sorted[midPoint] ?? 0);
+        ? round4(((sorted[midPoint - 1] ?? 0) + (sorted[midPoint] ?? 0)) / 2)
+        : round4(sorted[midPoint] ?? 0);
   const variance =
     consumptions.reduce((acc, x) => acc + (x - averageDailyConsumption) ** 2, 0) / windowDays;
   const stdDeviation = round4(Math.sqrt(variance));
@@ -179,8 +179,8 @@ export function computeFeatures(daily: DailyConsumptionPoint[]): ConsumptionFeat
     Math.abs(trendSlopeUnitsPerDay) < 0.001
       ? 'flat'
       : trendSlopeUnitsPerDay > 0
-      ? 'increasing'
-      : 'decreasing';
+        ? 'increasing'
+        : 'decreasing';
 
   const zeroConsumptionDays = consumptions.filter((c) => c === 0).length;
 
@@ -232,9 +232,9 @@ export function computeFeatures(daily: DailyConsumptionPoint[]): ConsumptionFeat
 export function sumConsumed(movements: MovementRow[]): number {
   let total = 0;
   for (const m of movements) {
-    if (m.type === 'out' || m.type === 'transfer_out') {
+    if (m.type === 'out') {
       total += m.quantity < 0 ? -m.quantity : m.quantity;
-    } else if (m.type === 'adjustment' && m.quantity < 0) {
+    } else if (m.type === 'adjustment' && m.quantity < 0 && m.reasonCode === 'production_consume') {
       total += -m.quantity;
     }
   }
@@ -284,11 +284,17 @@ export async function prepareForecastContext(args: {
 }
 
 /** List items eligible for batch forecasting in this tenant. */
-export async function listItemsForBatchForecast(
-  tenantId: Types.ObjectId,
-): Promise<ItemDoc[]> {
+export async function listItemsForBatchForecast(tenantId: Types.ObjectId): Promise<ItemDoc[]> {
   return Item.find({ tenantId, archivedAt: null })
-    .select({ sku: 1, name: 1, unit: 1, type: 1, reorderLevel: 1, movingAverageCost: 1, preferredSupplierId: 1 })
+    .select({
+      sku: 1,
+      name: 1,
+      unit: 1,
+      type: 1,
+      reorderLevel: 1,
+      movingAverageCost: 1,
+      preferredSupplierId: 1,
+    })
     .lean<ItemDoc[]>()
     .exec();
 }

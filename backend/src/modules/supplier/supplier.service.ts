@@ -78,7 +78,11 @@ export class SupplierService {
   async create(ctx: TenantContext, input: CreateSupplierRequest): Promise<SupplierView> {
     if (input.taxId) {
       const dup = await supplierRepository.findByTaxId(input.taxId);
-      if (dup) throw new ConflictError(ErrorCodes.RESOURCE_DUPLICATE, 'Supplier with this taxId already exists');
+      if (dup)
+        throw new ConflictError(
+          ErrorCodes.RESOURCE_DUPLICATE,
+          'Supplier with this taxId already exists',
+        );
     }
     const created = await supplierRepository.create({
       legalName: input.legalName,
@@ -231,7 +235,8 @@ export class SupplierService {
     if (!existing) throw new NotFoundError();
     const merged = {
       name: input.name ?? existing.name,
-      designation: input.designation !== undefined ? (input.designation ?? null) : existing.designation,
+      designation:
+        input.designation !== undefined ? (input.designation ?? null) : existing.designation,
       email: input.email ?? existing.email,
       phone: input.phone !== undefined ? (input.phone ?? null) : existing.phone,
       isPrimary: input.isPrimary ?? existing.isPrimary,

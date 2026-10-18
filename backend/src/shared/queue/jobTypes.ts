@@ -72,8 +72,7 @@ export interface PoDeliveryOverdueCheckJob {
 }
 
 export type ScheduledJobName =
-  | 'scheduled.quotation.expiry_check'
-  | 'scheduled.po.delivery_overdue_check';
+  'scheduled.quotation.expiry_check' | 'scheduled.po.delivery_overdue_check';
 
 export type ScheduledJobMap = {
   'scheduled.quotation.expiry_check': QuotationExpiryCheckJob;

@@ -16,4 +16,9 @@ export {
   type AiProvider,
 } from './models/forecast.model.js';
 
-export { AiUsage, periodKey, type AiUsageDoc, type AiUsageHydrated } from './models/aiUsage.model.js';
+export {
+  AiUsage,
+  periodKey,
+  type AiUsageDoc,
+  type AiUsageHydrated,
+} from './models/aiUsage.model.js';

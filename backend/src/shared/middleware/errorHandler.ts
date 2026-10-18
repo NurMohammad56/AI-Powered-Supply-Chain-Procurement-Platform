@@ -17,6 +17,32 @@ const TENANCY_MARKERS = ['TENANCY_SCOPE_MISSING', 'TENANCY_VIOLATION'];
  */
 export const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {
   const requestId = getRequestId(req);
+  const parserError = err as { type?: string; message?: string };
+  if (
+    parserError?.type === 'entity.parse.failed' ||
+    parserError?.type === 'entity.too.large' ||
+    parserError?.message === 'CORS_ORIGIN_REJECTED'
+  ) {
+    const status =
+      parserError.type === 'entity.too.large'
+        ? 413
+        : parserError.message === 'CORS_ORIGIN_REJECTED'
+          ? 403
+          : 400;
+    res.status(status).json({
+      error: {
+        code: ErrorCodes.BAD_REQUEST,
+        message:
+          status === 413
+            ? 'Request body too large'
+            : status === 403
+              ? 'Origin not allowed'
+              : 'Invalid JSON body',
+        requestId,
+      },
+    });
+    return;
+  }
 
   if (err instanceof AppError) {
     const body: ErrorEnvelope = {
@@ -82,12 +108,7 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {
   }
 
   // Mongo duplicate key
-  if (
-    err &&
-    typeof err === 'object' &&
-    'code' in err &&
-    (err as { code: number }).code === 11000
-  ) {
+  if (err && typeof err === 'object' && 'code' in err && (err as { code: number }).code === 11000) {
     const body: ErrorEnvelope = {
       error: {
         code: ErrorCodes.RESOURCE_DUPLICATE,

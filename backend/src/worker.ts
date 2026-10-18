@@ -6,6 +6,8 @@ import { startEmailWorker } from './workers/email.worker.js';
 import { startReportWorker } from './workers/report.worker.js';
 import { startForecastWorker } from './workers/forecast.worker.js';
 import { startScheduledWorker } from './workers/scheduled.worker.js';
+import { createServer } from 'node:http';
+import { createSocketServer, closeSocketServer } from './shared/realtime/socketServer.js';
 
 /**
  * Worker process entrypoint. Distinct from `server.ts` so long-running
@@ -15,6 +17,8 @@ import { startScheduledWorker } from './workers/scheduled.worker.js';
 async function bootstrap(): Promise<void> {
   await connectDatabase();
   await connectRedis();
+  // Redis adapter forwards worker events to clients connected to API instances.
+  createSocketServer(createServer());
 
   const workers = [
     startEmailWorker(),
@@ -35,6 +39,7 @@ async function bootstrap(): Promise<void> {
     logger.info({ signal, event: 'worker.shutdown_start' }, 'worker shutting down');
     try {
       await Promise.all(workers.map((w) => w.close()));
+      await closeSocketServer();
       await closeQueues();
       await disconnectRedis();
       await disconnectDatabase();

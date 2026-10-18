@@ -25,10 +25,10 @@ let cachedClient: S3Client | null = null;
 function isConfigured(): boolean {
   return Boolean(
     env.R2_ACCOUNT_ID &&
-      env.R2_ACCESS_KEY_ID &&
-      env.R2_SECRET_ACCESS_KEY &&
-      env.R2_BUCKET &&
-      (env.R2_ENDPOINT || env.R2_ACCOUNT_ID),
+    env.R2_ACCESS_KEY_ID &&
+    env.R2_SECRET_ACCESS_KEY &&
+    env.R2_BUCKET &&
+    (env.R2_ENDPOINT || env.R2_ACCOUNT_ID),
   );
 }
 

@@ -12,12 +12,7 @@ export const SUBSCRIPTION_TIERS: readonly SubscriptionTier[] = [
 ] as const;
 
 export type SubscriptionStatus =
-  | 'trialing'
-  | 'active'
-  | 'past_due'
-  | 'cancelled'
-  | 'incomplete'
-  | 'incomplete_expired';
+  'trialing' | 'active' | 'past_due' | 'cancelled' | 'incomplete' | 'incomplete_expired';
 
 export const SUBSCRIPTION_STATUSES: readonly SubscriptionStatus[] = [
   'trialing',

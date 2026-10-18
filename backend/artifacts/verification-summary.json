@@ -1,0 +1,87 @@
+{
+  "generatedAt": "2026-10-18T07:20:45.723Z",
+  "tenantId": "6ad469df663965b6a909baf0",
+  "baseUrl": "http://localhost:4001/api/v1",
+  "databaseName": "test",
+  "presentationSubscription": {
+    "tier": "enterprise",
+    "synthetic": true,
+    "note": "Presentation-only plan configuration; no purchase, charge or real subscription upgrade. Preserves recorded AI usage while providing capacity for more live demos."
+  },
+  "counts": {
+    "items": 46,
+    "stockMovements": 3698,
+    "stockBalances": 49,
+    "purchaseOrders": 115,
+    "forecasts": 59,
+    "liveAiForecasts": 59,
+    "aiInsights": 38,
+    "emailDeliveries": 232
+  },
+  "seed": {
+    "passed": 288,
+    "failed": 0
+  },
+  "regression": {
+    "passed": 218,
+    "failed": 0
+  },
+  "unit": {
+    "passed": 105,
+    "failed": 0,
+    "skipped": 3
+  },
+  "postman": {
+    "requests": 45,
+    "assertions": 45,
+    "failed": 0,
+    "evidence": "artifacts/postman-validation.txt"
+  },
+  "sandboxPayment": {
+    "passed": true,
+    "status": "paid",
+    "duplicatePaymentAttempts": 0
+  },
+  "coverage": [
+    {
+      "kind": "statements",
+      "actual": 83.75,
+      "required": 70,
+      "passed": true
+    },
+    {
+      "kind": "branches",
+      "actual": 60.26,
+      "required": 60,
+      "passed": true
+    },
+    {
+      "kind": "functions",
+      "actual": 82.97,
+      "required": 70,
+      "passed": true
+    },
+    {
+      "kind": "lines",
+      "actual": 85.9,
+      "required": 70,
+      "passed": true
+    }
+  ],
+  "dependencies": {
+    "info": 0,
+    "low": 0,
+    "moderate": 20,
+    "high": 4,
+    "critical": 0,
+    "total": 24
+  },
+  "productionDependencies": {
+    "info": 0,
+    "low": 0,
+    "moderate": 0,
+    "high": 0,
+    "critical": 0,
+    "total": 0
+  }
+}

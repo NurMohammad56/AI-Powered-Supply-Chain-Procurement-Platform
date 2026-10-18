@@ -19,13 +19,19 @@ export class InventoryRepository {
     const doc = await Warehouse.create(input);
     return doc.toObject();
   }
-  async updateWarehouse(id: Types.ObjectId, patch: Partial<WarehouseDoc>): Promise<WarehouseDoc | null> {
+  async updateWarehouse(
+    id: Types.ObjectId,
+    patch: Partial<WarehouseDoc>,
+  ): Promise<WarehouseDoc | null> {
     return Warehouse.findByIdAndUpdate(id, patch, { new: true, runValidators: true })
       .lean<WarehouseDoc>()
       .exec();
   }
   async archiveWarehouse(id: Types.ObjectId): Promise<boolean> {
-    const result = await Warehouse.updateOne({ _id: id }, { $set: { archivedAt: new Date() } }).exec();
+    const result = await Warehouse.updateOne(
+      { _id: id },
+      { $set: { archivedAt: new Date() } },
+    ).exec();
     return (result.modifiedCount ?? 0) > 0;
   }
   async listWarehouses(args: {
@@ -127,10 +133,7 @@ export class InventoryRepository {
     if (args.supplierId) filter.preferredSupplierId = new Types.ObjectId(args.supplierId);
     if (args.q) {
       const escaped = args.q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      filter.$or = [
-        { sku: new RegExp(escaped, 'i') },
-        { name: new RegExp(escaped, 'i') },
-      ];
+      filter.$or = [{ sku: new RegExp(escaped, 'i') }, { name: new RegExp(escaped, 'i') }];
     }
     if (args.archived === true) {
       filter.archivedAt = { $type: 'date' };

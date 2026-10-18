@@ -1,6 +1,10 @@
 import { Router } from 'express';
 
-import { authPublicRouter, authPrivateRouter, authPrivateMiddleware } from './modules/auth/index.js';
+import {
+  authPublicRouter,
+  authPrivateRouter,
+  authPrivateMiddleware,
+} from './modules/auth/index.js';
 import { resolveTenant, tenantScope } from './shared/middleware/tenant.js';
 import { rateLimitAuthenticated, rateLimitTenant } from './shared/middleware/rateLimit.js';
 

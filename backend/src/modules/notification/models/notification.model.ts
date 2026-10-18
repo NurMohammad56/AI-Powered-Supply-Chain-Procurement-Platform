@@ -4,11 +4,7 @@ import { tenancyPlugin } from '../../../shared/db/tenancyPlugin.js';
 import { auditPlugin } from '../../../shared/db/auditPlugin.js';
 
 export type NotificationCategory =
-  | 'low_stock'
-  | 'po_status'
-  | 'delivery_reminder'
-  | 'weekly_digest'
-  | 'system';
+  'low_stock' | 'po_status' | 'delivery_reminder' | 'weekly_digest' | 'system';
 
 export const NOTIFICATION_CATEGORIES: readonly NotificationCategory[] = [
   'low_stock',

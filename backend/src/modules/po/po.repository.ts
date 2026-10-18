@@ -14,7 +14,10 @@ export class PoRepository {
     return doc.toObject();
   }
 
-  async update(id: Types.ObjectId, patch: Partial<PurchaseOrderDoc>): Promise<PurchaseOrderDoc | null> {
+  async update(
+    id: Types.ObjectId,
+    patch: Partial<PurchaseOrderDoc>,
+  ): Promise<PurchaseOrderDoc | null> {
     return PurchaseOrder.findByIdAndUpdate(id, patch, { new: true, runValidators: true })
       .lean<PurchaseOrderDoc>()
       .exec();
@@ -79,7 +82,9 @@ export class PoRepository {
     const doc = await PurchaseOrder.findById(args.id).exec();
     if (!doc) return null;
     for (const upd of args.perLine) {
-      const line = doc.lines.find((l) => (l as unknown as { _id: Types.ObjectId })._id.toString() === upd.poLineId.toString());
+      const line = doc.lines.find(
+        (l) => (l as unknown as { _id: Types.ObjectId })._id.toString() === upd.poLineId.toString(),
+      );
       if (line) line.quantityReceived += upd.addQuantity;
     }
     await doc.save();

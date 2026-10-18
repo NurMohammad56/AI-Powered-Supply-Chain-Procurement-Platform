@@ -11,7 +11,10 @@ type Source = 'body' | 'query' | 'params' | 'headers';
  * that read `req.body` after this middleware get the schema's inferred
  * type guarantees - no defensive re-checks required.
  */
-export function validate<S extends z.ZodTypeAny>(schema: S, source: Source = 'body'): RequestHandler {
+export function validate<S extends z.ZodTypeAny>(
+  schema: S,
+  source: Source = 'body',
+): RequestHandler {
   return (req, _res, next) => {
     const parsed = schema.safeParse(req[source]);
     if (!parsed.success) {

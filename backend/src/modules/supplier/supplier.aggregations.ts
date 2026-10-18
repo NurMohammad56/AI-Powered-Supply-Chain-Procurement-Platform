@@ -87,11 +87,7 @@ export async function supplierPerformanceScores(
         supplierId: '$_id',
         sampleSize: { $size: '$sampleSize' },
         onTimeDeliveryRate: {
-          $cond: [
-            { $gt: ['$lineCount', 0] },
-            { $divide: ['$onTimeCount', '$lineCount'] },
-            0,
-          ],
+          $cond: [{ $gt: ['$lineCount', 0] }, { $divide: ['$onTimeCount', '$lineCount'] }, 0],
         },
         fillRate: {
           $cond: [
@@ -102,20 +98,15 @@ export async function supplierPerformanceScores(
         },
         qualityRejectRate: 0,
         averageUnitPrice: {
-          $cond: [
-            { $gt: ['$lineCount', 0] },
-            { $divide: ['$priceSum', '$lineCount'] },
-            0,
-          ],
+          $cond: [{ $gt: ['$lineCount', 0] }, { $divide: ['$priceSum', '$lineCount'] }, 0],
         },
       },
     },
     { $match: { sampleSize: { $gte: minSampleSize } } },
   ];
 
-  const rows = await PurchaseOrder.aggregate<Omit<SupplierPerformanceRow, 'overall'>>(
-    pipeline,
-  ).exec();
+  const rows =
+    await PurchaseOrder.aggregate<Omit<SupplierPerformanceRow, 'overall'>>(pipeline).exec();
 
   if (rows.length === 0) return [];
 

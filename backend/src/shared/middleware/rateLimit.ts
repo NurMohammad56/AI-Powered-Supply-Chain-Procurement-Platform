@@ -166,7 +166,10 @@ export function slidingWindowLimiter(opts: SlidingWindowOptions): RequestHandler
         return next();
       } catch (err) {
         // Rate-limiter must NEVER block on its own backend failure.
-        logger.warn({ err, event: 'ratelimit.sliding.fail_open', prefix: opts.prefix }, 'sliding rate limiter degraded; failing open');
+        logger.warn(
+          { err, event: 'ratelimit.sliding.fail_open', prefix: opts.prefix },
+          'sliding rate limiter degraded; failing open',
+        );
         return next();
       }
     })();

@@ -1,0 +1,3061 @@
+{
+  "baseUrl": "http://localhost:4001/api/v1",
+  "generatedAt": "2026-10-18T06:40:30.865Z",
+  "runId": "d19ac4c6",
+  "password": "GarmentsDemo!2026",
+  "users": {
+    "owner": "owner.d19ac4c6@garments.example.test",
+    "manager": "manager.d19ac4c6@garments.example.test",
+    "warehouse_staff": "warehouse_staff.d19ac4c6@garments.example.test",
+    "viewer": "viewer.d19ac4c6@garments.example.test"
+  },
+  "warehouses": [
+    {
+      "id": "6ad469e1663965b6a909bb00",
+      "name": "Gazipur Fabric Store",
+      "code": "GAZ",
+      "address": {
+        "street": "Demo Industrial Area",
+        "city": "Gazipur",
+        "country": "BD",
+        "postalCode": "1700"
+      },
+      "isActive": true,
+      "archivedAt": null,
+      "createdAt": "2026-10-18T06:40:33.559Z",
+      "updatedAt": "2026-10-18T06:40:33.559Z"
+    },
+    {
+      "id": "6ad469e1663965b6a909bb05",
+      "name": "Savar Trims Store",
+      "code": "SAV",
+      "address": {
+        "street": "Demo Industrial Area",
+        "city": "Savar",
+        "country": "BD",
+        "postalCode": "1700"
+      },
+      "isActive": true,
+      "archivedAt": null,
+      "createdAt": "2026-10-18T06:40:33.654Z",
+      "updatedAt": "2026-10-18T06:40:33.654Z"
+    },
+    {
+      "id": "6ad469e1663965b6a909bb0a",
+      "name": "Chattogram Export Packing",
+      "code": "CTG",
+      "address": {
+        "street": "Demo Industrial Area",
+        "city": "Chattogram",
+        "country": "BD",
+        "postalCode": "1700"
+      },
+      "isActive": true,
+      "archivedAt": null,
+      "createdAt": "2026-10-18T06:40:33.750Z",
+      "updatedAt": "2026-10-18T06:40:33.750Z"
+    }
+  ],
+  "categories": [
+    {
+      "id": "6ad469e1663965b6a909bb0f",
+      "name": "Knit Fabrics",
+      "parentId": null,
+      "description": null,
+      "archivedAt": null
+    },
+    {
+      "id": "6ad469e1663965b6a909bb12",
+      "name": "Woven and Denim",
+      "parentId": null,
+      "description": null,
+      "archivedAt": null
+    },
+    {
+      "id": "6ad469e2663965b6a909bb15",
+      "name": "Sewing Trims",
+      "parentId": null,
+      "description": null,
+      "archivedAt": null
+    },
+    {
+      "id": "6ad469e2663965b6a909bb18",
+      "name": "Packaging",
+      "parentId": null,
+      "description": null,
+      "archivedAt": null
+    },
+    {
+      "id": "6ad469e2663965b6a909bb1b",
+      "name": "Dyes and Chemicals",
+      "parentId": null,
+      "description": null,
+      "archivedAt": null
+    },
+    {
+      "id": "6ad469e2663965b6a909bb1e",
+      "name": "Finished Garments",
+      "parentId": null,
+      "description": null,
+      "archivedAt": null
+    }
+  ],
+  "suppliers": [
+    {
+      "id": "6ad469e2663965b6a909bb20",
+      "legalName": "Meghna Knit Fabrics Demo Ltd",
+      "tradingName": "Meghna Knit Fabrics Demo Ltd",
+      "taxId": null,
+      "status": "active",
+      "address": {
+        "street": "Demo BSCIC Industrial Estate",
+        "city": "Gazipur",
+        "country": "BD",
+        "postalCode": null
+      },
+      "paymentTermsDays": 30,
+      "leadTimeDays": 5,
+      "contacts": [
+        {
+          "name": "Demo Sales 1",
+          "designation": null,
+          "email": "sales0@garments.example.test",
+          "phone": "+8801700000000",
+          "isPrimary": true
+        }
+      ],
+      "categoryIds": [
+        "6ad469e1663965b6a909bb0f"
+      ],
+      "tier": "strategic",
+      "performanceScore": {
+        "overall": null,
+        "onTimeDeliveryRate": null,
+        "qualityRejectRate": null,
+        "priceCompetitiveness": null,
+        "sampleSize": 0,
+        "computedAt": null
+      },
+      "documents": [],
+      "archivedAt": null,
+      "createdAt": "2026-10-18T06:40:34.366Z",
+      "updatedAt": "2026-10-18T06:40:34.366Z"
+    },
+    {
+      "id": "6ad469e2663965b6a909bb24",
+      "legalName": "Padma Denim Demo Ltd",
+      "tradingName": "Padma Denim Demo Ltd",
+      "taxId": null,
+      "status": "active",
+      "address": {
+        "street": "Demo BSCIC Industrial Estate",
+        "city": "Narayanganj",
+        "country": "BD",
+        "postalCode": null
+      },
+      "paymentTermsDays": 45,
+      "leadTimeDays": 8,
+      "contacts": [
+        {
+          "name": "Demo Sales 2",
+          "designation": null,
+          "email": "sales1@garments.example.test",
+          "phone": "+8801700000001",
+          "isPrimary": true
+        }
+      ],
+      "categoryIds": [
+        "6ad469e1663965b6a909bb12"
+      ],
+      "tier": "preferred",
+      "performanceScore": {
+        "overall": null,
+        "onTimeDeliveryRate": null,
+        "qualityRejectRate": null,
+        "priceCompetitiveness": null,
+        "sampleSize": 0,
+        "computedAt": null
+      },
+      "documents": [],
+      "archivedAt": null,
+      "createdAt": "2026-10-18T06:40:34.419Z",
+      "updatedAt": "2026-10-18T06:40:34.419Z"
+    },
+    {
+      "id": "6ad469e2663965b6a909bb28",
+      "legalName": "Gazipur Accessories Demo Ltd",
+      "tradingName": "Gazipur Accessories Demo Ltd",
+      "taxId": null,
+      "status": "active",
+      "address": {
+        "street": "Demo BSCIC Industrial Estate",
+        "city": "Dhaka",
+        "country": "BD",
+        "postalCode": null
+      },
+      "paymentTermsDays": 60,
+      "leadTimeDays": 11,
+      "contacts": [
+        {
+          "name": "Demo Sales 3",
+          "designation": null,
+          "email": "sales2@garments.example.test",
+          "phone": "+8801700000002",
+          "isPrimary": true
+        }
+      ],
+      "categoryIds": [
+        "6ad469e2663965b6a909bb15"
+      ],
+      "tier": "backup",
+      "performanceScore": {
+        "overall": null,
+        "onTimeDeliveryRate": null,
+        "qualityRejectRate": null,
+        "priceCompetitiveness": null,
+        "sampleSize": 0,
+        "computedAt": null
+      },
+      "documents": [],
+      "archivedAt": null,
+      "createdAt": "2026-10-18T06:40:34.472Z",
+      "updatedAt": "2026-10-18T06:40:34.472Z"
+    },
+    {
+      "id": "6ad469e2663965b6a909bb2c",
+      "legalName": "Narayanganj Thread Demo Ltd",
+      "tradingName": "Narayanganj Thread Demo Ltd",
+      "taxId": null,
+      "status": "active",
+      "address": {
+        "street": "Demo BSCIC Industrial Estate",
+        "city": "Chattogram",
+        "country": "BD",
+        "postalCode": null
+      },
+      "paymentTermsDays": 30,
+      "leadTimeDays": 14,
+      "contacts": [
+        {
+          "name": "Demo Sales 4",
+          "designation": null,
+          "email": "sales3@garments.example.test",
+          "phone": "+8801700000003",
+          "isPrimary": true
+        }
+      ],
+      "categoryIds": [
+        "6ad469e2663965b6a909bb18"
+      ],
+      "tier": "strategic",
+      "performanceScore": {
+        "overall": null,
+        "onTimeDeliveryRate": null,
+        "qualityRejectRate": null,
+        "priceCompetitiveness": null,
+        "sampleSize": 0,
+        "computedAt": null
+      },
+      "documents": [],
+      "archivedAt": null,
+      "createdAt": "2026-10-18T06:40:34.535Z",
+      "updatedAt": "2026-10-18T06:40:34.535Z"
+    },
+    {
+      "id": "6ad469e2663965b6a909bb30",
+      "legalName": "Chattogram Packaging Demo Ltd",
+      "tradingName": "Chattogram Packaging Demo Ltd",
+      "taxId": null,
+      "status": "active",
+      "address": {
+        "street": "Demo BSCIC Industrial Estate",
+        "city": "Gazipur",
+        "country": "BD",
+        "postalCode": null
+      },
+      "paymentTermsDays": 45,
+      "leadTimeDays": 17,
+      "contacts": [
+        {
+          "name": "Demo Sales 5",
+          "designation": null,
+          "email": "sales4@garments.example.test",
+          "phone": "+8801700000004",
+          "isPrimary": true
+        }
+      ],
+      "categoryIds": [
+        "6ad469e2663965b6a909bb1b"
+      ],
+      "tier": "preferred",
+      "performanceScore": {
+        "overall": null,
+        "onTimeDeliveryRate": null,
+        "qualityRejectRate": null,
+        "priceCompetitiveness": null,
+        "sampleSize": 0,
+        "computedAt": null
+      },
+      "documents": [],
+      "archivedAt": null,
+      "createdAt": "2026-10-18T06:40:34.587Z",
+      "updatedAt": "2026-10-18T06:40:34.587Z"
+    },
+    {
+      "id": "6ad469e2663965b6a909bb34",
+      "legalName": "Savar Dye Chemicals Demo Ltd",
+      "tradingName": "Savar Dye Chemicals Demo Ltd",
+      "taxId": null,
+      "status": "active",
+      "address": {
+        "street": "Demo BSCIC Industrial Estate",
+        "city": "Narayanganj",
+        "country": "BD",
+        "postalCode": null
+      },
+      "paymentTermsDays": 60,
+      "leadTimeDays": 20,
+      "contacts": [
+        {
+          "name": "Demo Sales 6",
+          "designation": null,
+          "email": "sales5@garments.example.test",
+          "phone": "+8801700000005",
+          "isPrimary": true
+        }
+      ],
+      "categoryIds": [
+        "6ad469e2663965b6a909bb1e"
+      ],
+      "tier": "backup",
+      "performanceScore": {
+        "overall": null,
+        "onTimeDeliveryRate": null,
+        "qualityRejectRate": null,
+        "priceCompetitiveness": null,
+        "sampleSize": 0,
+        "computedAt": null
+      },
+      "documents": [],
+      "archivedAt": null,
+      "createdAt": "2026-10-18T06:40:34.635Z",
+      "updatedAt": "2026-10-18T06:40:34.635Z"
+    },
+    {
+      "id": "6ad469e2663965b6a909bb38",
+      "legalName": "Bengal Export Trims Demo Ltd",
+      "tradingName": "Bengal Export Trims Demo Ltd",
+      "taxId": null,
+      "status": "active",
+      "address": {
+        "street": "Demo BSCIC Industrial Estate",
+        "city": "Dhaka",
+        "country": "BD",
+        "postalCode": null
+      },
+      "paymentTermsDays": 30,
+      "leadTimeDays": 23,
+      "contacts": [
+        {
+          "name": "Demo Sales 7",
+          "designation": null,
+          "email": "sales6@garments.example.test",
+          "phone": "+8801700000006",
+          "isPrimary": true
+        }
+      ],
+      "categoryIds": [
+        "6ad469e1663965b6a909bb0f"
+      ],
+      "tier": "strategic",
+      "performanceScore": {
+        "overall": null,
+        "onTimeDeliveryRate": null,
+        "qualityRejectRate": null,
+        "priceCompetitiveness": null,
+        "sampleSize": 0,
+        "computedAt": null
+      },
+      "documents": [],
+      "archivedAt": null,
+      "createdAt": "2026-10-18T06:40:34.687Z",
+      "updatedAt": "2026-10-18T06:40:34.687Z"
+    },
+    {
+      "id": "6ad469e2663965b6a909bb3c",
+      "legalName": "Dhaka Backup Textiles Demo Ltd",
+      "tradingName": "Dhaka Backup Textiles Demo Ltd",
+      "taxId": null,
+      "status": "active",
+      "address": {
+        "street": "Demo BSCIC Industrial Estate",
+        "city": "Chattogram",
+        "country": "BD",
+        "postalCode": null
+      },
+      "paymentTermsDays": 45,
+      "leadTimeDays": 26,
+      "contacts": [
+        {
+          "name": "Demo Sales 8",
+          "designation": null,
+          "email": "sales7@garments.example.test",
+          "phone": "+8801700000007",
+          "isPrimary": true
+        }
+      ],
+      "categoryIds": [
+        "6ad469e1663965b6a909bb12"
+      ],
+      "tier": "preferred",
+      "performanceScore": {
+        "overall": null,
+        "onTimeDeliveryRate": null,
+        "qualityRejectRate": null,
+        "priceCompetitiveness": null,
+        "sampleSize": 0,
+        "computedAt": null
+      },
+      "documents": [],
+      "archivedAt": null,
+      "createdAt": "2026-10-18T06:40:34.739Z",
+      "updatedAt": "2026-10-18T06:40:34.739Z"
+    }
+  ],
+  "items": [
+    {
+      "id": "6ad469e2663965b6a909bb41",
+      "sku": "BD-RMG-001",
+      "barcode": null,
+      "name": "Single Jersey Cotton 160 GSM",
+      "description": null,
+      "categoryId": "6ad469e1663965b6a909bb0f",
+      "unit": "kg",
+      "type": "raw_material",
+      "preferredSupplierId": "6ad469e2663965b6a909bb20",
+      "reorderLevel": 960,
+      "movingAverageCost": 480,
+      "currency": "BDT",
+      "archivedAt": null,
+      "createdAt": "2026-10-18T06:40:34.832Z",
+      "updatedAt": "2026-10-18T06:40:34.832Z",
+      "demoDaily": 80
+    },
+    {
+      "id": "6ad469e3663965b6a909bb46",
+      "sku": "BD-RMG-002",
+      "barcode": null,
+      "name": "Pique Cotton 220 GSM",
+      "description": null,
+      "categoryId": "6ad469e1663965b6a909bb0f",
+      "unit": "kg",
+      "type": "raw_material",
+      "preferredSupplierId": "6ad469e2663965b6a909bb24",
+      "reorderLevel": 660,
+      "movingAverageCost": 560,
+      "currency": "BDT",
+      "archivedAt": null,
+      "createdAt": "2026-10-18T06:40:35.112Z",
+      "updatedAt": "2026-10-18T06:40:35.112Z",
+      "demoDaily": 55
+    },
+    {
+      "id": "6ad469e3663965b6a909bb4b",
+      "sku": "BD-RMG-003",
+      "barcode": null,
+      "name": "Rib Fabric 1x1",
+      "description": null,
+      "categoryId": "6ad469e1663965b6a909bb0f",
+      "unit": "kg",
+      "type": "raw_material",
+      "preferredSupplierId": "6ad469e2663965b6a909bb28",
+      "reorderLevel": 288,
+      "movingAverageCost": 520,
+      "currency": "BDT",
+      "archivedAt": null,
+      "createdAt": "2026-10-18T06:40:35.329Z",
+      "updatedAt": "2026-10-18T06:40:35.329Z",
+      "demoDaily": 24
+    },
+    {
+      "id": "6ad469e3663965b6a909bb50",
+      "sku": "BD-RMG-004",
+      "barcode": null,
+      "name": "Fleece Brushed 280 GSM",
+      "description": null,
+      "categoryId": "6ad469e1663965b6a909bb0f",
+      "unit": "kg",
+      "type": "raw_material",
+      "preferredSupplierId": "6ad469e2663965b6a909bb2c",
+      "reorderLevel": 480,
+      "movingAverageCost": 650,
+      "currency": "BDT",
+      "archivedAt": null,
+      "createdAt": "2026-10-18T06:40:35.536Z",
+      "updatedAt": "2026-10-18T06:40:35.536Z",
+      "demoDaily": 40
+    },
+    {
+      "id": "6ad469e3663965b6a909bb55",
+      "sku": "BD-RMG-005",
+      "barcode": null,
+      "name": "Stretch Denim 10 oz",
+      "description": null,
+      "categoryId": "6ad469e1663965b6a909bb12",
+      "unit": "m",
+      "type": "raw_material",
+      "preferredSupplierId": "6ad469e2663965b6a909bb30",
+      "reorderLevel": 1320,
+      "movingAverageCost": 330,
+      "currency": "BDT",
+      "archivedAt": null,
+      "createdAt": "2026-10-18T06:40:35.741Z",
+      "updatedAt": "2026-10-18T06:40:35.741Z",
+      "demoDaily": 110
+    },
+    {
+      "id": "6ad469e3663965b6a909bb5a",
+      "sku": "BD-RMG-006",
+      "barcode": null,
+      "name": "Cotton Twill 180 GSM",
+      "description": null,
+      "categoryId": "6ad469e1663965b6a909bb12",
+      "unit": "m",
+      "type": "raw_material",
+      "preferredSupplierId": "6ad469e2663965b6a909bb34",
+      "reorderLevel": 1020,
+      "movingAverageCost": 240,
+      "currency": "BDT",
+      "archivedAt": null,
+      "createdAt": "2026-10-18T06:40:35.941Z",
+      "updatedAt": "2026-10-18T06:40:35.941Z",
+      "demoDaily": 85
+    },
+    {
+      "id": "6ad469e4663965b6a909bb5f",
+      "sku": "BD-RMG-007",
+      "barcode": null,
+      "name": "Poplin White 120 GSM",
+      "description": null,
+      "categoryId": "6ad469e1663965b6a909bb12",
+      "unit": "m",
+      "type": "raw_material",
+      "preferredSupplierId": "6ad469e2663965b6a909bb38",
+      "reorderLevel": 840,
+      "movingAverageCost": 190,
+      "currency": "BDT",
+      "archivedAt": null,
+      "createdAt": "2026-10-18T06:40:36.150Z",
+      "updatedAt": "2026-10-18T06:40:36.150Z",
+      "demoDaily": 70
+    },
+    {
+      "id": "6ad469e4663965b6a909bb64",
+      "sku": "BD-RMG-008",
+      "barcode": null,
+      "name": "Dead Stock Printed Voile",
+      "description": null,
+      "categoryId": "6ad469e1663965b6a909bb12",
+      "unit": "m",
+      "type": "raw_material",
+      "preferredSupplierId": "6ad469e2663965b6a909bb3c",
+      "reorderLevel": 50,
+      "movingAverageCost": 160,
+      "currency": "BDT",
+      "archivedAt": null,
+      "createdAt": "2026-10-18T06:40:36.355Z",
+      "updatedAt": "2026-10-18T06:40:36.355Z",
+      "demoDaily": 0
+    },
+    {
+      "id": "6ad469e4663965b6a909bb69",
+      "sku": "BD-RMG-009",
+      "barcode": null,
+      "name": "Polyester Sewing Thread",
+      "description": null,
+      "categoryId": "6ad469e2663965b6a909bb15",
+      "unit": "pcs",
+      "type": "raw_material",
+      "preferredSupplierId": "6ad469e2663965b6a909bb20",
+      "reorderLevel": 1920,
+      "movingAverageCost": 65,
+      "currency": "BDT",
+      "archivedAt": null,
+      "createdAt": "2026-10-18T06:40:36.536Z",
+      "updatedAt": "2026-10-18T06:40:36.536Z",
+      "demoDaily": 160
+    },
+    {
+      "id": "6ad469e4663965b6a909bb6e",
+      "sku": "BD-RMG-010",
+      "barcode": null,
+      "name": "Metal Zipper 7 Inch",
+      "description": null,
+      "categoryId": "6ad469e2663965b6a909bb15",
+      "unit": "pcs",
+      "type": "raw_material",
+      "preferredSupplierId": "6ad469e2663965b6a909bb24",
+      "reorderLevel": 2640,
+      "movingAverageCost": 18,
+      "currency": "BDT",
+      "archivedAt": null,
+      "createdAt": "2026-10-18T06:40:36.738Z",
+      "updatedAt": "2026-10-18T06:40:36.738Z",
+      "demoDaily": 220
+    },
+    {
+      "id": "6ad469e4663965b6a909bb73",
+      "sku": "BD-RMG-011",
+      "barcode": null,
+      "name": "Plastic Button 18L",
+      "description": null,
+      "categoryId": "6ad469e2663965b6a909bb15",
+      "unit": "pcs",
+      "type": "raw_material",
+      "preferredSupplierId": "6ad469e2663965b6a909bb28",
+      "reorderLevel": 7200,
+      "movingAverageCost": 2,
+      "currency": "BDT",
+      "archivedAt": null,
+      "createdAt": "2026-10-18T06:40:36.936Z",
+      "updatedAt": "2026-10-18T06:40:36.936Z",
+      "demoDaily": 600
+    },
+    {
+      "id": "6ad469e5663965b6a909bb78",
+      "sku": "BD-RMG-012",
+      "barcode": null,
+      "name": "Woven Size Label",
+      "description": null,
+      "categoryId": "6ad469e2663965b6a909bb15",
+      "unit": "pcs",
+      "type": "raw_material",
+      "preferredSupplierId": "6ad469e2663965b6a909bb2c",
+      "reorderLevel": 4800,
+      "movingAverageCost": 3,
+      "currency": "BDT",
+      "archivedAt": null,
+      "createdAt": "2026-10-18T06:40:37.137Z",
+      "updatedAt": "2026-10-18T06:40:37.137Z",
+      "demoDaily": 400
+    },
+    {
+      "id": "6ad469e5663965b6a909bb7d",
+      "sku": "BD-RMG-013",
+      "barcode": null,
+      "name": "Export Carton 5 Ply",
+      "description": null,
+      "categoryId": "6ad469e2663965b6a909bb18",
+      "unit": "pcs",
+      "type": "packaging",
+      "preferredSupplierId": "6ad469e2663965b6a909bb30",
+      "reorderLevel": 540,
+      "movingAverageCost": 95,
+      "currency": "BDT",
+      "archivedAt": null,
+      "createdAt": "2026-10-18T06:40:37.335Z",
+      "updatedAt": "2026-10-18T06:40:37.335Z",
+      "demoDaily": 45
+    },
+    {
+      "id": "6ad469e5663965b6a909bb82",
+      "sku": "BD-RMG-014",
+      "barcode": null,
+      "name": "Recycled Polybag",
+      "description": null,
+      "categoryId": "6ad469e2663965b6a909bb18",
+      "unit": "pcs",
+      "type": "packaging",
+      "preferredSupplierId": "6ad469e2663965b6a909bb34",
+      "reorderLevel": 5400,
+      "movingAverageCost": 5,
+      "currency": "BDT",
+      "archivedAt": null,
+      "createdAt": "2026-10-18T06:40:37.538Z",
+      "updatedAt": "2026-10-18T06:40:37.538Z",
+      "demoDaily": 450
+    },
+    {
+      "id": "6ad469e5663965b6a909bb87",
+      "sku": "BD-RMG-015",
+      "barcode": null,
+      "name": "Barcode Hangtag",
+      "description": null,
+      "categoryId": "6ad469e2663965b6a909bb18",
+      "unit": "pcs",
+      "type": "packaging",
+      "preferredSupplierId": "6ad469e2663965b6a909bb38",
+      "reorderLevel": 4200,
+      "movingAverageCost": 4,
+      "currency": "BDT",
+      "archivedAt": null,
+      "createdAt": "2026-10-18T06:40:37.752Z",
+      "updatedAt": "2026-10-18T06:40:37.752Z",
+      "demoDaily": 350
+    },
+    {
+      "id": "6ad469e5663965b6a909bb8c",
+      "sku": "BD-RMG-016",
+      "barcode": null,
+      "name": "Carton Sealing Tape",
+      "description": null,
+      "categoryId": "6ad469e2663965b6a909bb18",
+      "unit": "roll",
+      "type": "packaging",
+      "preferredSupplierId": "6ad469e2663965b6a909bb3c",
+      "reorderLevel": 180,
+      "movingAverageCost": 60,
+      "currency": "BDT",
+      "archivedAt": null,
+      "createdAt": "2026-10-18T06:40:37.948Z",
+      "updatedAt": "2026-10-18T06:40:37.948Z",
+      "demoDaily": 15
+    },
+    {
+      "id": "6ad469e6663965b6a909bb91",
+      "sku": "BD-RMG-017",
+      "barcode": null,
+      "name": "Reactive Blue Dye",
+      "description": null,
+      "categoryId": "6ad469e2663965b6a909bb1b",
+      "unit": "kg",
+      "type": "consumable",
+      "preferredSupplierId": "6ad469e2663965b6a909bb20",
+      "reorderLevel": 144,
+      "movingAverageCost": 820,
+      "currency": "BDT",
+      "archivedAt": null,
+      "createdAt": "2026-10-18T06:40:38.142Z",
+      "updatedAt": "2026-10-18T06:40:38.142Z",
+      "demoDaily": 12
+    },
+    {
+      "id": "6ad469e6663965b6a909bb96",
+      "sku": "BD-RMG-018",
+      "barcode": null,
+      "name": "Softener Textile Grade",
+      "description": null,
+      "categoryId": "6ad469e2663965b6a909bb1b",
+      "unit": "litre",
+      "type": "consumable",
+      "preferredSupplierId": "6ad469e2663965b6a909bb24",
+      "reorderLevel": 216,
+      "movingAverageCost": 180,
+      "currency": "BDT",
+      "archivedAt": null,
+      "createdAt": "2026-10-18T06:40:38.343Z",
+      "updatedAt": "2026-10-18T06:40:38.343Z",
+      "demoDaily": 18
+    },
+    {
+      "id": "6ad469e6663965b6a909bb9b",
+      "sku": "BD-RMG-019",
+      "barcode": null,
+      "name": "Hydrogen Peroxide Demo",
+      "description": null,
+      "categoryId": "6ad469e2663965b6a909bb1b",
+      "unit": "litre",
+      "type": "consumable",
+      "preferredSupplierId": "6ad469e2663965b6a909bb28",
+      "reorderLevel": 168,
+      "movingAverageCost": 95,
+      "currency": "BDT",
+      "archivedAt": null,
+      "createdAt": "2026-10-18T06:40:38.538Z",
+      "updatedAt": "2026-10-18T06:40:38.538Z",
+      "demoDaily": 14
+    },
+    {
+      "id": "6ad469e6663965b6a909bba0",
+      "sku": "BD-RMG-020",
+      "barcode": null,
+      "name": "Enzyme Wash Agent",
+      "description": null,
+      "categoryId": "6ad469e2663965b6a909bb1b",
+      "unit": "kg",
+      "type": "consumable",
+      "preferredSupplierId": "6ad469e2663965b6a909bb2c",
+      "reorderLevel": 108,
+      "movingAverageCost": 360,
+      "currency": "BDT",
+      "archivedAt": null,
+      "createdAt": "2026-10-18T06:40:38.736Z",
+      "updatedAt": "2026-10-18T06:40:38.736Z",
+      "demoDaily": 9
+    },
+    {
+      "id": "6ad469e6663965b6a909bba5",
+      "sku": "BD-RMG-021",
+      "barcode": null,
+      "name": "Basic Crew Neck Tee",
+      "description": null,
+      "categoryId": "6ad469e2663965b6a909bb1e",
+      "unit": "pcs",
+      "type": "finished_good",
+      "preferredSupplierId": "6ad469e2663965b6a909bb30",
+      "reorderLevel": 1080,
+      "movingAverageCost": 280,
+      "currency": "BDT",
+      "archivedAt": null,
+      "createdAt": "2026-10-18T06:40:38.946Z",
+      "updatedAt": "2026-10-18T06:40:38.946Z",
+      "demoDaily": 90
+    },
+    {
+      "id": "6ad469e7663965b6a909bbaa",
+      "sku": "BD-RMG-022",
+      "barcode": null,
+      "name": "Ladies Denim Jeans",
+      "description": null,
+      "categoryId": "6ad469e2663965b6a909bb1e",
+      "unit": "pcs",
+      "type": "finished_good",
+      "preferredSupplierId": "6ad469e2663965b6a909bb34",
+      "reorderLevel": 720,
+      "movingAverageCost": 780,
+      "currency": "BDT",
+      "archivedAt": null,
+      "createdAt": "2026-10-18T06:40:39.155Z",
+      "updatedAt": "2026-10-18T06:40:39.155Z",
+      "demoDaily": 60
+    },
+    {
+      "id": "6ad469e7663965b6a909bbaf",
+      "sku": "BD-RMG-023",
+      "barcode": null,
+      "name": "Polo Shirt Navy",
+      "description": null,
+      "categoryId": "6ad469e2663965b6a909bb1e",
+      "unit": "pcs",
+      "type": "finished_good",
+      "preferredSupplierId": "6ad469e2663965b6a909bb38",
+      "reorderLevel": 900,
+      "movingAverageCost": 430,
+      "currency": "BDT",
+      "archivedAt": null,
+      "createdAt": "2026-10-18T06:40:39.350Z",
+      "updatedAt": "2026-10-18T06:40:39.350Z",
+      "demoDaily": 75
+    },
+    {
+      "id": "6ad469e7663965b6a909bbb4",
+      "sku": "BD-RMG-024",
+      "barcode": null,
+      "name": "Kids Cotton Hoodie",
+      "description": null,
+      "categoryId": "6ad469e2663965b6a909bb1e",
+      "unit": "pcs",
+      "type": "finished_good",
+      "preferredSupplierId": "6ad469e2663965b6a909bb3c",
+      "reorderLevel": 540,
+      "movingAverageCost": 580,
+      "currency": "BDT",
+      "archivedAt": null,
+      "createdAt": "2026-10-18T06:40:39.549Z",
+      "updatedAt": "2026-10-18T06:40:39.549Z",
+      "demoDaily": 45
+    }
+  ],
+  "quotations": [
+    {
+      "id": "6ad469ea663965b6a909bbeb",
+      "number": "RFQ-MVDGI4FY-8D0AAE",
+      "status": "open",
+      "requestedBy": "6ad469df663965b6a909baf2",
+      "validUntil": "2026-10-28T06:40:42.189Z",
+      "lines": [
+        {
+          "itemId": "6ad469e2663965b6a909bb41",
+          "quantity": 1000,
+          "targetUnitPrice": 480,
+          "targetDeliveryDate": null,
+          "remarks": null
+        }
+      ],
+      "supplierInvitations": [
+        {
+          "supplierId": "6ad469e2663965b6a909bb20",
+          "invitedAt": "2026-10-18T06:40:42.238Z",
+          "invitedContactEmail": "sales0@garments.example.test",
+          "response": null
+        },
+        {
+          "supplierId": "6ad469e2663965b6a909bb24",
+          "invitedAt": "2026-10-18T06:40:42.238Z",
+          "invitedContactEmail": "sales1@garments.example.test",
+          "response": null
+        },
+        {
+          "supplierId": "6ad469e2663965b6a909bb28",
+          "invitedAt": "2026-10-18T06:40:42.238Z",
+          "invitedContactEmail": "sales2@garments.example.test",
+          "response": null
+        }
+      ],
+      "acceptedSupplierId": null,
+      "acceptedAt": null,
+      "createdAt": "2026-10-18T06:40:42.240Z",
+      "updatedAt": "2026-10-18T06:40:42.240Z"
+    },
+    {
+      "id": "6ad469ec663965b6a909bc12",
+      "number": "RFQ-MVDGI69S-23D546",
+      "status": "open",
+      "requestedBy": "6ad469df663965b6a909baf2",
+      "validUntil": "2026-10-28T06:40:44.564Z",
+      "lines": [
+        {
+          "itemId": "6ad469e3663965b6a909bb46",
+          "quantity": 1000,
+          "targetUnitPrice": 560,
+          "targetDeliveryDate": null,
+          "remarks": null
+        }
+      ],
+      "supplierInvitations": [
+        {
+          "supplierId": "6ad469e2663965b6a909bb20",
+          "invitedAt": "2026-10-18T06:40:44.608Z",
+          "invitedContactEmail": "sales0@garments.example.test",
+          "response": null
+        },
+        {
+          "supplierId": "6ad469e2663965b6a909bb24",
+          "invitedAt": "2026-10-18T06:40:44.608Z",
+          "invitedContactEmail": "sales1@garments.example.test",
+          "response": null
+        },
+        {
+          "supplierId": "6ad469e2663965b6a909bb28",
+          "invitedAt": "2026-10-18T06:40:44.608Z",
+          "invitedContactEmail": "sales2@garments.example.test",
+          "response": null
+        }
+      ],
+      "acceptedSupplierId": null,
+      "acceptedAt": null,
+      "createdAt": "2026-10-18T06:40:44.611Z",
+      "updatedAt": "2026-10-18T06:40:44.611Z"
+    },
+    {
+      "id": "6ad469ee663965b6a909bc39",
+      "number": "RFQ-MVDGI7RI-DE97FA",
+      "status": "open",
+      "requestedBy": "6ad469df663965b6a909baf2",
+      "validUntil": "2026-10-28T06:40:46.492Z",
+      "lines": [
+        {
+          "itemId": "6ad469e3663965b6a909bb4b",
+          "quantity": 1000,
+          "targetUnitPrice": 520,
+          "targetDeliveryDate": null,
+          "remarks": null
+        }
+      ],
+      "supplierInvitations": [
+        {
+          "supplierId": "6ad469e2663965b6a909bb20",
+          "invitedAt": "2026-10-18T06:40:46.542Z",
+          "invitedContactEmail": "sales0@garments.example.test",
+          "response": null
+        },
+        {
+          "supplierId": "6ad469e2663965b6a909bb24",
+          "invitedAt": "2026-10-18T06:40:46.542Z",
+          "invitedContactEmail": "sales1@garments.example.test",
+          "response": null
+        },
+        {
+          "supplierId": "6ad469e2663965b6a909bb28",
+          "invitedAt": "2026-10-18T06:40:46.542Z",
+          "invitedContactEmail": "sales2@garments.example.test",
+          "response": null
+        }
+      ],
+      "acceptedSupplierId": null,
+      "acceptedAt": null,
+      "createdAt": "2026-10-18T06:40:46.543Z",
+      "updatedAt": "2026-10-18T06:40:46.543Z"
+    },
+    {
+      "id": "6ad469f0663965b6a909bc60",
+      "number": "RFQ-MVDGI9AL-9B6D3C",
+      "status": "open",
+      "requestedBy": "6ad469df663965b6a909baf2",
+      "validUntil": "2026-10-28T06:40:48.479Z",
+      "lines": [
+        {
+          "itemId": "6ad469e3663965b6a909bb50",
+          "quantity": 1000,
+          "targetUnitPrice": 650,
+          "targetDeliveryDate": null,
+          "remarks": null
+        }
+      ],
+      "supplierInvitations": [
+        {
+          "supplierId": "6ad469e2663965b6a909bb20",
+          "invitedAt": "2026-10-18T06:40:48.525Z",
+          "invitedContactEmail": "sales0@garments.example.test",
+          "response": null
+        },
+        {
+          "supplierId": "6ad469e2663965b6a909bb24",
+          "invitedAt": "2026-10-18T06:40:48.525Z",
+          "invitedContactEmail": "sales1@garments.example.test",
+          "response": null
+        },
+        {
+          "supplierId": "6ad469e2663965b6a909bb28",
+          "invitedAt": "2026-10-18T06:40:48.525Z",
+          "invitedContactEmail": "sales2@garments.example.test",
+          "response": null
+        }
+      ],
+      "acceptedSupplierId": null,
+      "acceptedAt": null,
+      "createdAt": "2026-10-18T06:40:48.526Z",
+      "updatedAt": "2026-10-18T06:40:48.526Z"
+    },
+    {
+      "id": "6ad469f2663965b6a909bc87",
+      "number": "RFQ-MVDGIATV-5EFB68",
+      "status": "open",
+      "requestedBy": "6ad469df663965b6a909baf2",
+      "validUntil": "2026-10-28T06:40:50.468Z",
+      "lines": [
+        {
+          "itemId": "6ad469e3663965b6a909bb55",
+          "quantity": 1000,
+          "targetUnitPrice": 330,
+          "targetDeliveryDate": null,
+          "remarks": null
+        }
+      ],
+      "supplierInvitations": [
+        {
+          "supplierId": "6ad469e2663965b6a909bb20",
+          "invitedAt": "2026-10-18T06:40:50.515Z",
+          "invitedContactEmail": "sales0@garments.example.test",
+          "response": null
+        },
+        {
+          "supplierId": "6ad469e2663965b6a909bb24",
+          "invitedAt": "2026-10-18T06:40:50.516Z",
+          "invitedContactEmail": "sales1@garments.example.test",
+          "response": null
+        },
+        {
+          "supplierId": "6ad469e2663965b6a909bb28",
+          "invitedAt": "2026-10-18T06:40:50.516Z",
+          "invitedContactEmail": "sales2@garments.example.test",
+          "response": null
+        }
+      ],
+      "acceptedSupplierId": null,
+      "acceptedAt": null,
+      "createdAt": "2026-10-18T06:40:50.517Z",
+      "updatedAt": "2026-10-18T06:40:50.517Z"
+    },
+    {
+      "id": "6ad469f3663965b6a909bc9f",
+      "number": "RFQ-MVDGIBPT-6D6AE3",
+      "status": "open",
+      "requestedBy": "6ad469df663965b6a909baf2",
+      "validUntil": "2026-10-28T06:40:51.622Z",
+      "lines": [
+        {
+          "itemId": "6ad469e3663965b6a909bb5a",
+          "quantity": 1000,
+          "targetUnitPrice": 240,
+          "targetDeliveryDate": null,
+          "remarks": null
+        }
+      ],
+      "supplierInvitations": [
+        {
+          "supplierId": "6ad469e2663965b6a909bb20",
+          "invitedAt": "2026-10-18T06:40:51.665Z",
+          "invitedContactEmail": "sales0@garments.example.test",
+          "response": null
+        },
+        {
+          "supplierId": "6ad469e2663965b6a909bb24",
+          "invitedAt": "2026-10-18T06:40:51.665Z",
+          "invitedContactEmail": "sales1@garments.example.test",
+          "response": null
+        },
+        {
+          "supplierId": "6ad469e2663965b6a909bb28",
+          "invitedAt": "2026-10-18T06:40:51.665Z",
+          "invitedContactEmail": "sales2@garments.example.test",
+          "response": null
+        }
+      ],
+      "acceptedSupplierId": null,
+      "acceptedAt": null,
+      "createdAt": "2026-10-18T06:40:51.666Z",
+      "updatedAt": "2026-10-18T06:40:51.666Z"
+    }
+  ],
+  "purchaseOrders": [
+    {
+      "id": "6ad469ec663965b6a909bc0c",
+      "number": "PO-MVDGI66X-0A32D2",
+      "state": "draft",
+      "supplierId": "6ad469e2663965b6a909bb20",
+      "supplierSnapshot": {
+        "legalName": "Meghna Knit Fabrics Demo Ltd",
+        "address": "Demo BSCIC Industrial Estate, Gazipur",
+        "primaryContactEmail": "sales0@garments.example.test"
+      },
+      "warehouseId": "6ad469e1663965b6a909bb00",
+      "currency": "BDT",
+      "paymentTermsDays": 30,
+      "expectedDeliveryAt": "2026-10-25T06:40:44.372Z",
+      "lines": [
+        {
+          "id": "6ad469ec663965b6a909bc0d",
+          "itemId": "6ad469e2663965b6a909bb41",
+          "itemSnapshot": {
+            "sku": "BD-RMG-001",
+            "name": "Single Jersey Cotton 160 GSM",
+            "unit": "kg"
+          },
+          "quantityOrdered": 1000,
+          "quantityReceived": 0,
+          "unitPrice": 442,
+          "lineTotal": 442000,
+          "expectedDeliveryAt": "2026-10-25T06:40:44.372Z",
+          "remarks": "From quotation RFQ-MVDGI4FY-8D0AAE"
+        }
+      ],
+      "totals": {
+        "subtotal": 442000,
+        "tax": 0,
+        "total": 442000
+      },
+      "pdfUrl": null,
+      "pdfGeneratedAt": null,
+      "approval": null,
+      "dispatch": null,
+      "cancellation": null,
+      "createdBy": "6ad469df663965b6a909baf2",
+      "approvedAt": null,
+      "closedAt": null,
+      "createdAt": "2026-10-18T06:40:44.506Z",
+      "updatedAt": "2026-10-18T06:40:44.506Z"
+    },
+    {
+      "id": "6ad469ee663965b6a909bc33",
+      "number": "PO-MVDGI7OS-807320",
+      "state": "draft",
+      "supplierId": "6ad469e2663965b6a909bb20",
+      "supplierSnapshot": {
+        "legalName": "Meghna Knit Fabrics Demo Ltd",
+        "address": "Demo BSCIC Industrial Estate, Gazipur",
+        "primaryContactEmail": "sales0@garments.example.test"
+      },
+      "warehouseId": "6ad469e1663965b6a909bb00",
+      "currency": "BDT",
+      "paymentTermsDays": 30,
+      "expectedDeliveryAt": "2026-10-25T06:40:46.320Z",
+      "lines": [
+        {
+          "id": "6ad469ee663965b6a909bc34",
+          "itemId": "6ad469e3663965b6a909bb46",
+          "itemSnapshot": {
+            "sku": "BD-RMG-002",
+            "name": "Pique Cotton 220 GSM",
+            "unit": "kg"
+          },
+          "quantityOrdered": 1000,
+          "quantityReceived": 0,
+          "unitPrice": 515,
+          "lineTotal": 515000,
+          "expectedDeliveryAt": "2026-10-25T06:40:46.320Z",
+          "remarks": "From quotation RFQ-MVDGI69S-23D546"
+        }
+      ],
+      "totals": {
+        "subtotal": 515000,
+        "tax": 0,
+        "total": 515000
+      },
+      "pdfUrl": null,
+      "pdfGeneratedAt": null,
+      "approval": null,
+      "dispatch": null,
+      "cancellation": null,
+      "createdBy": "6ad469df663965b6a909baf2",
+      "approvedAt": null,
+      "closedAt": null,
+      "createdAt": "2026-10-18T06:40:46.446Z",
+      "updatedAt": "2026-10-18T06:40:46.446Z"
+    },
+    {
+      "id": "6ad469f0663965b6a909bc5a",
+      "number": "PO-MVDGI97Y-8338AB",
+      "state": "draft",
+      "supplierId": "6ad469e2663965b6a909bb20",
+      "supplierSnapshot": {
+        "legalName": "Meghna Knit Fabrics Demo Ltd",
+        "address": "Demo BSCIC Industrial Estate, Gazipur",
+        "primaryContactEmail": "sales0@garments.example.test"
+      },
+      "warehouseId": "6ad469e1663965b6a909bb00",
+      "currency": "BDT",
+      "paymentTermsDays": 30,
+      "expectedDeliveryAt": "2026-10-25T06:40:48.308Z",
+      "lines": [
+        {
+          "id": "6ad469f0663965b6a909bc5b",
+          "itemId": "6ad469e3663965b6a909bb4b",
+          "itemSnapshot": {
+            "sku": "BD-RMG-003",
+            "name": "Rib Fabric 1x1",
+            "unit": "kg"
+          },
+          "quantityOrdered": 1000,
+          "quantityReceived": 0,
+          "unitPrice": 478,
+          "lineTotal": 478000,
+          "expectedDeliveryAt": "2026-10-25T06:40:48.308Z",
+          "remarks": "From quotation RFQ-MVDGI7RI-DE97FA"
+        }
+      ],
+      "totals": {
+        "subtotal": 478000,
+        "tax": 0,
+        "total": 478000
+      },
+      "pdfUrl": null,
+      "pdfGeneratedAt": null,
+      "approval": null,
+      "dispatch": null,
+      "cancellation": null,
+      "createdBy": "6ad469df663965b6a909baf2",
+      "approvedAt": null,
+      "closedAt": null,
+      "createdAt": "2026-10-18T06:40:48.431Z",
+      "updatedAt": "2026-10-18T06:40:48.431Z"
+    },
+    {
+      "id": "6ad469f2663965b6a909bc81",
+      "number": "PO-MVDGIAR9-D45522",
+      "state": "draft",
+      "supplierId": "6ad469e2663965b6a909bb20",
+      "supplierSnapshot": {
+        "legalName": "Meghna Knit Fabrics Demo Ltd",
+        "address": "Demo BSCIC Industrial Estate, Gazipur",
+        "primaryContactEmail": "sales0@garments.example.test"
+      },
+      "warehouseId": "6ad469e1663965b6a909bb00",
+      "currency": "BDT",
+      "paymentTermsDays": 30,
+      "expectedDeliveryAt": "2026-10-25T06:40:50.294Z",
+      "lines": [
+        {
+          "id": "6ad469f2663965b6a909bc82",
+          "itemId": "6ad469e3663965b6a909bb50",
+          "itemSnapshot": {
+            "sku": "BD-RMG-004",
+            "name": "Fleece Brushed 280 GSM",
+            "unit": "kg"
+          },
+          "quantityOrdered": 1000,
+          "quantityReceived": 0,
+          "unitPrice": 598,
+          "lineTotal": 598000,
+          "expectedDeliveryAt": "2026-10-25T06:40:50.294Z",
+          "remarks": "From quotation RFQ-MVDGI9AL-9B6D3C"
+        }
+      ],
+      "totals": {
+        "subtotal": 598000,
+        "tax": 0,
+        "total": 598000
+      },
+      "pdfUrl": null,
+      "pdfGeneratedAt": null,
+      "approval": null,
+      "dispatch": null,
+      "cancellation": null,
+      "createdBy": "6ad469df663965b6a909baf2",
+      "approvedAt": null,
+      "closedAt": null,
+      "createdAt": "2026-10-18T06:40:50.422Z",
+      "updatedAt": "2026-10-18T06:40:50.422Z"
+    },
+    {
+      "id": "6ad469f5663965b6a909bcb9",
+      "number": "PO-MVDGICZO-810829",
+      "state": "draft",
+      "supplierId": "6ad469e2663965b6a909bb20",
+      "supplierSnapshot": {
+        "legalName": "Meghna Knit Fabrics Demo Ltd",
+        "address": "Demo BSCIC Industrial Estate, Gazipur",
+        "primaryContactEmail": "sales0@garments.example.test"
+      },
+      "warehouseId": "6ad469e1663965b6a909bb00",
+      "currency": "BDT",
+      "paymentTermsDays": 30,
+      "expectedDeliveryAt": "2026-11-01T06:40:53.179Z",
+      "lines": [
+        {
+          "id": "6ad469f5663965b6a909bcba",
+          "itemId": "6ad469e2663965b6a909bb41",
+          "itemSnapshot": {
+            "sku": "BD-RMG-001",
+            "name": "Single Jersey Cotton 160 GSM",
+            "unit": "kg"
+          },
+          "quantityOrdered": 100,
+          "quantityReceived": 0,
+          "unitPrice": 480,
+          "lineTotal": 48000,
+          "expectedDeliveryAt": null,
+          "remarks": null
+        }
+      ],
+      "totals": {
+        "subtotal": 48000,
+        "tax": 0,
+        "total": 48000
+      },
+      "pdfUrl": null,
+      "pdfGeneratedAt": null,
+      "approval": null,
+      "dispatch": null,
+      "cancellation": null,
+      "createdBy": "6ad469df663965b6a909baf2",
+      "approvedAt": null,
+      "closedAt": null,
+      "createdAt": "2026-10-18T06:40:53.318Z",
+      "updatedAt": "2026-10-18T06:40:53.318Z"
+    },
+    {
+      "id": "6ad469f5663965b6a909bcc2",
+      "number": "PO-MVDGID76-A5C2F3",
+      "state": "pending_approval",
+      "supplierId": "6ad469e2663965b6a909bb20",
+      "supplierSnapshot": {
+        "legalName": "Meghna Knit Fabrics Demo Ltd",
+        "address": "Demo BSCIC Industrial Estate, Gazipur",
+        "primaryContactEmail": "sales0@garments.example.test"
+      },
+      "warehouseId": "6ad469e1663965b6a909bb00",
+      "currency": "BDT",
+      "paymentTermsDays": 30,
+      "expectedDeliveryAt": "2026-11-01T06:40:53.458Z",
+      "lines": [
+        {
+          "id": "6ad469f5663965b6a909bcc3",
+          "itemId": "6ad469e2663965b6a909bb41",
+          "itemSnapshot": {
+            "sku": "BD-RMG-001",
+            "name": "Single Jersey Cotton 160 GSM",
+            "unit": "kg"
+          },
+          "quantityOrdered": 100,
+          "quantityReceived": 0,
+          "unitPrice": 480,
+          "lineTotal": 48000,
+          "expectedDeliveryAt": null,
+          "remarks": null
+        }
+      ],
+      "totals": {
+        "subtotal": 48000,
+        "tax": 0,
+        "total": 48000
+      },
+      "pdfUrl": null,
+      "pdfGeneratedAt": null,
+      "approval": {
+        "submittedAt": "2026-10-18T06:40:53.770Z",
+        "submittedBy": "6ad469df663965b6a909baf2",
+        "decidedAt": null,
+        "decidedBy": null,
+        "decision": null,
+        "rejectReason": null,
+        "thresholdRule": null
+      },
+      "dispatch": null,
+      "cancellation": null,
+      "createdBy": "6ad469df663965b6a909baf2",
+      "approvedAt": null,
+      "closedAt": null,
+      "createdAt": "2026-10-18T06:40:53.587Z",
+      "updatedAt": "2026-10-18T06:40:53.771Z"
+    },
+    {
+      "id": "6ad469f5663965b6a909bcd3",
+      "number": "PO-MVDGIDHF-23ED5B",
+      "state": "approved",
+      "supplierId": "6ad469e2663965b6a909bb20",
+      "supplierSnapshot": {
+        "legalName": "Meghna Knit Fabrics Demo Ltd",
+        "address": "Demo BSCIC Industrial Estate, Gazipur",
+        "primaryContactEmail": "sales0@garments.example.test"
+      },
+      "warehouseId": "6ad469e1663965b6a909bb00",
+      "currency": "BDT",
+      "paymentTermsDays": 30,
+      "expectedDeliveryAt": "2026-11-01T06:40:53.821Z",
+      "lines": [
+        {
+          "id": "6ad469f5663965b6a909bcd4",
+          "itemId": "6ad469e2663965b6a909bb41",
+          "itemSnapshot": {
+            "sku": "BD-RMG-001",
+            "name": "Single Jersey Cotton 160 GSM",
+            "unit": "kg"
+          },
+          "quantityOrdered": 100,
+          "quantityReceived": 0,
+          "unitPrice": 480,
+          "lineTotal": 48000,
+          "expectedDeliveryAt": null,
+          "remarks": null
+        }
+      ],
+      "totals": {
+        "subtotal": 48000,
+        "tax": 0,
+        "total": 48000
+      },
+      "pdfUrl": null,
+      "pdfGeneratedAt": null,
+      "approval": {
+        "submittedAt": "2026-10-18T06:40:54.140Z",
+        "submittedBy": "6ad469df663965b6a909baf2",
+        "decidedAt": "2026-10-18T06:40:54.241Z",
+        "decidedBy": "6ad469df663965b6a909baf2",
+        "decision": "approved",
+        "rejectReason": null,
+        "thresholdRule": null
+      },
+      "dispatch": null,
+      "cancellation": null,
+      "createdBy": "6ad469df663965b6a909baf2",
+      "approvedAt": "2026-10-18T06:40:54.241Z",
+      "closedAt": null,
+      "createdAt": "2026-10-18T06:40:53.956Z",
+      "updatedAt": "2026-10-18T06:40:54.242Z"
+    },
+    {
+      "id": "6ad469f6663965b6a909bce9",
+      "number": "PO-MVDGIDVI-545010",
+      "state": "sent",
+      "supplierId": "6ad469e2663965b6a909bb20",
+      "supplierSnapshot": {
+        "legalName": "Meghna Knit Fabrics Demo Ltd",
+        "address": "Demo BSCIC Industrial Estate, Gazipur",
+        "primaryContactEmail": "sales0@garments.example.test"
+      },
+      "warehouseId": "6ad469e1663965b6a909bb00",
+      "currency": "BDT",
+      "paymentTermsDays": 30,
+      "expectedDeliveryAt": "2026-11-01T06:40:54.291Z",
+      "lines": [
+        {
+          "id": "6ad469f6663965b6a909bcea",
+          "itemId": "6ad469e2663965b6a909bb41",
+          "itemSnapshot": {
+            "sku": "BD-RMG-001",
+            "name": "Single Jersey Cotton 160 GSM",
+            "unit": "kg"
+          },
+          "quantityOrdered": 100,
+          "quantityReceived": 0,
+          "unitPrice": 480,
+          "lineTotal": 48000,
+          "expectedDeliveryAt": null,
+          "remarks": null
+        }
+      ],
+      "totals": {
+        "subtotal": 48000,
+        "tax": 0,
+        "total": 48000
+      },
+      "pdfUrl": null,
+      "pdfGeneratedAt": "2026-10-18T06:40:55.365Z",
+      "approval": {
+        "submittedAt": "2026-10-18T06:40:54.664Z",
+        "submittedBy": "6ad469df663965b6a909baf2",
+        "decidedAt": "2026-10-18T06:40:54.770Z",
+        "decidedBy": "6ad469df663965b6a909baf2",
+        "decision": "approved",
+        "rejectReason": null,
+        "thresholdRule": null
+      },
+      "dispatch": {
+        "sentAt": "2026-10-18T06:40:55.365Z",
+        "sentTo": "sales0@garments.example.test"
+      },
+      "cancellation": null,
+      "createdBy": "6ad469df663965b6a909baf2",
+      "approvedAt": "2026-10-18T06:40:54.770Z",
+      "closedAt": null,
+      "createdAt": "2026-10-18T06:40:54.464Z",
+      "updatedAt": "2026-10-18T06:40:55.365Z"
+    },
+    {
+      "id": "6ad469f7663965b6a909bd10",
+      "number": "PO-MVDGIEPJ-98205F",
+      "state": "partially_received",
+      "supplierId": "6ad469e2663965b6a909bb20",
+      "supplierSnapshot": {
+        "legalName": "Meghna Knit Fabrics Demo Ltd",
+        "address": "Demo BSCIC Industrial Estate, Gazipur",
+        "primaryContactEmail": "sales0@garments.example.test"
+      },
+      "warehouseId": "6ad469e1663965b6a909bb00",
+      "currency": "BDT",
+      "paymentTermsDays": 30,
+      "expectedDeliveryAt": "2026-11-01T06:40:55.418Z",
+      "lines": [
+        {
+          "id": "6ad469f7663965b6a909bd11",
+          "itemId": "6ad469e2663965b6a909bb41",
+          "itemSnapshot": {
+            "sku": "BD-RMG-001",
+            "name": "Single Jersey Cotton 160 GSM",
+            "unit": "kg"
+          },
+          "quantityOrdered": 100,
+          "quantityReceived": 40,
+          "unitPrice": 480,
+          "lineTotal": 48000,
+          "expectedDeliveryAt": null,
+          "remarks": null
+        }
+      ],
+      "totals": {
+        "subtotal": 48000,
+        "tax": 0,
+        "total": 48000
+      },
+      "pdfUrl": "https://cb67161547e0b038e71e48ab403c55fb.r2.cloudflarestorage.com/experiment/tenants/6ad469df663965b6a909baf0/po-pdf/2026-10-18/PO-MVDGIEPJ-98205F.pdf?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=92763f546eddfaf64fb59124fb219474%2F20261018%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20261018T064057Z&X-Amz-Expires=300&X-Amz-Signature=245e26aa6920fbeb7d9160cb546607e6ea8ff55247877fc2ff8fccf2f5fd5c22&X-Amz-SignedHeaders=host&x-amz-checksum-mode=ENABLED&x-id=GetObject",
+      "pdfGeneratedAt": "2026-10-18T06:40:56.631Z",
+      "approval": {
+        "submittedAt": "2026-10-18T06:40:55.757Z",
+        "submittedBy": "6ad469df663965b6a909baf2",
+        "decidedAt": "2026-10-18T06:40:55.853Z",
+        "decidedBy": "6ad469df663965b6a909baf2",
+        "decision": "approved",
+        "rejectReason": null,
+        "thresholdRule": null
+      },
+      "dispatch": {
+        "sentAt": "2026-10-18T06:40:56.438Z",
+        "sentTo": "sales0@garments.example.test"
+      },
+      "cancellation": null,
+      "createdBy": "6ad469df663965b6a909baf2",
+      "approvedAt": "2026-10-18T06:40:55.853Z",
+      "closedAt": null,
+      "createdAt": "2026-10-18T06:40:55.544Z",
+      "updatedAt": "2026-10-18T06:40:56.957Z"
+    },
+    {
+      "id": "6ad469f9663965b6a909bd45",
+      "number": "PO-MVDGIG0E-579C3A",
+      "state": "fully_received",
+      "supplierId": "6ad469e2663965b6a909bb20",
+      "supplierSnapshot": {
+        "legalName": "Meghna Knit Fabrics Demo Ltd",
+        "address": "Demo BSCIC Industrial Estate, Gazipur",
+        "primaryContactEmail": "sales0@garments.example.test"
+      },
+      "warehouseId": "6ad469e1663965b6a909bb00",
+      "currency": "BDT",
+      "paymentTermsDays": 30,
+      "expectedDeliveryAt": "2026-11-01T06:40:57.097Z",
+      "lines": [
+        {
+          "id": "6ad469f9663965b6a909bd46",
+          "itemId": "6ad469e2663965b6a909bb41",
+          "itemSnapshot": {
+            "sku": "BD-RMG-001",
+            "name": "Single Jersey Cotton 160 GSM",
+            "unit": "kg"
+          },
+          "quantityOrdered": 100,
+          "quantityReceived": 100,
+          "unitPrice": 480,
+          "lineTotal": 48000,
+          "expectedDeliveryAt": null,
+          "remarks": null
+        }
+      ],
+      "totals": {
+        "subtotal": 48000,
+        "tax": 0,
+        "total": 48000
+      },
+      "pdfUrl": null,
+      "pdfGeneratedAt": "2026-10-18T06:40:58.117Z",
+      "approval": {
+        "submittedAt": "2026-10-18T06:40:57.423Z",
+        "submittedBy": "6ad469df663965b6a909baf2",
+        "decidedAt": "2026-10-18T06:40:57.518Z",
+        "decidedBy": "6ad469df663965b6a909baf2",
+        "decision": "approved",
+        "rejectReason": null,
+        "thresholdRule": null
+      },
+      "dispatch": {
+        "sentAt": "2026-10-18T06:40:58.117Z",
+        "sentTo": "sales0@garments.example.test"
+      },
+      "cancellation": null,
+      "createdBy": "6ad469df663965b6a909baf2",
+      "approvedAt": "2026-10-18T06:40:57.518Z",
+      "closedAt": null,
+      "createdAt": "2026-10-18T06:40:57.234Z",
+      "updatedAt": "2026-10-18T06:40:59.074Z"
+    },
+    {
+      "id": "6ad469fb663965b6a909bd8c",
+      "number": "PO-MVDGIHN6-501CC7",
+      "state": "closed",
+      "supplierId": "6ad469e2663965b6a909bb20",
+      "supplierSnapshot": {
+        "legalName": "Meghna Knit Fabrics Demo Ltd",
+        "address": "Demo BSCIC Industrial Estate, Gazipur",
+        "primaryContactEmail": "sales0@garments.example.test"
+      },
+      "warehouseId": "6ad469e1663965b6a909bb00",
+      "currency": "BDT",
+      "paymentTermsDays": 30,
+      "expectedDeliveryAt": "2026-11-01T06:40:59.212Z",
+      "lines": [
+        {
+          "id": "6ad469fb663965b6a909bd8d",
+          "itemId": "6ad469e2663965b6a909bb41",
+          "itemSnapshot": {
+            "sku": "BD-RMG-001",
+            "name": "Single Jersey Cotton 160 GSM",
+            "unit": "kg"
+          },
+          "quantityOrdered": 100,
+          "quantityReceived": 100,
+          "unitPrice": 480,
+          "lineTotal": 48000,
+          "expectedDeliveryAt": null,
+          "remarks": null
+        }
+      ],
+      "totals": {
+        "subtotal": 48000,
+        "tax": 0,
+        "total": 48000
+      },
+      "pdfUrl": null,
+      "pdfGeneratedAt": "2026-10-18T06:41:00.272Z",
+      "approval": {
+        "submittedAt": "2026-10-18T06:40:59.547Z",
+        "submittedBy": "6ad469df663965b6a909baf2",
+        "decidedAt": "2026-10-18T06:40:59.652Z",
+        "decidedBy": "6ad469df663965b6a909baf2",
+        "decision": "approved",
+        "rejectReason": null,
+        "thresholdRule": null
+      },
+      "dispatch": {
+        "sentAt": "2026-10-18T06:41:00.272Z",
+        "sentTo": "sales0@garments.example.test"
+      },
+      "cancellation": null,
+      "createdBy": "6ad469df663965b6a909baf2",
+      "approvedAt": "2026-10-18T06:40:59.652Z",
+      "closedAt": "2026-10-18T06:41:01.415Z",
+      "createdAt": "2026-10-18T06:40:59.348Z",
+      "updatedAt": "2026-10-18T06:41:01.416Z"
+    },
+    {
+      "id": "6ad469fd663965b6a909bddb",
+      "number": "PO-MVDGIJDG-D3B89A",
+      "state": "cancelled",
+      "supplierId": "6ad469e2663965b6a909bb20",
+      "supplierSnapshot": {
+        "legalName": "Meghna Knit Fabrics Demo Ltd",
+        "address": "Demo BSCIC Industrial Estate, Gazipur",
+        "primaryContactEmail": "sales0@garments.example.test"
+      },
+      "warehouseId": "6ad469e1663965b6a909bb00",
+      "currency": "BDT",
+      "paymentTermsDays": 30,
+      "expectedDeliveryAt": "2026-11-01T06:41:01.464Z",
+      "lines": [
+        {
+          "id": "6ad469fd663965b6a909bddc",
+          "itemId": "6ad469e2663965b6a909bb41",
+          "itemSnapshot": {
+            "sku": "BD-RMG-001",
+            "name": "Single Jersey Cotton 160 GSM",
+            "unit": "kg"
+          },
+          "quantityOrdered": 100,
+          "quantityReceived": 0,
+          "unitPrice": 480,
+          "lineTotal": 48000,
+          "expectedDeliveryAt": null,
+          "remarks": null
+        }
+      ],
+      "totals": {
+        "subtotal": 48000,
+        "tax": 0,
+        "total": 48000
+      },
+      "pdfUrl": null,
+      "pdfGeneratedAt": null,
+      "approval": null,
+      "dispatch": null,
+      "cancellation": {
+        "cancelledAt": "2026-10-18T06:41:01.773Z",
+        "cancelledBy": "6ad469df663965b6a909baf2",
+        "reason": "Demo buyer style cancelled"
+      },
+      "createdBy": "6ad469df663965b6a909baf2",
+      "approvedAt": null,
+      "closedAt": null,
+      "createdAt": "2026-10-18T06:41:01.589Z",
+      "updatedAt": "2026-10-18T06:41:01.773Z"
+    },
+    {
+      "id": "6ad469fd663965b6a909bde8",
+      "number": "PO-MVDGIJNI-9CA746",
+      "state": "rejected",
+      "supplierId": "6ad469e2663965b6a909bb20",
+      "supplierSnapshot": {
+        "legalName": "Meghna Knit Fabrics Demo Ltd",
+        "address": "Demo BSCIC Industrial Estate, Gazipur",
+        "primaryContactEmail": "sales0@garments.example.test"
+      },
+      "warehouseId": "6ad469e1663965b6a909bb00",
+      "currency": "BDT",
+      "paymentTermsDays": 30,
+      "expectedDeliveryAt": "2026-11-01T06:41:01.822Z",
+      "lines": [
+        {
+          "id": "6ad469fd663965b6a909bde9",
+          "itemId": "6ad469e2663965b6a909bb41",
+          "itemSnapshot": {
+            "sku": "BD-RMG-001",
+            "name": "Single Jersey Cotton 160 GSM",
+            "unit": "kg"
+          },
+          "quantityOrdered": 100,
+          "quantityReceived": 0,
+          "unitPrice": 480,
+          "lineTotal": 48000,
+          "expectedDeliveryAt": null,
+          "remarks": null
+        }
+      ],
+      "totals": {
+        "subtotal": 48000,
+        "tax": 0,
+        "total": 48000
+      },
+      "pdfUrl": null,
+      "pdfGeneratedAt": null,
+      "approval": {
+        "submittedAt": "2026-10-18T06:41:02.135Z",
+        "submittedBy": "6ad469df663965b6a909baf2",
+        "decidedAt": "2026-10-18T06:41:02.232Z",
+        "decidedBy": "6ad469df663965b6a909baf2",
+        "decision": "rejected",
+        "rejectReason": "Demo budget review required",
+        "thresholdRule": null
+      },
+      "dispatch": null,
+      "cancellation": null,
+      "createdBy": "6ad469df663965b6a909baf2",
+      "approvedAt": null,
+      "closedAt": null,
+      "createdAt": "2026-10-18T06:41:01.953Z",
+      "updatedAt": "2026-10-18T06:41:02.232Z"
+    }
+  ],
+  "forecasts": [
+    {
+      "id": "6ad46a00663965b6a909be03",
+      "itemId": "6ad469e2663965b6a909bb41",
+      "horizonDays": 30,
+      "predictedQuantity": 2130,
+      "predictedRange": {
+        "lower": 1917,
+        "upper": 2343
+      },
+      "confidence": "high",
+      "reasoning": "Rich consumption history with clear upward trend (0.175 units/day) and strong weekly seasonality (score 0.93). Low volatility (CV 0.45) and recent data support continued growth. Forecast uses trend-adjusted daily averages and applies a 10% buffer for range.",
+      "seasonalityDetected": true,
+      "reorderPointSuggestion": {
+        "quantity": 804,
+        "safetyStockFactor": 1.5,
+        "leadTimeDaysAssumed": 5
+      },
+      "override": null,
+      "provenance": {
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "promptVersion": "forecast-v1.0.1",
+        "failoverInvoked": false,
+        "latencyMs": 2277,
+        "cacheHit": false,
+        "promptTokens": 3357,
+        "completionTokens": 565,
+        "fallback": false
+      },
+      "generatedAt": "2026-10-18T06:41:04.834Z",
+      "expiresAt": "2026-10-19T06:41:04.834Z",
+      "actualQuantity": null,
+      "mape": null
+    },
+    {
+      "id": "6ad46a03663965b6a909be0d",
+      "itemId": "6ad469e2663965b6a909bb41",
+      "horizonDays": 60,
+      "predictedQuantity": 5700,
+      "predictedRange": {
+        "lower": 5000,
+        "upper": 6400
+      },
+      "confidence": "high",
+      "reasoning": "The item shows a consistent upward trend and rich historical data with a predictable consumption pattern averaging around 90-100 kg per active day recently. Projections are scaled based on the latest increasing trend.",
+      "seasonalityDetected": true,
+      "reorderPointSuggestion": {
+        "quantity": 600,
+        "safetyStockFactor": 2,
+        "leadTimeDaysAssumed": 5
+      },
+      "override": null,
+      "provenance": {
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "promptVersion": "forecast-v1.0.1",
+        "failoverInvoked": true,
+        "latencyMs": 1991,
+        "cacheHit": false,
+        "promptTokens": 4123,
+        "completionTokens": 326,
+        "fallback": false
+      },
+      "generatedAt": "2026-10-18T06:41:07.717Z",
+      "expiresAt": "2026-10-19T06:41:07.717Z",
+      "actualQuantity": null,
+      "mape": null
+    },
+    {
+      "id": "6ad46a06663965b6a909be17",
+      "itemId": "6ad469e2663965b6a909bb41",
+      "horizonDays": 90,
+      "predictedQuantity": 9270,
+      "predictedRange": {
+        "lower": 8340,
+        "upper": 10200
+      },
+      "confidence": "high",
+      "reasoning": "The item shows a clear upward trend with rich historical data and consistent consumption patterns excluding weekly factory holidays. Demand has steadily scaled over the 180-day window from around 60 kg/day to over 100 kg/day.",
+      "seasonalityDetected": true,
+      "reorderPointSuggestion": {
+        "quantity": 620,
+        "safetyStockFactor": 2,
+        "leadTimeDaysAssumed": 5
+      },
+      "override": null,
+      "provenance": {
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "promptVersion": "forecast-v1.0.1",
+        "failoverInvoked": true,
+        "latencyMs": 1886,
+        "cacheHit": false,
+        "promptTokens": 4123,
+        "completionTokens": 340,
+        "fallback": false
+      },
+      "generatedAt": "2026-10-18T06:41:10.374Z",
+      "expiresAt": "2026-10-19T06:41:10.374Z",
+      "actualQuantity": null,
+      "mape": null
+    },
+    {
+      "id": "6ad46a09663965b6a909be21",
+      "itemId": "6ad469e3663965b6a909bb46",
+      "horizonDays": 30,
+      "predictedQuantity": 1850,
+      "predictedRange": {
+        "lower": 1700,
+        "upper": 2000
+      },
+      "confidence": "high",
+      "reasoning": "Consumption shows a clear upward trend and strong seasonality with rich historical data over the 180-day window. Daily consumption averages approximately 47-75 kg with regular weekly zero-consumption patterns (weekends). Lead time is 8 days.",
+      "seasonalityDetected": true,
+      "reorderPointSuggestion": {
+        "quantity": 680,
+        "safetyStockFactor": 2,
+        "leadTimeDaysAssumed": 8
+      },
+      "override": null,
+      "provenance": {
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "promptVersion": "forecast-v1.0.1",
+        "failoverInvoked": true,
+        "latencyMs": 2057,
+        "cacheHit": false,
+        "promptTokens": 4105,
+        "completionTokens": 324,
+        "fallback": false
+      },
+      "generatedAt": "2026-10-18T06:41:13.101Z",
+      "expiresAt": "2026-10-19T06:41:13.101Z",
+      "actualQuantity": null,
+      "mape": null
+    },
+    {
+      "id": "6ad46a0b663965b6a909be2b",
+      "itemId": "6ad469e3663965b6a909bb46",
+      "horizonDays": 60,
+      "predictedQuantity": 3800,
+      "predictedRange": {
+        "lower": 3500,
+        "upper": 4100
+      },
+      "confidence": "high",
+      "reasoning": "The consumption data exhibits a strong increasing trend with clear weekly cycles (zero consumption on weekends). Recent daily consumption is averaging around 65-75 kg. The growth trend supported by historical monthly increases warrants a robust forecast aligning with rising production targets.",
+      "seasonalityDetected": true,
+      "reorderPointSuggestion": {
+        "quantity": 750,
+        "safetyStockFactor": 2,
+        "leadTimeDaysAssumed": 8
+      },
+      "override": null,
+      "provenance": {
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "promptVersion": "forecast-v1.0.1",
+        "failoverInvoked": true,
+        "latencyMs": 2110,
+        "cacheHit": false,
+        "promptTokens": 4105,
+        "completionTokens": 360,
+        "fallback": false
+      },
+      "generatedAt": "2026-10-18T06:41:15.677Z",
+      "expiresAt": "2026-10-19T06:41:15.677Z",
+      "actualQuantity": null,
+      "mape": null
+    },
+    {
+      "id": "6ad46a0e663965b6a909be35",
+      "itemId": "6ad469e3663965b6a909bb46",
+      "horizonDays": 90,
+      "predictedQuantity": 5850,
+      "predictedRange": {
+        "lower": 5400,
+        "upper": 6300
+      },
+      "confidence": "high",
+      "reasoning": "The item shows a clear increasing consumption trend with strong historical data and seasonality detected. Recent daily consumption averages around 65-70 kg, driving steady upward scaling for the 30/60/90 day forecasts.",
+      "seasonalityDetected": true,
+      "reorderPointSuggestion": {
+        "quantity": 820,
+        "safetyStockFactor": 2,
+        "leadTimeDaysAssumed": 8
+      },
+      "override": null,
+      "provenance": {
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "promptVersion": "forecast-v1.0.1",
+        "failoverInvoked": true,
+        "latencyMs": 2202,
+        "cacheHit": false,
+        "promptTokens": 4105,
+        "completionTokens": 294,
+        "fallback": false
+      },
+      "generatedAt": "2026-10-18T06:41:18.336Z",
+      "expiresAt": "2026-10-19T06:41:18.336Z",
+      "actualQuantity": null,
+      "mape": null
+    },
+    {
+      "id": "6ad46a10663965b6a909be3f",
+      "itemId": "6ad469e3663965b6a909bb4b",
+      "horizonDays": 30,
+      "predictedQuantity": 840,
+      "predictedRange": {
+        "lower": 780,
+        "upper": 900
+      },
+      "confidence": "high",
+      "reasoning": "The item shows a consistent upward trend in daily consumption with clear weekly cycles (zero consumption on weekends). Historical growth supports projecting continued increases over the next 90 days.",
+      "seasonalityDetected": true,
+      "reorderPointSuggestion": {
+        "quantity": 360,
+        "safetyStockFactor": 2,
+        "leadTimeDaysAssumed": 11
+      },
+      "override": null,
+      "provenance": {
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "promptVersion": "forecast-v1.0.1",
+        "failoverInvoked": true,
+        "latencyMs": 1877,
+        "cacheHit": false,
+        "promptTokens": 4095,
+        "completionTokens": 310,
+        "fallback": false
+      },
+      "generatedAt": "2026-10-18T06:41:20.634Z",
+      "expiresAt": "2026-10-19T06:41:20.634Z",
+      "actualQuantity": null,
+      "mape": null
+    },
+    {
+      "id": "6ad46a13663965b6a909be49",
+      "itemId": "6ad469e3663965b6a909bb4b",
+      "horizonDays": 60,
+      "predictedQuantity": 1740,
+      "predictedRange": {
+        "lower": 1600,
+        "upper": 1880
+      },
+      "confidence": "high",
+      "reasoning": "The item shows a consistent upward trend in daily consumption with clear weekly cycles (zero consumption on weekends). Given the average daily consumption is around 20.5 with recent rates scaling up to 30+, projections are modeled with a positive trend slope and strong seasonal indicator.",
+      "seasonalityDetected": true,
+      "reorderPointSuggestion": {
+        "quantity": 385,
+        "safetyStockFactor": 2,
+        "leadTimeDaysAssumed": 11
+      },
+      "override": null,
+      "provenance": {
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "promptVersion": "forecast-v1.0.1",
+        "failoverInvoked": true,
+        "latencyMs": 2681,
+        "cacheHit": false,
+        "promptTokens": 4095,
+        "completionTokens": 357,
+        "fallback": false
+      },
+      "generatedAt": "2026-10-18T06:41:23.730Z",
+      "expiresAt": "2026-10-19T06:41:23.730Z",
+      "actualQuantity": null,
+      "mape": null
+    },
+    {
+      "id": "6ad46a16663965b6a909be53",
+      "itemId": "6ad469e3663965b6a909bb4b",
+      "horizonDays": 90,
+      "predictedQuantity": 2700,
+      "predictedRange": {
+        "lower": 2480,
+        "upper": 2920
+      },
+      "confidence": "high",
+      "reasoning": "The item shows a consistent increasing consumption trend with strong recurring weekly zeros corresponding to factory holidays. Given the stable average daily consumption increase and high recency bias, the projected demand reflects steady growth over the next 90 days.",
+      "seasonalityDetected": true,
+      "reorderPointSuggestion": {
+        "quantity": 360,
+        "safetyStockFactor": 2,
+        "leadTimeDaysAssumed": 11
+      },
+      "override": null,
+      "provenance": {
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "promptVersion": "forecast-v1.0.1",
+        "failoverInvoked": true,
+        "latencyMs": 1864,
+        "cacheHit": false,
+        "promptTokens": 4095,
+        "completionTokens": 294,
+        "fallback": false
+      },
+      "generatedAt": "2026-10-18T06:41:26.047Z",
+      "expiresAt": "2026-10-19T06:41:26.047Z",
+      "actualQuantity": null,
+      "mape": null
+    },
+    {
+      "id": "6ad46a18663965b6a909be5d",
+      "itemId": "6ad469e3663965b6a909bb50",
+      "horizonDays": 30,
+      "predictedQuantity": 1350,
+      "predictedRange": {
+        "lower": 1220,
+        "upper": 1480
+      },
+      "confidence": "high",
+      "reasoning": "The item shows a consistent and strong upward consumption trend with rich data history. Daily consumption averages approximately 45-50 kg in recent weeks. Factoring in the positive trend slope and weekly zero-consumption days, forecasted quantities reflect logical cumulative growth.",
+      "seasonalityDetected": true,
+      "reorderPointSuggestion": {
+        "quantity": 780,
+        "safetyStockFactor": 2,
+        "leadTimeDaysAssumed": 14
+      },
+      "override": null,
+      "provenance": {
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "promptVersion": "forecast-v1.0.1",
+        "failoverInvoked": true,
+        "latencyMs": 1825,
+        "cacheHit": false,
+        "promptTokens": 4104,
+        "completionTokens": 316,
+        "fallback": false
+      },
+      "generatedAt": "2026-10-18T06:41:28.328Z",
+      "expiresAt": "2026-10-19T06:41:28.328Z",
+      "actualQuantity": null,
+      "mape": null
+    },
+    {
+      "id": "6ad46a57663965b6a909be67",
+      "itemId": "6ad469e3663965b6a909bb50",
+      "horizonDays": 60,
+      "predictedQuantity": 2200,
+      "predictedRange": {
+        "lower": 2100,
+        "upper": 2300
+      },
+      "confidence": "high",
+      "reasoning": "Rich consumption history over 180 days with a clear increasing trend (0.086 units/day) and strong seasonal pattern (score 0.918). Average daily consumption is 34 kg, and variability is moderate (CV 0.45). Forecasts incorporate both trend and seasonality, yielding conservative integer estimates.",
+      "seasonalityDetected": true,
+      "reorderPointSuggestion": {
+        "quantity": 538,
+        "safetyStockFactor": 1.5,
+        "leadTimeDaysAssumed": 14
+      },
+      "override": null,
+      "provenance": {
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "promptVersion": "forecast-v1.0.1",
+        "failoverInvoked": false,
+        "latencyMs": 2076,
+        "cacheHit": false,
+        "promptTokens": 3353,
+        "completionTokens": 720,
+        "fallback": false
+      },
+      "generatedAt": "2026-10-18T06:42:31.875Z",
+      "expiresAt": "2026-10-19T06:42:31.875Z",
+      "actualQuantity": null,
+      "mape": null
+    },
+    {
+      "id": "6ad46a5a663965b6a909be71",
+      "itemId": "6ad469e3663965b6a909bb50",
+      "horizonDays": 90,
+      "predictedQuantity": 3590,
+      "predictedRange": {
+        "lower": 3231,
+        "upper": 3949
+      },
+      "confidence": "high",
+      "reasoning": "Rich consumption history (180 days) with a clear increasing trend (0.086 units/day) and strong seasonality (score 0.918). Average daily consumption is 34 kg, low volatility (CV 0.45). Forecast combines moving average, trend extrapolation, and a modest 5% seasonal uplift.",
+      "seasonalityDetected": true,
+      "reorderPointSuggestion": {
+        "quantity": 534,
+        "safetyStockFactor": 0.12,
+        "leadTimeDaysAssumed": 14
+      },
+      "override": null,
+      "provenance": {
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "promptVersion": "forecast-v1.0.1",
+        "failoverInvoked": false,
+        "latencyMs": 2064,
+        "cacheHit": false,
+        "promptTokens": 3353,
+        "completionTokens": 762,
+        "fallback": false
+      },
+      "generatedAt": "2026-10-18T06:42:34.390Z",
+      "expiresAt": "2026-10-19T06:42:34.390Z",
+      "actualQuantity": null,
+      "mape": null
+    },
+    {
+      "id": "6ad46a5c663965b6a909be7b",
+      "itemId": "6ad469e3663965b6a909bb55",
+      "horizonDays": 30,
+      "predictedQuantity": 3900,
+      "predictedRange": {
+        "lower": 3500,
+        "upper": 4300
+      },
+      "confidence": "high",
+      "reasoning": "The item shows a strong upward trend in daily consumption alongside clear weekly periodicity with zero-consumption days on weekends. Consumption has grown steadily from ~80-90 units/day in April to ~140-150 units/day in October. With rich data and consistent historical patterns, the 30, 60, and 90-day projections consistently factor in this accelerated run rate while providing conservative bounds.",
+      "seasonalityDetected": true,
+      "reorderPointSuggestion": {
+        "quantity": 2500,
+        "safetyStockFactor": 1,
+        "leadTimeDaysAssumed": 17
+      },
+      "override": null,
+      "provenance": {
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "promptVersion": "forecast-v1.0.1",
+        "failoverInvoked": true,
+        "latencyMs": 1985,
+        "cacheHit": false,
+        "promptTokens": 4218,
+        "completionTokens": 365,
+        "fallback": false
+      },
+      "generatedAt": "2026-10-18T06:42:36.919Z",
+      "expiresAt": "2026-10-19T06:42:36.919Z",
+      "actualQuantity": null,
+      "mape": null
+    },
+    {
+      "id": "6ad46a5f663965b6a909be85",
+      "itemId": "6ad469e3663965b6a909bb55",
+      "horizonDays": 60,
+      "predictedQuantity": 8100,
+      "predictedRange": {
+        "lower": 7300,
+        "upper": 8900
+      },
+      "confidence": "high",
+      "reasoning": "The item shows a clear, consistent increasing trend in consumption over the 180-day window, moving from around 80 units/day to 140+ units/day. Seasonality is detected with predictable weekly zero-consumption days corresponding to factory holidays or weekends. The robust data and steady growth trajectory allow for high confidence forecasts across 30, 60, and 90-day horizons.",
+      "seasonalityDetected": true,
+      "reorderPointSuggestion": {
+        "quantity": 2500,
+        "safetyStockFactor": 1,
+        "leadTimeDaysAssumed": 17
+      },
+      "override": null,
+      "provenance": {
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "promptVersion": "forecast-v1.0.1",
+        "failoverInvoked": true,
+        "latencyMs": 1868,
+        "cacheHit": false,
+        "promptTokens": 4218,
+        "completionTokens": 350,
+        "fallback": false
+      },
+      "generatedAt": "2026-10-18T06:42:39.355Z",
+      "expiresAt": "2026-10-19T06:42:39.355Z",
+      "actualQuantity": null,
+      "mape": null
+    },
+    {
+      "id": "6ad46a62663965b6a909be8f",
+      "itemId": "6ad469e3663965b6a909bb55",
+      "horizonDays": 90,
+      "predictedQuantity": 12600,
+      "predictedRange": {
+        "lower": 11300,
+        "upper": 13900
+      },
+      "confidence": "high",
+      "reasoning": "The item shows a strong, consistent upward consumption trend with clear weekly cyclicality (zero consumption on weekends). With rich historical data and a low coefficient of variation relative to RMG standards, the linear trend combined with detected seasonality allows for reliable multi-period forecasting.",
+      "seasonalityDetected": true,
+      "reorderPointSuggestion": {
+        "quantity": 2500,
+        "safetyStockFactor": 1.5,
+        "leadTimeDaysAssumed": 17
+      },
+      "override": null,
+      "provenance": {
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "promptVersion": "forecast-v1.0.1",
+        "failoverInvoked": true,
+        "latencyMs": 2352,
+        "cacheHit": false,
+        "promptTokens": 4218,
+        "completionTokens": 336,
+        "fallback": false
+      },
+      "generatedAt": "2026-10-18T06:42:42.251Z",
+      "expiresAt": "2026-10-19T06:42:42.251Z",
+      "actualQuantity": null,
+      "mape": null
+    },
+    {
+      "id": "6ad46a64663965b6a909be99",
+      "itemId": "6ad469e3663965b6a909bb5a",
+      "horizonDays": 30,
+      "predictedQuantity": 3150,
+      "predictedRange": {
+        "lower": 2900,
+        "upper": 3400
+      },
+      "confidence": "high",
+      "reasoning": "Rich historical data shows a steady increasing trend in consumption of Cotton Twill 180 GSM over the 180-day window, driven by peak RMG production cycles. Seasonality and upward trend are clearly reflected in recent monthly consumption moving towards 2500+ units.",
+      "seasonalityDetected": true,
+      "reorderPointSuggestion": {
+        "quantity": 2350,
+        "safetyStockFactor": 1,
+        "leadTimeDaysAssumed": 20
+      },
+      "override": null,
+      "provenance": {
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "promptVersion": "forecast-v1.0.1",
+        "failoverInvoked": true,
+        "latencyMs": 1871,
+        "cacheHit": false,
+        "promptTokens": 4137,
+        "completionTokens": 339,
+        "fallback": false
+      },
+      "generatedAt": "2026-10-18T06:42:44.573Z",
+      "expiresAt": "2026-10-19T06:42:44.573Z",
+      "actualQuantity": null,
+      "mape": null
+    },
+    {
+      "id": "6ad46a67663965b6a909bea3",
+      "itemId": "6ad469e3663965b6a909bb5a",
+      "horizonDays": 60,
+      "predictedQuantity": 6500,
+      "predictedRange": {
+        "lower": 5900,
+        "upper": 7100
+      },
+      "confidence": "high",
+      "reasoning": "The item shows a clear increasing trend in consumption over the 180-day window, with daily consumption recently averaging around 100-110 units. Strong data availability and consistent weekly cycles (zero consumption on holidays/weekends) support a high-confidence linear and seasonal projection.",
+      "seasonalityDetected": true,
+      "reorderPointSuggestion": {
+        "quantity": 2350,
+        "safetyStockFactor": 1,
+        "leadTimeDaysAssumed": 20
+      },
+      "override": null,
+      "provenance": {
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "promptVersion": "forecast-v1.0.1",
+        "failoverInvoked": true,
+        "latencyMs": 2162,
+        "cacheHit": false,
+        "promptTokens": 4137,
+        "completionTokens": 336,
+        "fallback": false
+      },
+      "generatedAt": "2026-10-18T06:42:47.187Z",
+      "expiresAt": "2026-10-19T06:42:47.187Z",
+      "actualQuantity": null,
+      "mape": null
+    },
+    {
+      "id": "6ad46a69663965b6a909bead",
+      "itemId": "6ad469e3663965b6a909bb5a",
+      "horizonDays": 90,
+      "predictedQuantity": 10050,
+      "predictedRange": {
+        "lower": 9100,
+        "upper": 11000
+      },
+      "confidence": "high",
+      "reasoning": "Consistent increasing consumption trend supported by rich historical data and reliable seasonality indicators. Daily consumption averages around 100-110 units in the latest periods.",
+      "seasonalityDetected": true,
+      "reorderPointSuggestion": {
+        "quantity": 2350,
+        "safetyStockFactor": 2,
+        "leadTimeDaysAssumed": 20
+      },
+      "override": null,
+      "provenance": {
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "promptVersion": "forecast-v1.0.1",
+        "failoverInvoked": true,
+        "latencyMs": 1560,
+        "cacheHit": false,
+        "promptTokens": 4137,
+        "completionTokens": 302,
+        "fallback": false
+      },
+      "generatedAt": "2026-10-18T06:42:49.210Z",
+      "expiresAt": "2026-10-19T06:42:49.210Z",
+      "actualQuantity": null,
+      "mape": null
+    },
+    {
+      "id": "6ad46a6b663965b6a909beb7",
+      "itemId": "6ad469e4663965b6a909bb5f",
+      "horizonDays": 30,
+      "predictedQuantity": 2400,
+      "predictedRange": {
+        "lower": 2160,
+        "upper": 2640
+      },
+      "confidence": "high",
+      "reasoning": "The item shows a clear, consistent upward consumption trend with rich historical data and strong weekly seasonality patterns (zero consumption on weekends). Based on the recent daily consumption rate averaging around 80-90 units, the forecast scales logically across 30, 60, and 90 days incorporating the upward slope.",
+      "seasonalityDetected": true,
+      "reorderPointSuggestion": {
+        "quantity": 2350,
+        "safetyStockFactor": 2,
+        "leadTimeDaysAssumed": 23
+      },
+      "override": null,
+      "provenance": {
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "promptVersion": "forecast-v1.0.1",
+        "failoverInvoked": true,
+        "latencyMs": 1702,
+        "cacheHit": false,
+        "promptTokens": 4108,
+        "completionTokens": 311,
+        "fallback": false
+      },
+      "generatedAt": "2026-10-18T06:42:51.321Z",
+      "expiresAt": "2026-10-19T06:42:51.321Z",
+      "actualQuantity": null,
+      "mape": null
+    },
+    {
+      "id": "6ad46a6d663965b6a909bec1",
+      "itemId": "6ad469e4663965b6a909bb5f",
+      "horizonDays": 60,
+      "predictedQuantity": 4950,
+      "predictedRange": {
+        "lower": 4455,
+        "upper": 5445
+      },
+      "confidence": "high",
+      "reasoning": "The item shows a strong, steady upward consumption trend with rich historical data and clear weekly cyclical patterns (zero consumption on weekends). Recent daily consumption averages around 80-95 units, supporting robust projected growth over the next 90 days.",
+      "seasonalityDetected": true,
+      "reorderPointSuggestion": {
+        "quantity": 2300,
+        "safetyStockFactor": 2,
+        "leadTimeDaysAssumed": 23
+      },
+      "override": null,
+      "provenance": {
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "promptVersion": "forecast-v1.0.1",
+        "failoverInvoked": true,
+        "latencyMs": 1709,
+        "cacheHit": false,
+        "promptTokens": 4108,
+        "completionTokens": 337,
+        "fallback": false
+      },
+      "generatedAt": "2026-10-18T06:42:53.491Z",
+      "expiresAt": "2026-10-19T06:42:53.491Z",
+      "actualQuantity": null,
+      "mape": null
+    },
+    {
+      "id": "6ad46aad663965b6a909becb",
+      "itemId": "6ad469e4663965b6a909bb5f",
+      "horizonDays": 90,
+      "predictedQuantity": 6600,
+      "predictedRange": {
+        "lower": 5940,
+        "upper": 7260
+      },
+      "confidence": "medium",
+      "reasoning": "Rich consumption history with a clear upward trend (0.15 units/day) and strong seasonality (score 0.92). Average daily consumption is ~60 m, leading to base forecasts of 1,800 m (30 d), 3,600 m (60 d) and 5,400 m (90 d). Adding trend impact and a modest 10% seasonal uplift yields the final predictions. Variability is moderate (CV 0.45), supporting a medium confidence level.",
+      "seasonalityDetected": true,
+      "reorderPointSuggestion": {
+        "quantity": 1570,
+        "safetyStockFactor": 1.5,
+        "leadTimeDaysAssumed": 23
+      },
+      "override": null,
+      "provenance": {
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "promptVersion": "forecast-v1.0.1",
+        "failoverInvoked": false,
+        "latencyMs": 2485,
+        "cacheHit": false,
+        "promptTokens": 3356,
+        "completionTokens": 769,
+        "fallback": false
+      },
+      "generatedAt": "2026-10-18T06:43:57.447Z",
+      "expiresAt": "2026-10-19T06:43:57.447Z",
+      "actualQuantity": null,
+      "mape": null
+    },
+    {
+      "id": "6ad46aaf663965b6a909bed5",
+      "itemId": "6ad469e4663965b6a909bb64",
+      "horizonDays": 30,
+      "predictedQuantity": 0,
+      "predictedRange": {
+        "lower": 0,
+        "upper": 5
+      },
+      "confidence": "low",
+      "reasoning": "The item shows sparse consumption history with a sharp drop to zero after an initial burst. Trend analysis indicates a decreasing pattern, and the coefficient of variation is high, reflecting volatility. Seasonality is flagged but no recurring pattern is evident within the limited data. Consequently, a conservative forecast of zero consumption is adopted.",
+      "seasonalityDetected": true,
+      "reorderPointSuggestion": {
+        "quantity": 16,
+        "safetyStockFactor": 2,
+        "leadTimeDaysAssumed": 26
+      },
+      "override": null,
+      "provenance": {
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "promptVersion": "forecast-v1.0.1",
+        "failoverInvoked": false,
+        "latencyMs": 1806,
+        "cacheHit": false,
+        "promptTokens": 3345,
+        "completionTokens": 494,
+        "fallback": false
+      },
+      "generatedAt": "2026-10-18T06:43:59.676Z",
+      "expiresAt": "2026-10-19T06:43:59.676Z",
+      "actualQuantity": null,
+      "mape": null
+    },
+    {
+      "id": "6ad46ab2663965b6a909bedf",
+      "itemId": "6ad469e4663965b6a909bb64",
+      "horizonDays": 60,
+      "predictedQuantity": 0,
+      "predictedRange": {
+        "lower": 0,
+        "upper": 0
+      },
+      "confidence": "low",
+      "reasoning": "The item is classified as dead stock printed voile with zero consumption recorded over the last several months following a brief burst of usage in April and May 2026. Given the lack of recent demand and stagnant trend, future consumption is projected to remain at zero.",
+      "seasonalityDetected": true,
+      "reorderPointSuggestion": {
+        "quantity": 16,
+        "safetyStockFactor": 2,
+        "leadTimeDaysAssumed": 26
+      },
+      "override": null,
+      "provenance": {
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "promptVersion": "forecast-v1.0.1",
+        "failoverInvoked": true,
+        "latencyMs": 1854,
+        "cacheHit": false,
+        "promptTokens": 3917,
+        "completionTokens": 274,
+        "fallback": false
+      },
+      "generatedAt": "2026-10-18T06:44:02.039Z",
+      "expiresAt": "2026-10-19T06:44:02.039Z",
+      "actualQuantity": null,
+      "mape": null
+    },
+    {
+      "id": "6ad46ab4663965b6a909bee9",
+      "itemId": "6ad469e4663965b6a909bb64",
+      "horizonDays": 90,
+      "predictedQuantity": 0,
+      "predictedRange": {
+        "lower": 0,
+        "upper": 0
+      },
+      "confidence": "low",
+      "reasoning": "The item is classified as dead stock printed voile with zero consumption recorded for the last several months following a brief burst of activity in April and May 2026. Given the complete lack of recent usage and high data sparsity, future consumption is expected to remain zero.",
+      "seasonalityDetected": true,
+      "reorderPointSuggestion": {
+        "quantity": 16,
+        "safetyStockFactor": 2,
+        "leadTimeDaysAssumed": 26
+      },
+      "override": null,
+      "provenance": {
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "promptVersion": "forecast-v1.0.1",
+        "failoverInvoked": true,
+        "latencyMs": 1724,
+        "cacheHit": false,
+        "promptTokens": 3917,
+        "completionTokens": 273,
+        "fallback": false
+      },
+      "generatedAt": "2026-10-18T06:44:04.229Z",
+      "expiresAt": "2026-10-19T06:44:04.229Z",
+      "actualQuantity": null,
+      "mape": null
+    },
+    {
+      "id": "6ad46ab6663965b6a909bef3",
+      "itemId": "6ad469e4663965b6a909bb69",
+      "horizonDays": 30,
+      "predictedQuantity": 5250,
+      "predictedRange": {
+        "lower": 4800,
+        "upper": 5700
+      },
+      "confidence": "high",
+      "reasoning": "The item shows a clear, consistent upward consumption trend with rich historical data and reliable weekly cyclicality (zero consumption on weekends/holidays). Demand has steadily grown from ~988 in April to ~4871 in September, and this trajectory is factored into the 30/60/90 day forecasts.",
+      "seasonalityDetected": true,
+      "reorderPointSuggestion": {
+        "quantity": 2150,
+        "safetyStockFactor": 1500,
+        "leadTimeDaysAssumed": 5
+      },
+      "override": null,
+      "provenance": {
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "promptVersion": "forecast-v1.0.1",
+        "failoverInvoked": true,
+        "latencyMs": 2014,
+        "cacheHit": false,
+        "promptTokens": 4260,
+        "completionTokens": 339,
+        "fallback": false
+      },
+      "generatedAt": "2026-10-18T06:44:06.906Z",
+      "expiresAt": "2026-10-19T06:44:06.906Z",
+      "actualQuantity": null,
+      "mape": null
+    },
+    {
+      "id": "6ad46ab8663965b6a909befd",
+      "itemId": "6ad469e4663965b6a909bb69",
+      "horizonDays": 60,
+      "predictedQuantity": 11800,
+      "predictedRange": {
+        "lower": 10800,
+        "upper": 12800
+      },
+      "confidence": "high",
+      "reasoning": "The item shows a clear increasing trend in daily consumption with a solid volume of historical data, moderate volatility, and predictable weekly production cycles with zero consumption on weekends.",
+      "seasonalityDetected": true,
+      "reorderPointSuggestion": {
+        "quantity": 1450,
+        "safetyStockFactor": 2,
+        "leadTimeDaysAssumed": 5
+      },
+      "override": null,
+      "provenance": {
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "promptVersion": "forecast-v1.0.1",
+        "failoverInvoked": true,
+        "latencyMs": 1581,
+        "cacheHit": false,
+        "promptTokens": 4260,
+        "completionTokens": 298,
+        "fallback": false
+      },
+      "generatedAt": "2026-10-18T06:44:08.933Z",
+      "expiresAt": "2026-10-19T06:44:08.933Z",
+      "actualQuantity": null,
+      "mape": null
+    },
+    {
+      "id": "6ad46abb663965b6a909bf07",
+      "itemId": "6ad469e4663965b6a909bb69",
+      "horizonDays": 90,
+      "predictedQuantity": 17250,
+      "predictedRange": {
+        "lower": 15500,
+        "upper": 19000
+      },
+      "confidence": "high",
+      "reasoning": "The item shows a consistent upward trend in daily consumption with clear weekly zero-consumption patterns typical of factory weekends. Consumption has grown steadily from around 100-130 units per day in April to nearly 200 units per day in October. Strong data richness and high seasonality score support a reliable upward projection.",
+      "seasonalityDetected": true,
+      "reorderPointSuggestion": {
+        "quantity": 1850,
+        "safetyStockFactor": 2,
+        "leadTimeDaysAssumed": 5
+      },
+      "override": null,
+      "provenance": {
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "promptVersion": "forecast-v1.0.1",
+        "failoverInvoked": true,
+        "latencyMs": 1668,
+        "cacheHit": false,
+        "promptTokens": 4260,
+        "completionTokens": 348,
+        "fallback": false
+      },
+      "generatedAt": "2026-10-18T06:44:11.056Z",
+      "expiresAt": "2026-10-19T06:44:11.056Z",
+      "actualQuantity": null,
+      "mape": null
+    },
+    {
+      "id": "6ad46abd663965b6a909bf11",
+      "itemId": "6ad469e4663965b6a909bb6e",
+      "horizonDays": 30,
+      "predictedQuantity": 7140,
+      "predictedRange": {
+        "lower": 6500,
+        "upper": 7800
+      },
+      "confidence": "high",
+      "reasoning": "The item shows a clear, consistent upward trend in daily consumption with strong seasonality patterns and rich historical data. The moving average daily consumption is roughly 238 units over recent weeks, supporting robust forward projections.",
+      "seasonalityDetected": true,
+      "reorderPointSuggestion": {
+        "quantity": 2850,
+        "safetyStockFactor": 2,
+        "leadTimeDaysAssumed": 8
+      },
+      "override": null,
+      "provenance": {
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "promptVersion": "forecast-v1.0.1",
+        "failoverInvoked": true,
+        "latencyMs": 1964,
+        "cacheHit": false,
+        "promptTokens": 4264,
+        "completionTokens": 302,
+        "fallback": false
+      },
+      "generatedAt": "2026-10-18T06:44:13.469Z",
+      "expiresAt": "2026-10-19T06:44:13.469Z",
+      "actualQuantity": null,
+      "mape": null
+    },
+    {
+      "id": "6ad46abf663965b6a909bf1b",
+      "itemId": "6ad469e4663965b6a909bb6e",
+      "horizonDays": 60,
+      "predictedQuantity": 14760,
+      "predictedRange": {
+        "lower": 13400,
+        "upper": 16120
+      },
+      "confidence": "high",
+      "reasoning": "Strong upward trend with consistent daily consumption patterns, minimal zero-consumption days outside of weekly holidays, and clear seasonal growth mirroring factory production volume increases.",
+      "seasonalityDetected": true,
+      "reorderPointSuggestion": {
+        "quantity": 2640,
+        "safetyStockFactor": 1,
+        "leadTimeDaysAssumed": 8
+      },
+      "override": null,
+      "provenance": {
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "promptVersion": "forecast-v1.0.1",
+        "failoverInvoked": true,
+        "latencyMs": 1775,
+        "cacheHit": false,
+        "promptTokens": 4264,
+        "completionTokens": 290,
+        "fallback": false
+      },
+      "generatedAt": "2026-10-18T06:44:15.705Z",
+      "expiresAt": "2026-10-19T06:44:15.705Z",
+      "actualQuantity": null,
+      "mape": null
+    },
+    {
+      "id": "6ad46ac2663965b6a909bf25",
+      "itemId": "6ad469e4663965b6a909bb6e",
+      "horizonDays": 90,
+      "predictedQuantity": 22260,
+      "predictedRange": {
+        "lower": 20200,
+        "upper": 24320
+      },
+      "confidence": "high",
+      "reasoning": "The item shows a clear and consistent upward consumption trend with strong historical data over a 180-day window. Regular weekly zeros correspond to factory weekends, fitting the operational pattern in Bangladesh. Seasonality is detected and factored into the projection.",
+      "seasonalityDetected": true,
+      "reorderPointSuggestion": {
+        "quantity": 3850,
+        "safetyStockFactor": 2,
+        "leadTimeDaysAssumed": 8
+      },
+      "override": null,
+      "provenance": {
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "promptVersion": "forecast-v1.0.1",
+        "failoverInvoked": true,
+        "latencyMs": 2078,
+        "cacheHit": false,
+        "promptTokens": 4264,
+        "completionTokens": 309,
+        "fallback": false
+      },
+      "generatedAt": "2026-10-18T06:44:18.229Z",
+      "expiresAt": "2026-10-19T06:44:18.229Z",
+      "actualQuantity": null,
+      "mape": null
+    },
+    {
+      "id": "6ad46b01663965b6a909bf2f",
+      "itemId": "6ad469e4663965b6a909bb73",
+      "horizonDays": 30,
+      "predictedQuantity": 15930,
+      "predictedRange": {
+        "lower": 14337,
+        "upper": 17523
+      },
+      "confidence": "high",
+      "reasoning": "Rich consumption history over 180 days with clear increasing trend (1.29 units/day) and strong seasonality (score 0.9185). Low volatility (CV 0.455) supports reliable extrapolation. Forecast uses average daily consumption adjusted for trend.",
+      "seasonalityDetected": true,
+      "reorderPointSuggestion": {
+        "quantity": 8200,
+        "safetyStockFactor": 1.5,
+        "leadTimeDaysAssumed": 11
+      },
+      "override": null,
+      "provenance": {
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "promptVersion": "forecast-v1.0.1",
+        "failoverInvoked": false,
+        "latencyMs": 1884,
+        "cacheHit": false,
+        "promptTokens": 3357,
+        "completionTokens": 618,
+        "fallback": false
+      },
+      "generatedAt": "2026-10-18T06:45:21.593Z",
+      "expiresAt": "2026-10-19T06:45:21.593Z",
+      "actualQuantity": null,
+      "mape": null
+    },
+    {
+      "id": "6ad46b04663965b6a909bf39",
+      "itemId": "6ad469e4663965b6a909bb73",
+      "horizonDays": 60,
+      "predictedQuantity": 34700,
+      "predictedRange": {
+        "lower": 31230,
+        "upper": 38170
+      },
+      "confidence": "medium",
+      "reasoning": "Rich consumption history (180 days) with a clear increasing trend (1.29 units/day) and strong seasonality (score 0.9185). Average daily consumption is ~513 pcs, adjusted upward for trend and seasonality, yielding conservative forecasts. Variability is moderate (CV 0.455), supporting medium confidence.",
+      "seasonalityDetected": true,
+      "reorderPointSuggestion": {
+        "quantity": 7200,
+        "safetyStockFactor": 1.5,
+        "leadTimeDaysAssumed": 11
+      },
+      "override": null,
+      "provenance": {
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "promptVersion": "forecast-v1.0.1",
+        "failoverInvoked": false,
+        "latencyMs": 2328,
+        "cacheHit": false,
+        "promptTokens": 3357,
+        "completionTokens": 810,
+        "fallback": false
+      },
+      "generatedAt": "2026-10-18T06:45:24.395Z",
+      "expiresAt": "2026-10-19T06:45:24.395Z",
+      "actualQuantity": null,
+      "mape": null
+    },
+    {
+      "id": "6ad46b07663965b6a909bf43",
+      "itemId": "6ad469e4663965b6a909bb73",
+      "horizonDays": 90,
+      "predictedQuantity": 75600,
+      "predictedRange": {
+        "lower": 68000,
+        "upper": 83000
+      },
+      "confidence": "high",
+      "reasoning": "Consistent increasing consumption trend supported by rich historical data and reliable seasonality patterns. Daily consumption is averaging well above 700 units in the most recent periods.",
+      "seasonalityDetected": true,
+      "reorderPointSuggestion": {
+        "quantity": 9500,
+        "safetyStockFactor": 1,
+        "leadTimeDaysAssumed": 11
+      },
+      "override": null,
+      "provenance": {
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "promptVersion": "forecast-v1.0.1",
+        "failoverInvoked": true,
+        "latencyMs": 1947,
+        "cacheHit": false,
+        "promptTokens": 4270,
+        "completionTokens": 307,
+        "fallback": false
+      },
+      "generatedAt": "2026-10-18T06:45:27.015Z",
+      "expiresAt": "2026-10-19T06:45:27.015Z",
+      "actualQuantity": null,
+      "mape": null
+    },
+    {
+      "id": "6ad46b09663965b6a909bf4d",
+      "itemId": "6ad469e5663965b6a909bb78",
+      "horizonDays": 30,
+      "predictedQuantity": 13500,
+      "predictedRange": {
+        "lower": 12150,
+        "upper": 14850
+      },
+      "confidence": "high",
+      "reasoning": "The item shows a strong and steady increasing consumption trend with clear weekly zero-consumption patterns aligning with factory holidays. Robust historical data over 180 days allows reliable projection factoring in recent daily consumption averages near 450-500 units.",
+      "seasonalityDetected": true,
+      "reorderPointSuggestion": {
+        "quantity": 7500,
+        "safetyStockFactor": 1,
+        "leadTimeDaysAssumed": 14
+      },
+      "override": null,
+      "provenance": {
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "promptVersion": "forecast-v1.0.1",
+        "failoverInvoked": true,
+        "latencyMs": 2234,
+        "cacheHit": false,
+        "promptTokens": 4263,
+        "completionTokens": 340,
+        "fallback": false
+      },
+      "generatedAt": "2026-10-18T06:45:29.929Z",
+      "expiresAt": "2026-10-19T06:45:29.929Z",
+      "actualQuantity": null,
+      "mape": null
+    },
+    {
+      "id": "6ad46b0c663965b6a909bf57",
+      "itemId": "6ad469e5663965b6a909bb78",
+      "horizonDays": 60,
+      "predictedQuantity": 27900,
+      "predictedRange": {
+        "lower": 25110,
+        "upper": 30690
+      },
+      "confidence": "high",
+      "reasoning": "The item shows a strong and consistent upward trend in daily consumption alongside robust data history and clear weekly zero-consumption patterns (likely weekends). The projections factor in the recent daily consumption averages adjusted upwards for the positive trend slope.",
+      "seasonalityDetected": true,
+      "reorderPointSuggestion": {
+        "quantity": 7500,
+        "safetyStockFactor": 1,
+        "leadTimeDaysAssumed": 14
+      },
+      "override": null,
+      "provenance": {
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "promptVersion": "forecast-v1.0.1",
+        "failoverInvoked": true,
+        "latencyMs": 1762,
+        "cacheHit": false,
+        "promptTokens": 4263,
+        "completionTokens": 324,
+        "fallback": false
+      },
+      "generatedAt": "2026-10-18T06:45:32.354Z",
+      "expiresAt": "2026-10-19T06:45:32.354Z",
+      "actualQuantity": null,
+      "mape": null
+    },
+    {
+      "id": "6ad46b0e663965b6a909bf61",
+      "itemId": "6ad469e5663965b6a909bb78",
+      "horizonDays": 90,
+      "predictedQuantity": 42900,
+      "predictedRange": {
+        "lower": 38610,
+        "upper": 47190
+      },
+      "confidence": "high",
+      "reasoning": "The item shows a strong and steady increasing consumption trend over the 180-day window, driven by peak garment production cycles. Seasonality is clearly detected with regular weekly drops corresponding to factory holidays. With rich data and a consistent upward trajectory, forecasts are projected cleanly based on recent daily average consumption adjusted for the positive trend slope.",
+      "seasonalityDetected": true,
+      "reorderPointSuggestion": {
+        "quantity": 6800,
+        "safetyStockFactor": 1,
+        "leadTimeDaysAssumed": 14
+      },
+      "override": null,
+      "provenance": {
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "promptVersion": "forecast-v1.0.1",
+        "failoverInvoked": true,
+        "latencyMs": 2163,
+        "cacheHit": false,
+        "promptTokens": 4263,
+        "completionTokens": 325,
+        "fallback": false
+      },
+      "generatedAt": "2026-10-18T06:45:34.980Z",
+      "expiresAt": "2026-10-19T06:45:34.980Z",
+      "actualQuantity": null,
+      "mape": null
+    }
+  ],
+  "tenantId": "6ad469df663965b6a909baf0",
+  "loadProbe": {
+    "requests": 20,
+    "p95Ms": 422
+  },
+  "finalCounts": {
+    "items": 46,
+    "stockMovements": 3698,
+    "stockBalances": 49,
+    "purchaseOrders": 115,
+    "forecasts": 59,
+    "liveAiForecasts": 59,
+    "aiInsights": 38,
+    "emailDeliveries": 232
+  },
+  "collectionCounts": {
+    "notifications": 214,
+    "emaildeliveries": 232,
+    "factories": 1,
+    "procurementbudgets": 1,
+    "invoices": 26,
+    "users": 15,
+    "warehouses": 14,
+    "sessions": 105,
+    "aiusages": 1,
+    "stockbalances": 49,
+    "itemcategories": 17,
+    "aiinsights": 38,
+    "purchaseorders": 115,
+    "stockmovements": 3698,
+    "items": 46,
+    "suppliers": 19,
+    "stocksnapshots": 1,
+    "quotationrequests": 17,
+    "kpisnapshots": 1,
+    "paymentattempts": 26,
+    "subscriptions": 1,
+    "forecasts": 59,
+    "auditlogs": 820,
+    "reportartifacts": 22,
+    "poreceipts": 54
+  },
+  "verifiedAt": "2026-10-18T07:20:45.645Z",
+  "presentationSubscription": {
+    "tier": "enterprise",
+    "synthetic": true,
+    "note": "Presentation-only plan configuration; no purchase, charge or real subscription upgrade. Preserves recorded AI usage while providing capacity for more live demos."
+  },
+  "databaseName": "test"
+}
