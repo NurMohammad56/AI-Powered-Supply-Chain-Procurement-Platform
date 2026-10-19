@@ -1,5 +1,7 @@
 # বাংলাদেশের garments procurement: manual API test ও presentation
 
+**বিস্তারিত start-to-end নির্দেশিকা:** [START-TO-END-MANUAL.bn.md](START-TO-END-MANUAL.bn.md)। কোন role দিয়ে কখন কোন API চালাবেন, সম্পূর্ণ JSON body, response থেকে ID রাখা, automatic trigger, অপেক্ষার checkpoint ও final stock reconciliation সেখানে ধাপে ধাপে দেওয়া আছে।
+
 সব supplier, price, stock history এবং commercial transaction presentation-এর synthetic data। Forecast, quotation comparison ও procurement brief-এর AI response আসল configured provider দিয়ে তৈরি এবং MongoDB-তে সংরক্ষিত। Synthetic billing invoice/payment fixture-কে বাস্তব settlement হিসেবে দেখাবেন না।
 
 ## ১. চালু করা
