@@ -101,9 +101,7 @@ export interface CashFlowDay {
  * `expectedDeliveryAt + paymentTermsDays`. The output is bucketed by
  * day for the next 90 days (configurable).
  */
-export async function cashFlowProjection(
-  input: CashFlowProjectionInput,
-): Promise<CashFlowDay[]> {
+export async function cashFlowProjection(input: CashFlowProjectionInput): Promise<CashFlowDay[]> {
   const horizonDays = input.horizonDays ?? 90;
   const today = new Date();
   today.setUTCHours(0, 0, 0, 0);
@@ -131,7 +129,9 @@ export async function cashFlowProjection(
     { $match: { projectedPayAt: { $gte: today, $lte: horizonEnd } } },
     {
       $group: {
-        _id: { $dateToString: { format: '%Y-%m-%d', date: '$projectedPayAt', timezone: 'Asia/Dhaka' } },
+        _id: {
+          $dateToString: { format: '%Y-%m-%d', date: '$projectedPayAt', timezone: 'Asia/Dhaka' },
+        },
         payable: { $sum: '$totals.total' },
         poCount: { $sum: 1 },
         pos: {

@@ -18,12 +18,14 @@ export const NotificationIdParamSchema = z.object({
 });
 export type NotificationIdParam = z.infer<typeof NotificationIdParamSchema>;
 
-export const MarkReadRequestSchema = z.object({
-  ids: z.array(objectIdStringSchema).min(1).max(200).optional(),
-  all: z.boolean().optional(),
-}).refine((v) => v.all === true || (v.ids && v.ids.length > 0), {
-  message: 'Provide either ids[] or all=true',
-});
+export const MarkReadRequestSchema = z
+  .object({
+    ids: z.array(objectIdStringSchema).min(1).max(200).optional(),
+    all: z.boolean().optional(),
+  })
+  .refine((v) => v.all === true || (v.ids && v.ids.length > 0), {
+    message: 'Provide either ids[] or all=true',
+  });
 export type MarkReadRequest = z.infer<typeof MarkReadRequestSchema>;
 
 export interface NotificationView {

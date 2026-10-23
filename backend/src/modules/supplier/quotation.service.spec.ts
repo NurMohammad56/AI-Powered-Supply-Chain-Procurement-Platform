@@ -88,7 +88,9 @@ describe('quotationService.accept', () => {
       status: 'open',
       requestedBy: userId,
       validUntil: new Date('2026-08-10T00:00:00.000Z'),
-      lines: [{ itemId, quantity: 100, targetUnitPrice: null, targetDeliveryDate: null, remarks: null }],
+      lines: [
+        { itemId, quantity: 100, targetUnitPrice: null, targetDeliveryDate: null, remarks: null },
+      ],
       supplierInvitations: [
         {
           supplierId,
@@ -186,7 +188,9 @@ describe('quotationService.accept', () => {
       status: 'open',
       requestedBy: userId,
       validUntil: new Date('2026-08-10T00:00:00.000Z'),
-      lines: [{ itemId, quantity: 50, targetUnitPrice: null, targetDeliveryDate: null, remarks: null }],
+      lines: [
+        { itemId, quantity: 50, targetUnitPrice: null, targetDeliveryDate: null, remarks: null },
+      ],
       supplierInvitations: [
         {
           supplierId,

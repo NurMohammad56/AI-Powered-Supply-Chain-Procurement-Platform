@@ -113,7 +113,14 @@ export function coerceForecast(args: CoerceArgs): {
     };
   }
   const lenientParse = LenientForecastResponseSchema.safeParse(args.rawJson);
-  if (lenientParse.success) {
+  if (
+    lenientParse.success &&
+    [
+      lenientParse.data.predictedQuantity30Day,
+      lenientParse.data.predictedQuantity60Day,
+      lenientParse.data.predictedQuantity90Day,
+    ].some((value) => value !== undefined)
+  ) {
     return {
       response: repairFromLenient(lenientParse.data, args),
       coerced: true,
@@ -143,20 +150,35 @@ function repairFromLenient(
     predictedRange60Day: r60,
     predictedRange90Day: r90,
     confidence: parsed.confidence ?? baseline.confidence,
-    reasoning: parsed.reasoning?.slice(0, 4000) ?? baseline.reasoning,
+    reasoning: parsed.reasoning?.trim().slice(0, 4000) || baseline.reasoning,
     seasonalityDetected: parsed.seasonalityDetected ?? baseline.seasonalityDetected,
     seasonalityNote: parsed.seasonalityNote ?? baseline.seasonalityNote,
     reorderPointSuggestion: parsed.reorderPointSuggestion
       ? {
-          quantity: roundOr(parsed.reorderPointSuggestion.quantity, baseline.reorderPointSuggestion?.quantity ?? 0),
-          safetyStockFactor:
-            parsed.reorderPointSuggestion.safetyStockFactor ??
-            baseline.reorderPointSuggestion?.safetyStockFactor ??
-            1.65,
-          leadTimeDaysAssumed:
-            parsed.reorderPointSuggestion.leadTimeDaysAssumed ??
-            baseline.reorderPointSuggestion?.leadTimeDaysAssumed ??
-            args.leadTimeDays,
+          quantity: roundOr(
+            parsed.reorderPointSuggestion.quantity,
+            baseline.reorderPointSuggestion?.quantity ?? 0,
+          ),
+          safetyStockFactor: Math.min(
+            5,
+            Math.max(
+              0,
+              parsed.reorderPointSuggestion.safetyStockFactor ??
+                baseline.reorderPointSuggestion?.safetyStockFactor ??
+                1.65,
+            ),
+          ),
+          leadTimeDaysAssumed: Math.min(
+            365,
+            Math.max(
+              0,
+              Math.round(
+                parsed.reorderPointSuggestion.leadTimeDaysAssumed ??
+                  baseline.reorderPointSuggestion?.leadTimeDaysAssumed ??
+                  args.leadTimeDays,
+              ),
+            ),
+          ),
         }
       : baseline.reorderPointSuggestion,
     anomalies: (parsed.anomalies ?? baseline.anomalies).map((s) => s.slice(0, 300)).slice(0, 20),
@@ -181,6 +203,14 @@ function enforceMonotonicHorizons(r: StrictForecastResponse): StrictForecastResp
   }
   if (r.predictedQuantity90Day < r.predictedQuantity60Day) {
     r.predictedQuantity90Day = r.predictedQuantity60Day;
+  }
+  for (const [quantity, range] of [
+    [r.predictedQuantity30Day, r.predictedRange30Day],
+    [r.predictedQuantity60Day, r.predictedRange60Day],
+    [r.predictedQuantity90Day, r.predictedRange90Day],
+  ] as const) {
+    range.lower = Math.min(range.lower, quantity);
+    range.upper = Math.max(range.upper, quantity);
   }
   return r;
 }
@@ -222,8 +252,9 @@ export function deterministicBaseline(args: CoerceArgs): StrictForecastResponse 
     upper: Math.max(0, Math.round(q * (1 + widen))),
   });
   const safetyFactor = f.coefficientOfVariation > 1 ? 2.0 : 1.65;
-  const reorderQuantity =
-    Math.round(avg * args.leadTimeDays + safetyFactor * sd * Math.sqrt(Math.max(1, args.leadTimeDays)));
+  const reorderQuantity = Math.round(
+    avg * args.leadTimeDays + safetyFactor * sd * Math.sqrt(Math.max(1, args.leadTimeDays)),
+  );
   const reasoning =
     f.dataSparsity === 'empty'
       ? 'No consumption history available; baseline returns zero with low confidence. The procurement manager should review historical paper records or run a small trial order to seed the model.'
@@ -259,7 +290,10 @@ export function deterministicBaseline(args: CoerceArgs): StrictForecastResponse 
 /** Strip code fences, leading/trailing prose, and parse JSON. */
 export function extractJsonObject(text: string): unknown {
   let cleaned = text.trim();
-  cleaned = cleaned.replace(/^```(?:json)?/i, '').replace(/```$/i, '').trim();
+  cleaned = cleaned
+    .replace(/^```(?:json)?/i, '')
+    .replace(/```$/i, '')
+    .trim();
   // Locate the outermost JSON object braces if the model added
   // surrounding prose despite the instruction.
   const firstBrace = cleaned.indexOf('{');

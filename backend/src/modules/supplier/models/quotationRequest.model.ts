@@ -103,7 +103,13 @@ const invitationSchema = new Schema<QuotationSupplierInvitation>(
     supplierId: { type: Schema.Types.ObjectId, ref: 'Supplier', required: true },
     responseToken: { type: String, required: true, trim: true, maxlength: 256 },
     invitedAt: { type: Date, required: true, default: () => new Date() },
-    invitedContactEmail: { type: String, required: true, lowercase: true, trim: true, maxlength: 254 },
+    invitedContactEmail: {
+      type: String,
+      required: true,
+      lowercase: true,
+      trim: true,
+      maxlength: 254,
+    },
     response: { type: responseSchema, default: null },
   },
   { _id: false },
@@ -144,7 +150,10 @@ quotationRequestSchema.index({ tenantId: 1, number: 1 }, { unique: true });
 quotationRequestSchema.index({ tenantId: 1, status: 1, createdAt: -1 });
 quotationRequestSchema.index(
   { 'supplierInvitations.responseToken': 1 },
-  { unique: true, partialFilterExpression: { 'supplierInvitations.responseToken': { $type: 'string' } } },
+  {
+    unique: true,
+    partialFilterExpression: { 'supplierInvitations.responseToken': { $type: 'string' } },
+  },
 );
 quotationRequestSchema.index({ tenantId: 1, requestedBy: 1, createdAt: -1 });
 

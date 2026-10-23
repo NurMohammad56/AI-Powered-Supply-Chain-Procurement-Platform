@@ -91,7 +91,7 @@ describe('quotationService.create', () => {
       number: 'RFQ-TEST-001',
       status: 'open',
       requestedBy: userId,
-      validUntil: new Date('2026-08-10T23:59:59.000Z'),
+      validUntil: new Date(Date.now() + 7 * 86400000),
       lines: [
         {
           itemId,
@@ -124,11 +124,11 @@ describe('quotationService.create', () => {
       updatedAt: new Date('2026-08-05T10:00:00.000Z'),
     };
     jest.mocked(quotationRepository.create).mockResolvedValue(created as never);
-    jest.mocked(enqueueScheduled).mockResolvedValue({ jobId: 'scheduled-1' } as never);
-    jest.mocked(enqueueEmail).mockResolvedValue(undefined as never);
+    jest.mocked(enqueueScheduled).mockResolvedValue({ jobId: 'scheduled-1' });
+    jest.mocked(enqueueEmail).mockResolvedValue(undefined);
 
     const result = await quotationService.create(ctx, {
-      validUntil: '2026-08-10T23:59:59.000Z',
+      validUntil: new Date(Date.now() + 7 * 86400000).toISOString(),
       lines: [{ itemId: itemId.toString(), quantity: 1000 }],
       invitedSuppliers: [
         { supplierId: supplierId1.toString(), contactEmail: 'sales1@example.com' },

@@ -1,5 +1,6 @@
 import { randomBytes } from 'node:crypto';
 import { Types } from 'mongoose';
+import { mongoose } from '../../config/database.js';
 
 import { BadRequestError, ConflictError, NotFoundError } from '../../shared/errors/HttpErrors.js';
 import { ErrorCodes } from '../../shared/errors/errorCodes.js';
@@ -10,7 +11,6 @@ import { enqueueForecast, enqueueScheduled } from '../../shared/queue/queues.js'
 import { tenantKey, uploadObject, presignGet } from '../../shared/storage/r2.client.js';
 import { Factory } from '../auth/models/factory.model.js';
 import type { TenantContext } from '../../shared/auth/types.js';
-import type { Page } from '../../shared/utils/pagination.js';
 import { inventoryRepository } from '../inventory/inventory.repository.js';
 import { supplierRepository } from '../supplier/supplier.repository.js';
 import { aiRepository } from '../ai/ai.repository.js';
@@ -132,15 +132,6 @@ function toReceiptView(r: PoReceiptDoc): PoReceiptView {
   };
 }
 
-function pagedView<T, V>(page: Page<T>, mapper: (row: T) => V) {
-  return {
-    rows: page.rows.map(mapper),
-    nextCursor: page.nextCursor,
-    hasMore: page.hasMore,
-    limit: page.limit,
-  };
-}
-
 function resolveStoredPdfKey(po: PurchaseOrderDoc): string | null {
   if (!po.pdfUrl) return null;
   if (po.pdfUrl.startsWith('stub://')) return po.pdfUrl;
@@ -183,7 +174,8 @@ export class PoService {
     const tax = Math.round(subtotal * input.taxRate * 100) / 100;
     const total = Math.round((subtotal + tax) * 100) / 100;
 
-    const primaryContact = supplier.contacts.find((c) => c.isPrimary) ?? supplier.contacts[0] ?? null;
+    const primaryContact =
+      supplier.contacts.find((c) => c.isPrimary) ?? supplier.contacts[0] ?? null;
 
     const created = await poRepository.create({
       number: genNumber(),
@@ -233,10 +225,15 @@ export class PoService {
       );
     }
     const update: Partial<PurchaseOrderDoc> = {};
-    if (patch.warehouseId !== undefined) update.warehouseId = new Types.ObjectId(patch.warehouseId);
+    if (patch.warehouseId !== undefined) {
+      const warehouse = await inventoryRepository.findWarehouseById(patch.warehouseId);
+      assertTenantOwns(warehouse, ctx);
+      update.warehouseId = warehouse._id;
+    }
     if (patch.currency !== undefined) update.currency = patch.currency;
     if (patch.paymentTermsDays !== undefined) update.paymentTermsDays = patch.paymentTermsDays;
-    if (patch.expectedDeliveryAt !== undefined) update.expectedDeliveryAt = new Date(patch.expectedDeliveryAt);
+    if (patch.expectedDeliveryAt !== undefined)
+      update.expectedDeliveryAt = new Date(patch.expectedDeliveryAt);
     if (patch.lines !== undefined) {
       const lines: PoLine[] = [];
       let subtotal = 0;
@@ -257,12 +254,20 @@ export class PoService {
         });
       }
       update.lines = lines;
-      const taxRate = patch.taxRate ?? po.totals.subtotal > 0 ? po.totals.tax / po.totals.subtotal : 0;
+      const taxRate =
+        patch.taxRate ?? (po.totals.subtotal > 0 ? po.totals.tax / po.totals.subtotal : 0);
       const tax = Math.round(subtotal * taxRate * 100) / 100;
       update.totals = {
         subtotal: Math.round(subtotal * 100) / 100,
         tax,
         total: Math.round((subtotal + tax) * 100) / 100,
+      };
+    } else if (patch.taxRate !== undefined) {
+      const tax = Math.round(po.totals.subtotal * patch.taxRate * 100) / 100;
+      update.totals = {
+        subtotal: po.totals.subtotal,
+        tax,
+        total: Math.round((po.totals.subtotal + tax) * 100) / 100,
       };
     }
 
@@ -437,7 +442,11 @@ export class PoService {
    * additionally renders the PDF, uploads to R2, and emails the
    * supplier contact with the presigned link.
    */
-  async sendToSupplier(ctx: TenantContext, id: Types.ObjectId, input: DispatchPoRequest): Promise<PoView> {
+  async sendToSupplier(
+    ctx: TenantContext,
+    id: Types.ObjectId,
+    input: DispatchPoRequest,
+  ): Promise<PoView> {
     const po = await poRepository.findById(id);
     assertTenantOwns(po, ctx);
     if (!canTransition(po.state, 'sent')) {
@@ -504,7 +513,11 @@ export class PoService {
    * Legacy alias retained so callers using the old `/:id/dispatch` route
    * keep working. New callers should use `sendToSupplier`.
    */
-  async dispatch(ctx: TenantContext, id: Types.ObjectId, input: DispatchPoRequest): Promise<PoView> {
+  async dispatch(
+    ctx: TenantContext,
+    id: Types.ObjectId,
+    input: DispatchPoRequest,
+  ): Promise<PoView> {
     return this.sendToSupplier(ctx, id, input);
   }
 
@@ -546,6 +559,27 @@ export class PoService {
     id: Types.ObjectId,
     input: ReceivePoRequest,
   ): Promise<{ po: PoView; receipt: PoReceiptView }> {
+    const result = await mongoose.connection.transaction(() =>
+      this.receiveInTransaction(ctx, id, input),
+    );
+    const po = await poRepository.findById(id);
+    if (po)
+      void this.applyPostReceiptSideEffects({
+        ctx,
+        po,
+        warehouseId: new Types.ObjectId(input.warehouseId),
+        receivedQuantity: input.lines.reduce((sum, line) => sum + line.quantity, 0),
+        isFullyReceived: result.po.state === 'fully_received',
+        receivedItemIds: input.lines.map((line) => new Types.ObjectId(line.itemId)),
+      });
+    return result;
+  }
+
+  private async receiveInTransaction(
+    ctx: TenantContext,
+    id: Types.ObjectId,
+    input: ReceivePoRequest,
+  ): Promise<{ po: PoView; receipt: PoReceiptView }> {
     const po = await poRepository.findById(id);
     assertTenantOwns(po, ctx);
     if (po.state !== 'sent' && po.state !== 'partially_received') {
@@ -561,12 +595,22 @@ export class PoService {
     // Validate each receipt line corresponds to a real PO line and does
     // not exceed the remaining quantity.
     const perLine: Array<{ poLineId: Types.ObjectId; addQuantity: number }> = [];
+    const seenLines = new Set<string>();
     for (const rl of input.lines) {
+      if (seenLines.has(rl.poLineId))
+        throw new BadRequestError(ErrorCodes.BAD_REQUEST, 'Duplicate receipt line');
+      seenLines.add(rl.poLineId);
       const poLine = po.lines.find(
         (l) => (l as unknown as { _id: Types.ObjectId })._id.toString() === rl.poLineId,
       );
       if (!poLine) {
         throw new BadRequestError(ErrorCodes.BAD_REQUEST, `Unknown PO line: ${rl.poLineId}`);
+      }
+      if (poLine.itemId.toString() !== rl.itemId) {
+        throw new BadRequestError(
+          ErrorCodes.BAD_REQUEST,
+          'Receipt item does not match the PO line',
+        );
       }
       const remaining = poLine.quantityOrdered - poLine.quantityReceived;
       if (rl.quantity > remaining) {
@@ -610,8 +654,7 @@ export class PoService {
     // Post stock movements + balance increments. The stockMovements
     // collection is an append-only ledger (SDD §4.2.2); stockBalances is
     // a materialised view reconciled weekly by the balance-audit cron.
-    // Per-line movement+balance is therefore not strictly transactional,
-    // but every write here is atomic in isolation and audit-reconcilable.
+    // Receipt, PO quantities, movements and balances share one transaction.
     const affectedItemIds = new Set<string>();
     for (const l of input.lines) {
       const at = new Date();
@@ -665,15 +708,6 @@ export class PoService {
     // Post-receipt fan-out: low-stock alert resolution, forecast
     // re-trigger, and full-receipt confirmation email. All side-effects
     // are best-effort; failures must not roll back the receipt.
-    void this.applyPostReceiptSideEffects({
-      ctx,
-      po: transitioned,
-      warehouseId,
-      receivedQuantity: input.lines.reduce((sum, l) => sum + l.quantity, 0),
-      isFullyReceived: resultingState === 'fully_received',
-      receivedItemIds: input.lines.map((l) => new Types.ObjectId(l.itemId)),
-    });
-
     return { po: await toView(transitioned), receipt: toReceiptView(receipt) };
   }
 
@@ -864,7 +898,7 @@ export class PoService {
         isDraftWatermark: po.state === 'draft',
       });
       const key = tenantKey(po.tenantId.toString(), 'po-pdf', `${po.number}.pdf`);
-      const upload = await uploadObject({
+      await uploadObject({
         key,
         body: pdfBuffer,
         contentType: 'application/pdf',

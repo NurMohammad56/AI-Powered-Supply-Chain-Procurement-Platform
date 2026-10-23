@@ -2,10 +2,15 @@ import { z } from 'zod';
 
 import { objectIdStringSchema } from '../../shared/utils/objectId.js';
 
-export const ReportRangeQuerySchema = z.object({
-  from: z.string().datetime(),
-  to: z.string().datetime(),
-});
+export const ReportRangeQuerySchema = z
+  .object({
+    from: z.string().datetime(),
+    to: z.string().datetime(),
+  })
+  .refine((value) => new Date(value.from).getTime() < new Date(value.to).getTime(), {
+    message: 'from must precede to',
+    path: ['to'],
+  });
 export type ReportRangeQuery = z.infer<typeof ReportRangeQuerySchema>;
 
 export const AbcAnalysisQuerySchema = z.object({

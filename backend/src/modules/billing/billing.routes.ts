@@ -18,11 +18,7 @@ import { billingController } from './billing.controller.js';
 export const billingRouter = Router();
 
 billingRouter.get('/plans', billingController.listPlans);
-billingRouter.get(
-  '/subscription',
-  rbacFor('billing.read'),
-  billingController.getSubscription,
-);
+billingRouter.get('/subscription', rbacFor('billing.read'), billingController.getSubscription);
 billingRouter.post(
   '/checkout-session',
   rbacFor('billing.subscription.change'),

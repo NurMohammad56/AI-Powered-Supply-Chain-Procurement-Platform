@@ -1,5 +1,11 @@
 # Postman Collection — Quick start
 
+Automatic stock alerts and AI: [Low-stock automation guide](LOW-STOCK-AUTOMATION.bn.md).
+
+Detailed Bengali walkthrough: [Start-to-end manual API flow](START-TO-END-MANUAL.bn.md) — roles, request bodies, response IDs, automatic jobs, waiting checkpoints, receipts, AI and reports.
+
+For the prepared Atlas presentation, use [the Bengali workflow](MANUAL-TEST-WORKFLOW.bn.md), `garments-demo.collection.json` and `garments-demo.environment.json`. Run folder 01 for login, folder 02 for saved presentation data, and folder 03 for a complete new PO workflow. The generated environment includes current credentials and IDs. The generic collection below is a reference; its register endpoint returns factory/owner details, so run Login afterward.
+
 Two files in this folder:
 
 - `api.collection.json` — every endpoint grouped by module

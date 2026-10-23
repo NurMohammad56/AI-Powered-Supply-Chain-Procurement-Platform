@@ -22,11 +22,12 @@ export function checkPasswordPolicy(plain: string): PasswordPolicyResult {
   if (typeof plain !== 'string') return { ok: false, message: 'Password must be a string' };
   if (plain.length < 10) return { ok: false, message: 'Password must be at least 10 characters' };
   if (plain.length > 128) return { ok: false, message: 'Password must be at most 128 characters' };
+  if (Buffer.byteLength(plain, 'utf8') > 72)
+    return { ok: false, message: 'Password must fit within 72 UTF-8 bytes' };
   if (!PASSWORD_REGEX.test(plain)) {
     return {
       ok: false,
-      message:
-        'Password must contain uppercase, lowercase, digit, and symbol characters',
+      message: 'Password must contain uppercase, lowercase, digit, and symbol characters',
     };
   }
   return { ok: true };
@@ -37,5 +38,6 @@ export async function hashPassword(plain: string): Promise<string> {
 }
 
 export async function verifyPassword(plain: string, hash: string): Promise<boolean> {
+  if (Buffer.byteLength(plain, 'utf8') > 72) return false;
   return bcrypt.compare(plain, hash);
 }

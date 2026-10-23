@@ -32,7 +32,9 @@ export const PURCHASE_ORDER_STATES: readonly PurchaseOrderState[] = [
  * Cancelled (any state pre-Closed, Owner only) and Rejected (from
  * Pending Approval) terminal exits.
  */
-export const PURCHASE_ORDER_TRANSITIONS: Readonly<Record<PurchaseOrderState, readonly PurchaseOrderState[]>> = {
+export const PURCHASE_ORDER_TRANSITIONS: Readonly<
+  Record<PurchaseOrderState, readonly PurchaseOrderState[]>
+> = {
   draft: ['pending_approval', 'cancelled'],
   pending_approval: ['approved', 'rejected', 'cancelled'],
   approved: ['sent', 'cancelled'],
@@ -156,7 +158,13 @@ const supplierSnapshotSchema = new Schema<PoSupplierSnapshot>(
   {
     legalName: { type: String, required: true, trim: true, maxlength: 200 },
     address: { type: String, default: null, trim: true, maxlength: 500 },
-    primaryContactEmail: { type: String, default: null, lowercase: true, trim: true, maxlength: 254 },
+    primaryContactEmail: {
+      type: String,
+      default: null,
+      lowercase: true,
+      trim: true,
+      maxlength: 254,
+    },
   },
   { _id: false },
 );

@@ -33,7 +33,10 @@ const SAFETY_TTL_SECONDS = 24 * 60 * 60; // 1 day cap; matches max JWT TTL
  */
 export async function denylistJti(jti: string, expiresAt: Date): Promise<void> {
   if (!jti) return;
-  const ttlSeconds = Math.max(1, Math.min(SAFETY_TTL_SECONDS, Math.ceil((expiresAt.getTime() - Date.now()) / 1000)));
+  const ttlSeconds = Math.max(
+    1,
+    Math.min(SAFETY_TTL_SECONDS, Math.ceil((expiresAt.getTime() - Date.now()) / 1000)),
+  );
   try {
     await redisCache.set(`${PREFIX}${jti}`, '1', 'EX', ttlSeconds, 'NX');
   } catch (err) {
@@ -51,9 +54,17 @@ export async function denylistJti(jti: string, expiresAt: Date): Promise<void> {
 export async function denylistAllForUser(userId: string): Promise<void> {
   if (!userId) return;
   try {
-    await redisCache.set(`${USER_PREFIX}${userId}`, Date.now().toString(), 'EX', SAFETY_TTL_SECONDS);
+    await redisCache.set(
+      `${USER_PREFIX}${userId}`,
+      Date.now().toString(),
+      'EX',
+      SAFETY_TTL_SECONDS,
+    );
   } catch (err) {
-    logger.warn({ err, event: 'auth.denylist.user_failed', userId }, 'user denylist write degraded');
+    logger.warn(
+      { err, event: 'auth.denylist.user_failed', userId },
+      'user denylist write degraded',
+    );
   }
 }
 
@@ -68,6 +79,7 @@ export async function isAccessTokenDenied(args: {
   jti: string;
   userId: string;
   issuedAtSec: number;
+  issuedAtMs?: number;
 }): Promise<boolean> {
   try {
     const [jtiHit, userWatermark] = await Promise.all([
@@ -77,13 +89,16 @@ export async function isAccessTokenDenied(args: {
     if (jtiHit) return true;
     if (userWatermark) {
       const watermark = Number(userWatermark);
-      if (Number.isFinite(watermark) && args.issuedAtSec * 1000 < watermark) {
+      if (Number.isFinite(watermark) && (args.issuedAtMs ?? args.issuedAtSec * 1000) < watermark) {
         return true;
       }
     }
     return false;
   } catch (err) {
-    logger.warn({ err, event: 'auth.denylist.read_failed' }, 'denylist read degraded; failing open');
+    logger.warn(
+      { err, event: 'auth.denylist.read_failed' },
+      'denylist read degraded; failing open',
+    );
     return false;
   }
 }

@@ -2,7 +2,14 @@ import { Queue, QueueEvents, type JobsOptions } from 'bullmq';
 
 import { redisQueue } from '../../config/redis.js';
 import { logger } from '../../config/logger.js';
-import { QueueNames, type EmailJobMap, type ForecastJobMap, type ReportJobMap, type ScheduledJobMap } from './jobTypes.js';
+import { env } from '../../config/env.js';
+import {
+  QueueNames,
+  type EmailJobMap,
+  type ForecastJobMap,
+  type ReportJobMap,
+  type ScheduledJobMap,
+} from './jobTypes.js';
 
 const defaultJobOptions: JobsOptions = {
   attempts: 3,
@@ -14,6 +21,7 @@ const defaultJobOptions: JobsOptions = {
 function buildQueue<TPayload>(name: string, opts: Partial<JobsOptions> = {}): Queue<TPayload> {
   return new Queue<TPayload>(name, {
     connection: redisQueue,
+    prefix: env.QUEUE_PREFIX,
     defaultJobOptions: { ...defaultJobOptions, ...opts },
   });
 }
@@ -40,14 +48,29 @@ export const forecastQueue = buildQueue<ForecastJobMap[keyof ForecastJobMap]>(Qu
 // Scheduled queue: cron-like jobs (quote expiry, PO overdue) enqueued
 // with `delay: <ms>`. Single retry; failures usually mean the upstream
 // row no longer exists, which is fine.
-export const scheduledQueue = buildQueue<ScheduledJobMap[keyof ScheduledJobMap]>(QueueNames.Scheduled, {
-  attempts: 1,
-});
+export const scheduledQueue = buildQueue<ScheduledJobMap[keyof ScheduledJobMap]>(
+  QueueNames.Scheduled,
+  {
+    attempts: 1,
+  },
+);
 
-const emailEvents = new QueueEvents(QueueNames.Email, { connection: redisQueue });
-const reportEvents = new QueueEvents(QueueNames.Report, { connection: redisQueue });
-const forecastEvents = new QueueEvents(QueueNames.Forecast, { connection: redisQueue });
-const scheduledEvents = new QueueEvents(QueueNames.Scheduled, { connection: redisQueue });
+const emailEvents = new QueueEvents(QueueNames.Email, {
+  connection: redisQueue,
+  prefix: env.QUEUE_PREFIX,
+});
+const reportEvents = new QueueEvents(QueueNames.Report, {
+  connection: redisQueue,
+  prefix: env.QUEUE_PREFIX,
+});
+const forecastEvents = new QueueEvents(QueueNames.Forecast, {
+  connection: redisQueue,
+  prefix: env.QUEUE_PREFIX,
+});
+const scheduledEvents = new QueueEvents(QueueNames.Scheduled, {
+  connection: redisQueue,
+  prefix: env.QUEUE_PREFIX,
+});
 
 emailEvents.on('failed', ({ jobId, failedReason }) => {
   logger.warn({ queue: QueueNames.Email, jobId, failedReason }, 'email job failed');

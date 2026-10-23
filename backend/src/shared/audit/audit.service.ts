@@ -160,7 +160,7 @@ export async function recordAudit(input: RecordAuditInput): Promise<AuditLogDoc 
           )
         : [];
 
-    const doc = await AuditLog.create({
+    const doc = new AuditLog({
       tenantId: input.tenantId,
       actorUserId: input.actorUserId,
       actorRole: input.actorRole ?? null,
@@ -175,6 +175,8 @@ export async function recordAudit(input: RecordAuditInput): Promise<AuditLogDoc 
       requestId: input.requestId ?? null,
       at: input.at ?? new Date(),
     });
+    // Audit writes may outlive a business transaction's callback.
+    await doc.save({ session: null });
     return doc.toObject();
   } catch (err) {
     logger.warn(

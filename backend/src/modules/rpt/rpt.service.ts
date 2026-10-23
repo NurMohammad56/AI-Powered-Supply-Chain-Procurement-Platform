@@ -71,7 +71,9 @@ export class RptService {
     q: { from?: string; to?: string },
   ): Promise<AbcAnalysisView> {
     const to = q.to ? new Date(q.to) : new Date();
-    const from = q.from ? new Date(q.from) : new Date(to.getTime() - DEFAULT_ABC_WINDOW_DAYS * MS_PER_DAY);
+    const from = q.from
+      ? new Date(q.from)
+      : new Date(to.getTime() - DEFAULT_ABC_WINDOW_DAYS * MS_PER_DAY);
     const movements = await StockMovement.find({
       tenantId: ctx.tenantId,
       performedAt: { $gte: from, $lt: to },
@@ -123,11 +125,15 @@ export class RptService {
       .filter((row): row is NonNullable<typeof row> => row !== null)
       .sort((a, b) => b.consumptionValue - a.consumptionValue);
 
-    const totalConsumptionValue = rawRows.reduce((sum, row) => sum + Number(row.consumptionValue ?? 0), 0);
+    const totalConsumptionValue = rawRows.reduce(
+      (sum, row) => sum + Number(row.consumptionValue ?? 0),
+      0,
+    );
     let cumulative = 0;
     const items = rawRows.map((row): AbcAnalysisItemView => {
       const consumptionValue = Number(row.consumptionValue ?? 0);
-      const sharePct = totalConsumptionValue > 0 ? (consumptionValue / totalConsumptionValue) * 100 : 0;
+      const sharePct =
+        totalConsumptionValue > 0 ? (consumptionValue / totalConsumptionValue) * 100 : 0;
       cumulative += sharePct;
       const classification = cumulative <= 80 ? 'A' : cumulative <= 95 ? 'B' : 'C';
       return {
@@ -156,7 +162,11 @@ export class RptService {
     ctx: TenantContext,
     q: { itemId: string; orderingCost: number; holdingCostRate: number; leadTimeDays?: number },
   ): Promise<EoqView> {
-    const item = await Item.findOne({ tenantId: ctx.tenantId, _id: new Types.ObjectId(q.itemId), archivedAt: null })
+    const item = await Item.findOne({
+      tenantId: ctx.tenantId,
+      _id: new Types.ObjectId(q.itemId),
+      archivedAt: null,
+    })
       .lean()
       .exec();
     if (!item) throw new NotFoundError();
@@ -207,14 +217,29 @@ export class RptService {
     };
   }
 
-  async getBudgetStatus(ctx: TenantContext, q?: { monthStart?: string }): Promise<BudgetStatusView> {
-    const monthStart = q?.monthStart ? startOfMonthUtc(new Date(q.monthStart)) : startOfMonthUtc(new Date());
-    const budget = await ProcurementBudget.findOne({ tenantId: ctx.tenantId, monthStart }).lean().exec();
+  async getBudgetStatus(
+    ctx: TenantContext,
+    q?: { monthStart?: string },
+  ): Promise<BudgetStatusView> {
+    const monthStart = q?.monthStart
+      ? startOfMonthUtc(new Date(q.monthStart))
+      : startOfMonthUtc(new Date());
+    const budget = await ProcurementBudget.findOne({ tenantId: ctx.tenantId, monthStart })
+      .lean()
+      .exec();
     const monthEnd = nextMonthStartUtc(monthStart);
     const currency = budget?.currency ?? 'BDT';
-    const committed = await this.sumPurchaseOrderSpend(ctx.tenantId, monthStart, monthEnd, currency);
+    const committed = await this.sumPurchaseOrderSpend(
+      ctx.tenantId,
+      monthStart,
+      monthEnd,
+      currency,
+    );
     const daysElapsed = Math.max(1, Math.ceil((Date.now() - monthStart.getTime()) / MS_PER_DAY));
-    const daysInMonth = Math.max(1, Math.ceil((monthEnd.getTime() - monthStart.getTime()) / MS_PER_DAY));
+    const daysInMonth = Math.max(
+      1,
+      Math.ceil((monthEnd.getTime() - monthStart.getTime()) / MS_PER_DAY),
+    );
     const projectedMonthEnd = round2((committed / daysElapsed) * daysInMonth);
 
     if (!budget) {
@@ -233,15 +258,16 @@ export class RptService {
     }
 
     const remaining = round2(budget.monthlyLimit - committed);
-    const utilizationPct = budget.monthlyLimit > 0 ? round2((committed / budget.monthlyLimit) * 100) : null;
+    const utilizationPct =
+      budget.monthlyLimit > 0 ? round2((committed / budget.monthlyLimit) * 100) : null;
     const status =
       budget.monthlyLimit === 0
         ? 'overrun'
         : committed >= budget.monthlyLimit
-        ? 'overrun'
-        : utilizationPct !== null && utilizationPct >= budget.warningThresholdPct
-        ? 'warning'
-        : 'ok';
+          ? 'overrun'
+          : utilizationPct !== null && utilizationPct >= budget.warningThresholdPct
+            ? 'warning'
+            : 'ok';
 
     return {
       monthStart: monthStart.toISOString(),
@@ -262,7 +288,9 @@ export class RptService {
   }
 
   async upsertBudget(ctx: TenantContext, input: UpsertBudgetRequest): Promise<UpsertBudgetView> {
-    const monthStart = input.monthStart ? startOfMonthUtc(new Date(input.monthStart)) : startOfMonthUtc(new Date());
+    const monthStart = input.monthStart
+      ? startOfMonthUtc(new Date(input.monthStart))
+      : startOfMonthUtc(new Date());
     const updated = await ProcurementBudget.findOneAndUpdate(
       { tenantId: ctx.tenantId, monthStart },
       {
@@ -319,11 +347,19 @@ export class RptService {
   }
 }
 
-async function runInventoryTurnover(args: { tenantId: Types.ObjectId; from: Date; to: Date }): Promise<unknown[]> {
+async function runInventoryTurnover(args: {
+  tenantId: Types.ObjectId;
+  from: Date;
+  to: Date;
+}): Promise<unknown[]> {
   return StockMovement.aggregate(inventoryTurnoverByCategoryPipeline(args)).exec();
 }
 
-async function runSpendBySupplier(args: { tenantId: Types.ObjectId; from: Date; to: Date }): Promise<unknown[]> {
+async function runSpendBySupplier(args: {
+  tenantId: Types.ObjectId;
+  from: Date;
+  to: Date;
+}): Promise<unknown[]> {
   return PurchaseOrder.aggregate(spendBySupplierPipeline(args)).exec();
 }
 
@@ -339,7 +375,11 @@ async function runCashFlowProjection(args: { tenantId: Types.ObjectId }): Promis
   return PurchaseOrder.aggregate(cashFlowProjectionPipeline(args)).exec();
 }
 
-async function runDeadStock(args: { tenantId: Types.ObjectId; from: Date; to: Date }): Promise<unknown[]> {
+async function runDeadStock(args: {
+  tenantId: Types.ObjectId;
+  from: Date;
+  to: Date;
+}): Promise<unknown[]> {
   return StockBalance.aggregate(deadStockPipeline(args)).exec();
 }
 

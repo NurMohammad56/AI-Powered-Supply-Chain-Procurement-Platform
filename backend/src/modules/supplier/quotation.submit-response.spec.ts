@@ -68,14 +68,14 @@ describe('quotationService.submitResponse', () => {
     jest.mocked(quotationRepository.findByTokenGlobal).mockResolvedValue({
       _id: quotationId,
       tenantId,
-    } as never);
+    });
     jest.mocked(quotationRepository.findByToken).mockResolvedValue({
       _id: quotationId,
       tenantId,
       number: 'RFQ-1',
       status: 'open',
       requestedBy: new Types.ObjectId(),
-      validUntil: new Date('2026-08-10T23:59:59.000Z'),
+      validUntil: new Date(Date.now() + 7 * 86400000),
       lines: [
         {
           itemId,
@@ -106,7 +106,7 @@ describe('quotationService.submitResponse', () => {
       number: 'RFQ-1',
       status: 'open',
       requestedBy: new Types.ObjectId(),
-      validUntil: new Date('2026-08-10T23:59:59.000Z'),
+      validUntil: new Date(Date.now() + 7 * 86400000),
       lines: [
         {
           itemId,

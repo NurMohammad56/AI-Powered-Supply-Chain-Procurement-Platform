@@ -215,7 +215,12 @@ export function supplierCostComparisonPipeline(args: PipelineRangeArgs): Pipelin
             { $gt: ['$mostExpensivePrice', 0] },
             {
               $multiply: [
-                { $divide: [{ $subtract: ['$mostExpensivePrice', '$cheapestPrice'] }, '$mostExpensivePrice'] },
+                {
+                  $divide: [
+                    { $subtract: ['$mostExpensivePrice', '$cheapestPrice'] },
+                    '$mostExpensivePrice',
+                  ],
+                },
                 100,
               ],
             },
@@ -335,9 +340,7 @@ export function deadStockPipeline(args: PipelineRangeArgs): PipelineStage[] {
         localField: 'itemId',
         foreignField: '_id',
         as: 'item',
-        pipeline: [
-          { $project: { sku: 1, name: 1, movingAverageCost: 1, type: 1 } },
-        ],
+        pipeline: [{ $project: { sku: 1, name: 1, movingAverageCost: 1, type: 1 } }],
       },
     },
     { $unwind: '$item' },

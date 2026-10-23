@@ -1,0 +1,43 @@
+{
+  "sandbox": true,
+  "transactionId": "SCB-MVDHN61B-68F6AE",
+  "riskLevel": 0,
+  "invoiceStatus": "paid",
+  "amountMinor": 14900,
+  "currency": "USD",
+  "paymentAttemptCount": 1,
+  "paymentStatus": "succeeded",
+  "verifiedSafePayment": {
+    "transactionId": "SCB-MVDHN61B-68F6AE",
+    "status": "paid",
+    "amountMinor": 14900,
+    "currency": "USD"
+  },
+  "results": [
+    {
+      "name": "Real sandbox payment validation",
+      "status": 200,
+      "response": {
+        "data": {
+          "accepted": true
+        },
+        "meta": {
+          "requestId": "9f1519b4-ffa2-47b6-a5d8-faa85b93d9c2"
+        }
+      }
+    },
+    {
+      "name": "Successful IPN replay",
+      "status": 200,
+      "response": {
+        "data": {
+          "accepted": true
+        },
+        "meta": {
+          "requestId": "45f6e8cb-ab25-449c-8850-34d946db7a95"
+        }
+      }
+    }
+  ],
+  "passed": true
+}

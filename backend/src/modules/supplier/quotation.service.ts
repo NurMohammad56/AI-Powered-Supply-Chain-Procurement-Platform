@@ -2,7 +2,12 @@ import { randomBytes } from 'node:crypto';
 import { Types } from 'mongoose';
 
 import { env } from '../../config/env.js';
-import { BadRequestError, ConflictError, NotFoundError, UnauthorizedError } from '../../shared/errors/HttpErrors.js';
+import {
+  BadRequestError,
+  ConflictError,
+  NotFoundError,
+  UnauthorizedError,
+} from '../../shared/errors/HttpErrors.js';
 import { ErrorCodes } from '../../shared/errors/errorCodes.js';
 import { assertTenantOwns } from '../../shared/auth/assertTenantOwns.js';
 import { recordAudit, AuditActions } from '../../shared/audit/index.js';
@@ -11,11 +16,16 @@ import { enqueueEmail, enqueueForecast, enqueueScheduled } from '../../shared/qu
 import type { TenantContext } from '../../shared/auth/types.js';
 import type { Page } from '../../shared/utils/pagination.js';
 import { runTextPipeline } from '../ai/forecastPipeline.js';
+import { AiInsight } from '../ai/models/aiInsight.model.js';
+import { checkQuota, aiUsageRepository, estimateCostMicroUsd } from '../ai/aiUsage.repository.js';
 import { inventoryRepository } from '../inventory/inventory.repository.js';
 import { poService } from '../po/po.service.js';
 import { quotationRepository } from './quotation.repository.js';
 import { supplierRepository } from './supplier.repository.js';
-import type { QuotationRequestDoc, QuotationResponseLine } from './models/quotationRequest.model.js';
+import type {
+  QuotationRequestDoc,
+  QuotationResponseLine,
+} from './models/quotationRequest.model.js';
 import type { PoView } from '../po/po.dto.js';
 import type {
   AcceptQuotationRequest,
@@ -154,7 +164,7 @@ export class QuotationService {
       );
     });
 
-    const supplierById = new Map<string, typeof suppliers[number]>();
+    const supplierById = new Map<string, (typeof suppliers)[number]>();
     for (const supplier of suppliers) {
       supplierById.set(supplier._id.toString(), supplier);
     }
@@ -165,7 +175,8 @@ export class QuotationService {
         to: invitation.invitedContactEmail,
         subject: `RFQ invitation: ${created.number}`,
         html: this.renderSupplierInvitationEmail({
-          supplierName: supplier?.tradingName ?? supplier?.legalName ?? invitation.invitedContactEmail,
+          supplierName:
+            supplier?.tradingName ?? supplier?.legalName ?? invitation.invitedContactEmail,
           rfqNumber: created.number,
           token: invitation.responseToken,
           validUntil: created.validUntil,
@@ -209,7 +220,10 @@ export class QuotationService {
     assertTenantOwns(q, ctx);
     const cancelled = await quotationRepository.cancel(id);
     if (!cancelled) {
-      throw new ConflictError(ErrorCodes.RESOURCE_STATE_RACE, 'Quotation cannot be cancelled in its current state');
+      throw new ConflictError(
+        ErrorCodes.RESOURCE_STATE_RACE,
+        'Quotation cannot be cancelled in its current state',
+      );
     }
     return toView(cancelled);
   }
@@ -238,11 +252,31 @@ export class QuotationService {
         throw new UnauthorizedError(ErrorCodes.QUOTE_INVALID_TOKEN, 'Invalid response token');
       }
       if (inv.response) {
-        throw new ConflictError(ErrorCodes.QUOTE_ALREADY_RESPONDED, 'A response has already been recorded');
+        throw new ConflictError(
+          ErrorCodes.QUOTE_ALREADY_RESPONDED,
+          'A response has already been recorded',
+        );
       }
       const now = new Date();
       if (q.validUntil.getTime() < now.getTime()) {
         throw new BadRequestError(ErrorCodes.QUOTE_EXPIRED, 'Quotation has expired');
+      }
+      const requestedItems = new Set(q.lines.map((line) => line.itemId.toString()));
+      const responseItems = new Set(input.lines.map((line) => line.itemId));
+      if (
+        responseItems.size !== input.lines.length ||
+        input.lines.some((line) => !requestedItems.has(line.itemId))
+      ) {
+        throw new BadRequestError(
+          ErrorCodes.BAD_REQUEST,
+          'Response contains duplicate or unrequested items',
+        );
+      }
+      if (new Set(input.lines.map((line) => line.currency)).size > 1) {
+        throw new BadRequestError(
+          ErrorCodes.BAD_REQUEST,
+          'Quotation response must use a single currency',
+        );
       }
       const updated = await quotationRepository.setInvitationResponse({
         id: q._id,
@@ -288,12 +322,17 @@ export class QuotationService {
       throw new ConflictError(ErrorCodes.RESOURCE_STATE_RACE, 'Quotation is not open');
     }
     const supplierId = new Types.ObjectId(input.supplierId);
-    const inv = q.supplierInvitations.find((i) => i.supplierId.toString() === supplierId.toString());
+    const inv = q.supplierInvitations.find(
+      (i) => i.supplierId.toString() === supplierId.toString(),
+    );
     if (!inv) {
       throw new NotFoundError();
     }
     if (!inv.response) {
-      throw new BadRequestError(ErrorCodes.BAD_REQUEST, 'Selected supplier has not submitted a response');
+      throw new BadRequestError(
+        ErrorCodes.BAD_REQUEST,
+        'Selected supplier has not submitted a response',
+      );
     }
     const accepted = await quotationRepository.accept({
       id,
@@ -301,7 +340,10 @@ export class QuotationService {
       acceptedAt: new Date(),
     });
     if (!accepted) {
-      throw new ConflictError(ErrorCodes.RESOURCE_STATE_RACE, 'Quotation already accepted or closed');
+      throw new ConflictError(
+        ErrorCodes.RESOURCE_STATE_RACE,
+        'Quotation already accepted or closed',
+      );
     }
     void recordAudit({
       tenantId: ctx.tenantId,
@@ -437,7 +479,10 @@ export class QuotationService {
    * produce an AI-narrated recommendation. The numeric comparison is
    * deterministic; the LLM only writes the prose summary.
    */
-  async compareQuotes(ctx: TenantContext, id: Types.ObjectId): Promise<{
+  async compareQuotes(
+    ctx: TenantContext,
+    id: Types.ObjectId,
+  ): Promise<{
     quotationNumber: string;
     rows: Array<{
       supplierId: string;
@@ -511,8 +556,41 @@ DATA:
 ${JSON.stringify(rows, null, 2)}
 
 Respond with the recommendation only, no preamble.`;
+        const quota = await checkQuota({
+          tenantId: ctx.tenantId,
+          tier: ctx.subscriptionTier,
+          callKind: 'report',
+          estimatedTokens: Math.ceil(prompt.length / 4) + 1000,
+        });
+        if (!quota.allowed)
+          throw new BadRequestError(
+            ErrorCodes.AI_QUOTA_EXCEEDED,
+            'Quotation AI summary quota exceeded',
+          );
         const result = await runTextPipeline(prompt);
         aiSummary = result.text.trim();
+        await AiInsight.create({
+          tenantId: ctx.tenantId,
+          kind: 'quotation_comparison',
+          referenceId: id,
+          prompt,
+          response: aiSummary,
+          provenance: {
+            provider: result.provider,
+            model: result.model,
+            promptTokens: result.promptTokens,
+            completionTokens: result.completionTokens,
+            latencyMs: result.latencyMs,
+            failoverInvoked: result.failoverInvoked,
+          },
+        });
+        await aiUsageRepository.increment({
+          tenantId: ctx.tenantId,
+          promptTokens: result.promptTokens,
+          completionTokens: result.completionTokens,
+          callKind: 'report',
+          estimatedCostMicroUsd: estimateCostMicroUsd(result),
+        });
       } catch (err) {
         logger.warn(
           { err, event: 'quote.compare.ai_summary_failed', quotationId: id.toString() },

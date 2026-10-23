@@ -24,11 +24,11 @@ import { paginate, type Cursor, type Page } from '../utils/pagination.js';
 export abstract class BaseRepository<TDoc extends { _id: Types.ObjectId }> {
   constructor(protected readonly model: Model<TDoc>) {}
 
-  async findById(id: Types.ObjectId | string, projection?: ProjectionType<TDoc>): Promise<TDoc | null> {
-    return this.model
-      .findById(id, projection)
-      .lean<TDoc>()
-      .exec();
+  async findById(
+    id: Types.ObjectId | string,
+    projection?: ProjectionType<TDoc>,
+  ): Promise<TDoc | null> {
+    return this.model.findById(id, projection).lean<TDoc>().exec();
   }
 
   async findOne(

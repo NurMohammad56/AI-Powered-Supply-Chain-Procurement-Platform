@@ -6,6 +6,7 @@ import { ItemCategory, type ItemCategoryDoc } from './models/itemCategory.model.
 import { Warehouse, type WarehouseDoc } from './models/warehouse.model.js';
 import { StockBalance, type StockBalanceDoc } from './models/stockBalance.model.js';
 import { StockMovement, type StockMovementDoc } from './models/stockMovement.model.js';
+import { Notification } from '../notification/models/notification.model.js';
 
 export class InventoryRepository {
   // ----- Warehouses -----
@@ -19,13 +20,19 @@ export class InventoryRepository {
     const doc = await Warehouse.create(input);
     return doc.toObject();
   }
-  async updateWarehouse(id: Types.ObjectId, patch: Partial<WarehouseDoc>): Promise<WarehouseDoc | null> {
+  async updateWarehouse(
+    id: Types.ObjectId,
+    patch: Partial<WarehouseDoc>,
+  ): Promise<WarehouseDoc | null> {
     return Warehouse.findByIdAndUpdate(id, patch, { new: true, runValidators: true })
       .lean<WarehouseDoc>()
       .exec();
   }
   async archiveWarehouse(id: Types.ObjectId): Promise<boolean> {
-    const result = await Warehouse.updateOne({ _id: id }, { $set: { archivedAt: new Date() } }).exec();
+    const result = await Warehouse.updateOne(
+      { _id: id },
+      { $set: { archivedAt: new Date() } },
+    ).exec();
     return (result.modifiedCount ?? 0) > 0;
   }
   async listWarehouses(args: {
@@ -127,10 +134,7 @@ export class InventoryRepository {
     if (args.supplierId) filter.preferredSupplierId = new Types.ObjectId(args.supplierId);
     if (args.q) {
       const escaped = args.q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      filter.$or = [
-        { sku: new RegExp(escaped, 'i') },
-        { name: new RegExp(escaped, 'i') },
-      ];
+      filter.$or = [{ sku: new RegExp(escaped, 'i') }, { name: new RegExp(escaped, 'i') }];
     }
     if (args.archived === true) {
       filter.archivedAt = { $type: 'date' };
@@ -183,6 +187,44 @@ export class InventoryRepository {
       .lean<StockBalanceDoc>()
       .exec();
     if (!updated) throw new Error('Failed to update stock balance');
+    return this.reconcileLowStock(updated);
+  }
+
+  /** Runs in the caller's stock transaction. No external side effects before commit. */
+  async reconcileLowStock(balance: StockBalanceDoc): Promise<StockBalanceDoc> {
+    const item = await this.findItemById(balance.itemId);
+    const threshold = balance.reorderLevelOverride ?? item?.reorderLevel ?? 0;
+    const low = !!item && threshold > 0 && balance.quantity < threshold;
+    const episode = low ? (balance.lowStockEpisodeId ?? new Types.ObjectId()) : null;
+    const sameEpisode = low && !!balance.lowStockEpisodeId;
+    if (
+      (low && balance.lowStockSince && sameEpisode) ||
+      (!low && !balance.lowStockSince && !balance.lowStockEpisodeId)
+    )
+      return balance;
+    const updated = await StockBalance.findOneAndUpdate(
+      { _id: balance._id, version: balance.version },
+      {
+        $set: {
+          lowStockSince: low ? (balance.lowStockSince ?? new Date()) : null,
+          lowStockEpisodeId: episode,
+          lowStockNotifiedAt: sameEpisode ? (balance.lowStockNotifiedAt ?? null) : null,
+          lowStockNextForecastAt: sameEpisode ? (balance.lowStockNextForecastAt ?? null) : null,
+        },
+      },
+      { new: true },
+    )
+      .lean<StockBalanceDoc>()
+      .exec();
+    if (!updated) throw new Error('Stock balance changed during low-stock reconciliation');
+    if (!low && balance.lowStockEpisodeId) {
+      await Notification.updateMany(
+        { category: 'low_stock', 'metadata.episodeId': balance.lowStockEpisodeId.toString() },
+        {
+          $set: { 'metadata.resolvedAt': new Date() },
+        },
+      ).exec();
+    }
     return updated;
   }
 
@@ -196,16 +238,10 @@ export class InventoryRepository {
     warehouseId: Types.ObjectId;
     reorderLevel: number;
   }): Promise<boolean> {
-    const result = await StockBalance.updateOne(
-      {
-        itemId: args.itemId,
-        warehouseId: args.warehouseId,
-        lowStockSince: { $type: 'date' },
-        quantity: { $gte: args.reorderLevel },
-      },
-      { $set: { lowStockSince: null } },
-    ).exec();
-    return (result.modifiedCount ?? 0) > 0;
+    const balance = await this.findBalance(args.itemId, args.warehouseId);
+    if (!balance) return false;
+    const updated = await this.reconcileLowStock(balance);
+    return !!balance.lowStockSince && !updated.lowStockSince;
   }
 
   async listLowStock(args: {

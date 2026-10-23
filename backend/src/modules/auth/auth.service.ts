@@ -20,6 +20,7 @@ import {
   verifyRefreshToken,
 } from '../../shared/auth/jwt.js';
 import { enqueueEmail } from '../../shared/queue/queues.js';
+import { denylistAllForUser } from '../../shared/security/tokenDenylist.js';
 import type { Role, SubscriptionTier } from '../../shared/auth/types.js';
 import { authRepository } from './auth.repository.js';
 import type { FactoryDoc } from './models/factory.model.js';
@@ -171,7 +172,10 @@ export class AuthService {
       html: this.renderVerifyEmail(owner.fullName, verifyToken),
       template: 'auth.verify_email',
     }).catch((err: unknown) =>
-      logger.warn({ err, event: 'email.enqueue_failed', userId: owner._id.toString() }, 'verify email enqueue failed'),
+      logger.warn(
+        { err, event: 'email.enqueue_failed', userId: owner._id.toString() },
+        'verify email enqueue failed',
+      ),
     );
 
     return {
@@ -209,9 +213,7 @@ export class AuthService {
     if (!passwordOk) {
       const fails = candidate.failedLoginCount + 1;
       const lockUntil =
-        fails >= ACCOUNT_LOCK_AFTER_FAILS
-          ? new Date(Date.now() + ACCOUNT_LOCK_DURATION_MS)
-          : null;
+        fails >= ACCOUNT_LOCK_AFTER_FAILS ? new Date(Date.now() + ACCOUNT_LOCK_DURATION_MS) : null;
       await authRepository.withScope(candidate.tenantId, () =>
         authRepository.incrementFailedLogins(candidate._id, lockUntil),
       );
@@ -236,7 +238,7 @@ export class AuthService {
       userId: candidate._id,
       tenantId: candidate.tenantId,
       role: candidate.role,
-      tier: this.tierFromFactoryStatus(factory.status),
+      tier: await this.subscriptionTierForFactory(factory),
       family: newSessionFamily(),
       meta,
     });
@@ -256,7 +258,10 @@ export class AuthService {
    * if a token is presented that has already been rotated, the entire
    * session family is invalidated immediately.
    */
-  async refresh(rawToken: string, meta: ClientMeta): Promise<{ tokens: AuthRefreshResponse; refreshToken: string; refreshTokenExpiresAt: string }> {
+  async refresh(
+    rawToken: string,
+    meta: ClientMeta,
+  ): Promise<{ tokens: AuthRefreshResponse; refreshToken: string; refreshTokenExpiresAt: string }> {
     const claims = verifyRefreshToken(rawToken);
     const tenantId = new Types.ObjectId(claims.tenantId);
 
@@ -298,7 +303,7 @@ export class AuthService {
         userId: user._id,
         tenantId,
         role: user.role,
-        tier: this.tierFromFactoryStatus(factory.status),
+        tier: await this.subscriptionTierForFactory(factory),
         family: session.family,
         meta,
       });
@@ -432,11 +437,17 @@ export class AuthService {
     const { User } = await import('./models/user.model.js');
     const stub = await User.collection.findOne({ emailVerifyToken: input.token });
     if (!stub) {
-      throw new UnauthorizedError(ErrorCodes.AUTH_VERIFY_TOKEN_INVALID, 'Verification token invalid');
+      throw new UnauthorizedError(
+        ErrorCodes.AUTH_VERIFY_TOKEN_INVALID,
+        'Verification token invalid',
+      );
     }
     const expires = stub.emailVerifyTokenExpiresAt as Date | null;
     if (!expires || expires.getTime() < Date.now()) {
-      throw new UnauthorizedError(ErrorCodes.AUTH_VERIFY_TOKEN_INVALID, 'Verification token expired');
+      throw new UnauthorizedError(
+        ErrorCodes.AUTH_VERIFY_TOKEN_INVALID,
+        'Verification token expired',
+      );
     }
     const userId = stub._id;
     const tenantId = stub.tenantId;
@@ -473,7 +484,10 @@ export class AuthService {
         throw new UnauthorizedError(ErrorCodes.AUTH_INVITE_TOKEN_INVALID, 'Invite token invalid');
       }
       if (user.status !== 'invited') {
-        throw new UnauthorizedError(ErrorCodes.AUTH_INVITE_TOKEN_INVALID, 'Invite already accepted');
+        throw new UnauthorizedError(
+          ErrorCodes.AUTH_INVITE_TOKEN_INVALID,
+          'Invite already accepted',
+        );
       }
 
       const passwordHash = await hashPassword(input.password);
@@ -504,7 +518,7 @@ export class AuthService {
       userId: updated._id,
       tenantId,
       role: updated.role,
-      tier: this.tierFromFactoryStatus(factory.status),
+      tier: await this.subscriptionTierForFactory(factory),
       family: newSessionFamily(),
       meta,
     });
@@ -539,10 +553,19 @@ export class AuthService {
       }
       const currentOk = await verifyPassword(input.currentPassword, userWithHash.passwordHash);
       if (!currentOk) {
-        throw new UnauthorizedError(ErrorCodes.AUTH_INVALID_CREDENTIALS, 'Current password incorrect');
+        throw new UnauthorizedError(
+          ErrorCodes.AUTH_INVALID_CREDENTIALS,
+          'Current password incorrect',
+        );
       }
       const passwordHash = await hashPassword(input.newPassword);
       await authRepository.updateUser(userId, { passwordHash });
+      const { Session } = await import('./models/session.model.js');
+      await Session.updateMany(
+        { userId, revokedAt: null },
+        { $set: { revokedAt: new Date(), revokeReason: 'admin' } },
+      ).exec();
+      await denylistAllForUser(userId.toString());
     });
   }
 
@@ -628,6 +651,7 @@ export class AuthService {
       }
       const updated = await authRepository.updateUser(targetUserId, { role: newRole });
       if (!updated) throw new ConflictError(ErrorCodes.NOT_FOUND, 'User not found');
+      await denylistAllForUser(targetUserId.toString());
       return toUserView(updated);
     });
   }
@@ -657,6 +681,7 @@ export class AuthService {
         }
       }
       await authRepository.updateUser(targetUserId, { status: 'disabled' });
+      await denylistAllForUser(targetUserId.toString());
       const { Session } = await import('./models/session.model.js');
       await Session.updateMany(
         { userId: targetUserId, revokedAt: null },
@@ -686,7 +711,10 @@ export class AuthService {
         return User.findOne({ email: input.email }).lean<UserDoc>().exec();
       });
       if (existing) {
-        throw new ConflictError(ErrorCodes.RESOURCE_DUPLICATE, 'User with that email already exists');
+        throw new ConflictError(
+          ErrorCodes.RESOURCE_DUPLICATE,
+          'User with that email already exists',
+        );
       }
       const tempPassword = crypto.randomBytes(24).toString('base64url') + 'A1!';
       const passwordHash = await hashPassword(tempPassword);
@@ -737,12 +765,16 @@ export class AuthService {
     family: string;
     meta: ClientMeta;
   }): Promise<IssuedTokenPair> {
+    const { Subscription } = await import('../billing/models/subscription.model.js');
+    const subscription = await authRepository.withScope(args.tenantId, () =>
+      Subscription.findOne({ tenantId: args.tenantId }).lean().exec(),
+    );
     const access = issueAccessToken({
       userId: args.userId,
       tenantId: args.tenantId,
       role: args.role,
       tier: args.tier,
-      seats: 0,
+      seats: subscription?.seats ?? 0,
       features: [],
     });
     const refresh = issueRefreshToken({
@@ -775,8 +807,14 @@ export class AuthService {
     };
   }
 
-  private tierFromFactoryStatus(status: FactoryDoc['status']): SubscriptionTier {
-    return status === 'trial' ? 'trial' : 'starter';
+  private async subscriptionTierForFactory(factory: FactoryDoc): Promise<SubscriptionTier> {
+    const { Subscription } = await import('../billing/models/subscription.model.js');
+    const subscription = await authRepository.withScope(factory._id, () =>
+      Subscription.findOne({ tenantId: factory._id }).lean().exec(),
+    );
+    if (subscription && ['active', 'trialing'].includes(subscription.status))
+      return subscription.tier;
+    return factory.status === 'trial' ? 'trial' : 'starter';
   }
 
   /**

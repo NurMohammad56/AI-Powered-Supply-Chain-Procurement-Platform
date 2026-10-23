@@ -138,7 +138,11 @@ export interface PoView {
   number: string;
   state: string;
   supplierId: string;
-  supplierSnapshot: { legalName: string; address: string | null; primaryContactEmail: string | null };
+  supplierSnapshot: {
+    legalName: string;
+    address: string | null;
+    primaryContactEmail: string | null;
+  };
   warehouseId: string;
   currency: string;
   paymentTermsDays: number;

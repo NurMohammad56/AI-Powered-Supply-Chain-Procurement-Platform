@@ -67,7 +67,9 @@ function getPreviousKeys(): ReadonlyArray<KeyEntry> {
     cachedPrevious = [];
     return cachedPrevious;
   }
-  const entries = env.FIELD_ENCRYPTION_KEY_PREVIOUS.split(',').map((s) => s.trim()).filter(Boolean);
+  const entries = env.FIELD_ENCRYPTION_KEY_PREVIOUS.split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
   cachedPrevious = entries.map((entry) => {
     const [kid, value] = entry.split(':', 2);
     if (!kid || !value) throw new Error(`Invalid FIELD_ENCRYPTION_KEY_PREVIOUS entry: ${entry}`);

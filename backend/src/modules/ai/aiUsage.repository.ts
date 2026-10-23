@@ -130,11 +130,12 @@ export class AiUsageRepository {
       (update.$inc as Record<string, number>).reportCalls = 1;
     }
 
-    const doc = await AiUsage.findOneAndUpdate(
-      { tenantId: args.tenantId, period },
-      update,
-      { upsert: true, new: true, runValidators: true, setDefaultsOnInsert: true },
-    )
+    const doc = await AiUsage.findOneAndUpdate({ tenantId: args.tenantId, period }, update, {
+      upsert: true,
+      new: true,
+      runValidators: true,
+      setDefaultsOnInsert: true,
+    })
       .lean<AiUsageDoc>()
       .exec();
     if (!doc) throw new Error('Failed to increment AI usage');
@@ -180,7 +181,11 @@ export async function checkQuota(args: {
   if (usedTokens + args.estimatedTokens > quota.monthlyTokenCap) {
     return {
       allowed: false,
-      remaining: { tokens: remainingTokens, forecastCalls: remainingForecasts, reportCalls: remainingReports },
+      remaining: {
+        tokens: remainingTokens,
+        forecastCalls: remainingForecasts,
+        reportCalls: remainingReports,
+      },
       softAlert: false,
       reason: 'token_cap',
     };
@@ -188,7 +193,11 @@ export async function checkQuota(args: {
   if (args.callKind === 'forecast' && usage.forecastCalls + 1 > quota.monthlyForecastCallCap) {
     return {
       allowed: false,
-      remaining: { tokens: remainingTokens, forecastCalls: remainingForecasts, reportCalls: remainingReports },
+      remaining: {
+        tokens: remainingTokens,
+        forecastCalls: remainingForecasts,
+        reportCalls: remainingReports,
+      },
       softAlert: false,
       reason: 'forecast_call_cap',
     };
@@ -196,7 +205,11 @@ export async function checkQuota(args: {
   if (args.callKind === 'report' && usage.reportCalls + 1 > quota.monthlyReportCallCap) {
     return {
       allowed: false,
-      remaining: { tokens: remainingTokens, forecastCalls: remainingForecasts, reportCalls: remainingReports },
+      remaining: {
+        tokens: remainingTokens,
+        forecastCalls: remainingForecasts,
+        reportCalls: remainingReports,
+      },
       softAlert: false,
       reason: 'report_call_cap',
     };
@@ -204,7 +217,11 @@ export async function checkQuota(args: {
   const projectedRatio = (usedTokens + args.estimatedTokens) / quota.monthlyTokenCap;
   return {
     allowed: true,
-    remaining: { tokens: remainingTokens, forecastCalls: remainingForecasts, reportCalls: remainingReports },
+    remaining: {
+      tokens: remainingTokens,
+      forecastCalls: remainingForecasts,
+      reportCalls: remainingReports,
+    },
     softAlert: projectedRatio >= quota.softAlertRatio,
   };
 }
@@ -223,8 +240,11 @@ export function estimateBatchForecastCost(args: {
   const totalPrompt = args.itemCount * promptPer;
   const totalCompletion = args.itemCount * completionPer;
   const cheaperCost =
-    estimateCostMicroUsd({ provider: 'gemini', promptTokens: totalPrompt, completionTokens: totalCompletion }) /
-    1_000_000;
+    estimateCostMicroUsd({
+      provider: 'gemini',
+      promptTokens: totalPrompt,
+      completionTokens: totalCompletion,
+    }) / 1_000_000;
   return {
     estimatedTokens: totalPrompt + totalCompletion,
     estimatedCostUsd: Math.round(cheaperCost * 100) / 100,

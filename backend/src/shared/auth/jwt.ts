@@ -9,6 +9,7 @@ import { ErrorCodes } from '../errors/errorCodes.js';
 import type { Role, SubscriptionTier } from './types.js';
 
 export interface AccessTokenClaims extends JwtPayload {
+  issuedAtMs?: number;
   sub: string;
   tenantId: string;
   role: Role;
@@ -82,6 +83,7 @@ export function issueAccessToken(input: IssueAccessTokenInput): IssuedToken {
     seats: input.seats,
     features: input.features ?? [],
     jti,
+    issuedAtMs: Date.now(),
   };
   const token = jwt.sign(payload, env.JWT_ACCESS_SECRET, accessSignOptions);
   const decoded = jwt.decode(token) as JwtPayload | null;

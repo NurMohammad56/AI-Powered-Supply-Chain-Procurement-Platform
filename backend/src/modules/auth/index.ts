@@ -4,11 +4,7 @@
  * forbids reaching into module internals from any other module.
  */
 
-export {
-  authPublicRouter,
-  authPrivateRouter,
-  authPrivateMiddleware,
-} from './auth.routes.js';
+export { authPublicRouter, authPrivateRouter, authPrivateMiddleware } from './auth.routes.js';
 
 export {
   RegisterFactoryRequestSchema,

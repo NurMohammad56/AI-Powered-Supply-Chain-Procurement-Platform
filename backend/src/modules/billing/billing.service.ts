@@ -212,9 +212,9 @@ export class BillingService {
     const invoice = await billingRepository.upsertInvoiceByGatewayId(ctx.tenantId, tranId, {
       subscriptionId: subscription._id,
       number: invoiceNumber,
-      amountSubtotal: plan.monthlyPrice.amount,
+      amountSubtotal: Math.round(plan.monthlyPrice.amount * 100),
       amountTax: 0,
-      amountTotal: plan.monthlyPrice.amount,
+      amountTotal: Math.round(plan.monthlyPrice.amount * 100),
       currency: plan.monthlyPrice.currency as InvoiceDoc['currency'],
       status: 'open',
       pdfUrl: null,
@@ -250,7 +250,7 @@ export class BillingService {
     const redirectBase = normalizeUrl(input.successUrl);
 
     const session = await initiateSslCommerzTransaction({
-      totalAmount: invoice.amountTotal,
+      totalAmount: invoice.amountTotal / 100,
       currency: invoice.currency,
       tranId,
       productCategory: 'software',
@@ -415,13 +415,18 @@ export class BillingService {
       const validation = await validateSslCommerzTransaction({ sessionKey, tranId, valId });
       const status = (validation.status ?? '').toUpperCase();
       const amountOk =
-        validation.amount === null || Number(validation.amount) === Number(invoice.amountTotal);
+        validation.amount !== null &&
+        Number.isFinite(Number(validation.amount)) &&
+        Math.round(Number(validation.amount) * 100) === invoice.amountTotal;
       const currencyOk =
-        validation.currency === null || validation.currency.toUpperCase() === invoice.currency;
+        validation.currency !== null && validation.currency.toUpperCase() === invoice.currency;
+      const transactionOk = validation.tranId === (tranId ?? invoice.gatewayInvoiceId);
       const isSuccess =
         (status === 'VALID' || status === 'VALIDATED' || status === 'SUCCESS') &&
         amountOk &&
-        currencyOk;
+        currencyOk &&
+        transactionOk &&
+        (validation.riskLevel === null || validation.riskLevel === 0);
 
       if (isSuccess) {
         const paidAt = new Date();

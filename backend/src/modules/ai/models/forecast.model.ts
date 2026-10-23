@@ -38,6 +38,7 @@ export interface ForecastProvenance {
   cacheHit: boolean;
   promptTokens: number;
   completionTokens: number;
+  fallback?: boolean;
 }
 
 export interface ForecastDoc {
@@ -104,6 +105,7 @@ const provenanceSchema = new Schema<ForecastProvenance>(
     cacheHit: { type: Boolean, default: false },
     promptTokens: { type: Number, default: 0, min: 0 },
     completionTokens: { type: Number, default: 0, min: 0 },
+    fallback: { type: Boolean, default: false },
   },
   { _id: false },
 );
@@ -135,8 +137,12 @@ const forecastSchema = new Schema<ForecastDoc>(
 );
 
 forecastSchema.index({ tenantId: 1, itemId: 1, horizonDays: 1, generatedAt: -1 });
-forecastSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
-forecastSchema.index({ tenantId: 1, mape: -1 }, { partialFilterExpression: { mape: { $type: 'number' } } });
+// expiresAt controls cache freshness. Forecast history must survive expiry.
+forecastSchema.index({ expiresAt: 1 });
+forecastSchema.index(
+  { tenantId: 1, mape: -1 },
+  { partialFilterExpression: { mape: { $type: 'number' } } },
+);
 
 forecastSchema.plugin(tenancyPlugin);
 forecastSchema.plugin(auditPlugin);

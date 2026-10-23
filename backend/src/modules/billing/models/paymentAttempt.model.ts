@@ -12,11 +12,7 @@ import type { PaymentGateway } from './subscription.model.js';
  */
 
 export type PaymentAttemptStatus =
-  | 'pending'
-  | 'succeeded'
-  | 'failed'
-  | 'cancelled'
-  | 'requires_action';
+  'pending' | 'succeeded' | 'failed' | 'cancelled' | 'requires_action';
 
 export const PAYMENT_ATTEMPT_STATUSES: readonly PaymentAttemptStatus[] = [
   'pending',

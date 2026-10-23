@@ -33,7 +33,11 @@ export const inventoryController = {
   }),
   updateWarehouse: asyncHandler(async (req, res) => {
     const ctx = requireContext(req);
-    const result = await inventoryService.updateWarehouse(ctx, objId(req.params.id ?? ''), req.body);
+    const result = await inventoryService.updateWarehouse(
+      ctx,
+      objId(req.params.id ?? ''),
+      req.body,
+    );
     return ok(req, res, result);
   }),
   deleteWarehouse: asyncHandler(async (req, res) => {
@@ -126,7 +130,11 @@ export const inventoryController = {
   }),
   getItemHistory: asyncHandler(async (req, res) => {
     const ctx = requireContext(req);
-    const result = await inventoryService.getItemHistory(ctx, objId(req.params.id ?? ''), req.query as never);
+    const result = await inventoryService.getItemHistory(
+      ctx,
+      objId(req.params.id ?? ''),
+      req.query as never,
+    );
     return paginated(req, res, result.rows, {
       nextCursor: result.nextCursor,
       hasMore: result.hasMore,

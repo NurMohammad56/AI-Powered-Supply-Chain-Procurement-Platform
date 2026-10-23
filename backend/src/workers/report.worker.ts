@@ -1,5 +1,7 @@
+import { env } from '../config/env.js';
 import { Worker, type Job } from 'bullmq';
 import { Types } from 'mongoose';
+import { tenantStorage } from '../shared/db/tenancyPlugin.js';
 
 import { redisQueue } from '../config/redis.js';
 import { logger } from '../config/logger.js';
@@ -15,49 +17,59 @@ import { generateWeeklyReport } from '../modules/ai/reportGenerator.js';
 export function startReportWorker(): Worker<ReportJobMap[keyof ReportJobMap]> {
   const worker = new Worker<ReportJobMap[keyof ReportJobMap]>(
     QueueNames.Report,
-    async (job: Job<ReportJobMap[keyof ReportJobMap]>) => {
-      const log = logger.child({
-        worker: QueueNames.Report,
-        jobId: job.id,
-        jobName: job.name,
-        attempt: job.attemptsMade + 1,
-      });
-      log.info({ event: 'report.start', payload: job.data }, 'report job received');
+    async (job: Job<ReportJobMap[keyof ReportJobMap]>) =>
+      tenantStorage.run({ tenantId: new Types.ObjectId(job.data.tenantId) }, async () => {
+        const log = logger.child({
+          worker: QueueNames.Report,
+          jobId: job.id,
+          jobName: job.name,
+          attempt: job.attemptsMade + 1,
+        });
+        log.info({ event: 'report.start', payload: job.data }, 'report job received');
 
-      switch (job.name) {
-        case 'report.weekly_digest': {
-          const data = job.data as ReportJobMap['report.weekly_digest'];
-          const result = await generateWeeklyReport({
-            tenantId: new Types.ObjectId(data.tenantId),
-            weekStart: new Date(data.weekStart),
-            weekEnd: new Date(data.weekEnd),
-          });
-          log.info(
-            {
-              event: 'report.weekly_digest.complete',
-              tenantId: data.tenantId,
-              pdfRendered: result.pdfRendered,
+        switch (job.name) {
+          case 'report.weekly_digest': {
+            const data = job.data as ReportJobMap['report.weekly_digest'];
+            const result = await generateWeeklyReport({
+              tenantId: new Types.ObjectId(data.tenantId),
+              weekStart: new Date(data.weekStart),
+              weekEnd: new Date(data.weekEnd),
+            });
+            log.info(
+              {
+                event: 'report.weekly_digest.complete',
+                tenantId: data.tenantId,
+                pdfRendered: result.pdfRendered,
+                emailSent: result.emailSent,
+                provider: result.provider,
+              },
+              'weekly digest generated',
+            );
+            return {
+              ok: true,
+              kind: 'weekly_digest',
               emailSent: result.emailSent,
-              provider: result.provider,
-            },
-            'weekly digest generated',
-          );
-          return { ok: true, kind: 'weekly_digest', emailSent: result.emailSent, pdfRendered: result.pdfRendered };
+              pdfRendered: result.pdfRendered,
+            };
+          }
+
+          case 'report.adhoc':
+            // Adhoc analytics reports use the rpt aggregations layer
+            // directly; the AI narrative is only added for the weekly
+            // digest. See rpt.service.ts.
+            log.info(
+              { event: 'report.adhoc.stub' },
+              'adhoc report stub - analytics only, no AI narrative',
+            );
+            return { ok: true, kind: 'adhoc_stub' };
+
+          default:
+            throw new Error(`Unknown report job name: ${job.name}`);
         }
-
-        case 'report.adhoc':
-          // Adhoc analytics reports use the rpt aggregations layer
-          // directly; the AI narrative is only added for the weekly
-          // digest. See rpt.service.ts.
-          log.info({ event: 'report.adhoc.stub' }, 'adhoc report stub - analytics only, no AI narrative');
-          return { ok: true, kind: 'adhoc_stub' };
-
-        default:
-          throw new Error(`Unknown report job name: ${job.name}`);
-      }
-    },
+      }),
     {
       connection: redisQueue,
+      prefix: env.QUEUE_PREFIX,
       concurrency: 2,
     },
   );

@@ -1,9 +1,16 @@
+import { env } from '../config/env.js';
 import { Worker, type Job } from 'bullmq';
 import { Types } from 'mongoose';
+import { tenantStorage } from '../shared/db/tenancyPlugin.js';
 
 import { redisQueue } from '../config/redis.js';
 import { logger } from '../config/logger.js';
-import { QueueNames, type ForecastJobMap, type ForecastSingleItemJob, type ForecastBatchJob } from '../shared/queue/jobTypes.js';
+import {
+  QueueNames,
+  type ForecastJobMap,
+  type ForecastSingleItemJob,
+  type ForecastBatchJob,
+} from '../shared/queue/jobTypes.js';
 import { aiService } from '../modules/ai/ai.service.js';
 import { tenantRoom, SocketEvents } from '../shared/realtime/events.js';
 import { getIo } from '../shared/realtime/socketServer.js';
@@ -14,6 +21,7 @@ import { User } from '../modules/auth/models/user.model.js';
 import { Subscription } from '../modules/billing/models/subscription.model.js';
 import type { TenantContext, SubscriptionTier } from '../shared/auth/types.js';
 import type { ForecastHorizonDays } from '../modules/ai/models/forecast.model.js';
+import { StockBalance } from '../modules/inventory/models/stockBalance.model.js';
 
 /**
  * Forecast worker. Two job kinds:
@@ -35,25 +43,27 @@ const WORKER_CONCURRENCY = 3;
 export function startForecastWorker(): Worker<ForecastJobMap[keyof ForecastJobMap]> {
   const worker = new Worker<ForecastJobMap[keyof ForecastJobMap]>(
     QueueNames.Forecast,
-    async (job: Job<ForecastJobMap[keyof ForecastJobMap]>) => {
-      const log = logger.child({
-        worker: QueueNames.Forecast,
-        jobId: job.id,
-        jobName: job.name,
-        attempt: job.attemptsMade + 1,
-      });
+    async (job: Job<ForecastJobMap[keyof ForecastJobMap]>) =>
+      tenantStorage.run({ tenantId: new Types.ObjectId(job.data.tenantId) }, async () => {
+        const log = logger.child({
+          worker: QueueNames.Forecast,
+          jobId: job.id,
+          jobName: job.name,
+          attempt: job.attemptsMade + 1,
+        });
 
-      switch (job.name) {
-        case 'forecast.single_item':
-          return handleSingleItem(job as Job<ForecastSingleItemJob>, log);
-        case 'forecast.batch':
-          return handleBatch(job as Job<ForecastBatchJob>, log);
-        default:
-          throw new Error(`Unknown forecast job name: ${job.name}`);
-      }
-    },
+        switch (job.name) {
+          case 'forecast.single_item':
+            return handleSingleItem(job as Job<ForecastSingleItemJob>, log);
+          case 'forecast.batch':
+            return handleBatch(job as Job<ForecastBatchJob>, log);
+          default:
+            throw new Error(`Unknown forecast job name: ${job.name}`);
+        }
+      }),
     {
       connection: redisQueue,
+      prefix: env.QUEUE_PREFIX,
       concurrency: WORKER_CONCURRENCY,
     },
   );
@@ -80,11 +90,22 @@ interface JobLogger {
   debug: (obj: Record<string, unknown>, msg?: string) => void;
 }
 
-async function handleSingleItem(job: Job<ForecastSingleItemJob>, log: JobLogger): Promise<{
+async function handleSingleItem(
+  job: Job<ForecastSingleItemJob>,
+  log: JobLogger,
+): Promise<{
   ok: true;
   forecastId: string;
 }> {
   const { tenantId, itemId, requestedBy, batchJobId, batchTotal, batchIndex } = job.data;
+  if (job.data.lowStockBalanceId && job.data.lowStockEpisodeId) {
+    const active = await StockBalance.exists({
+      _id: job.data.lowStockBalanceId,
+      lowStockEpisodeId: job.data.lowStockEpisodeId,
+      lowStockSince: { $type: 'date' },
+    });
+    if (!active) return { ok: true, forecastId: '' };
+  }
   log.info({ event: 'forecast.single.start', tenantId, itemId }, 'forecast job received');
 
   const ctx = await buildTenantContextForJob({ tenantId, userId: requestedBy });
@@ -156,7 +177,10 @@ async function handleBatch(
   log: JobLogger,
 ): Promise<{ ok: true; total: number; succeeded: number; failed: number }> {
   const { tenantId, itemIds, requestedBy } = job.data;
-  log.info({ event: 'forecast.batch.start', tenantId, count: itemIds?.length ?? 'all' }, 'batch job started');
+  log.info(
+    { event: 'forecast.batch.start', tenantId, count: itemIds?.length ?? 'all' },
+    'batch job started',
+  );
 
   const ctx = await buildTenantContextForJob({ tenantId, userId: requestedBy });
   const tenantObjectId = new Types.ObjectId(tenantId);
@@ -241,8 +265,15 @@ async function handleBatch(
   emitBatchCompleted({ tenantId, batchJobId, total, succeeded, failed, durationMs });
 
   // Email the requester a summary so they have a record outside the dashboard.
-  await sendBatchSummaryEmail({ tenantId, requestedBy, total, succeeded, failed, durationMs }).catch(
-    (err: unknown) => log.warn({ err, event: 'forecast.batch.email_failed' }, 'batch summary email failed'),
+  await sendBatchSummaryEmail({
+    tenantId,
+    requestedBy,
+    total,
+    succeeded,
+    failed,
+    durationMs,
+  }).catch((err: unknown) =>
+    log.warn({ err, event: 'forecast.batch.email_failed' }, 'batch summary email failed'),
   );
 
   log.info(

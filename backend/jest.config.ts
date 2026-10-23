@@ -22,7 +22,7 @@ const config: Config = {
     '!src/worker.ts',
   ],
   coverageDirectory: 'coverage',
-  coverageReporters: ['text', 'lcov', 'html'],
+  coverageReporters: ['text', 'json-summary', 'lcov', 'html'],
   coverageThreshold: {
     global: {
       branches: 60,

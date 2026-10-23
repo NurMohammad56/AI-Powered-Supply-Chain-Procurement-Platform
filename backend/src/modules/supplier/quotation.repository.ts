@@ -15,14 +15,16 @@ export class QuotationRepository {
       .exec();
   }
 
-  async findByTokenGlobal(token: string): Promise<{ _id: Types.ObjectId; tenantId: Types.ObjectId } | null> {
+  async findByTokenGlobal(
+    token: string,
+  ): Promise<{ _id: Types.ObjectId; tenantId: Types.ObjectId } | null> {
     const raw = await QuotationRequest.collection.findOne(
       { 'supplierInvitations.responseToken': token },
       { projection: { _id: 1, tenantId: 1 } },
     );
     if (!raw) return null;
     return {
-      _id: raw._id as Types.ObjectId,
+      _id: raw._id,
       tenantId: raw.tenantId as Types.ObjectId,
     };
   }
@@ -55,7 +57,11 @@ export class QuotationRepository {
     response: NonNullable<QuotationRequestDoc['supplierInvitations'][number]['response']>;
   }): Promise<QuotationRequestDoc | null> {
     return QuotationRequest.findOneAndUpdate(
-      { _id: args.id, 'supplierInvitations.responseToken': args.token },
+      {
+        _id: args.id,
+        status: 'open',
+        supplierInvitations: { $elemMatch: { responseToken: args.token, response: null } },
+      },
       {
         $set: {
           'supplierInvitations.$.response': args.response,

@@ -1,6 +1,11 @@
 import type { Types } from 'mongoose';
 
 import { logger } from '../../config/logger.js';
+import { env } from '../../config/env.js';
+import { Subscription } from '../billing/models/subscription.model.js';
+import { AiInsight } from './models/aiInsight.model.js';
+import { ReportArtifact } from '../rpt/models/reportArtifact.model.js';
+import { tenantKey, uploadObject } from '../../shared/storage/r2.client.js';
 import { emailClient } from '../../shared/email/resend.client.js';
 import { recordAudit } from '../../shared/audit/index.js';
 import { Factory } from '../auth/models/factory.model.js';
@@ -65,7 +70,8 @@ export async function generateWeeklyReport(args: {
   };
 
   // Quota gate (use trial cap for pre-onboarded tenants).
-  const tier = (factory as unknown as { tier?: 'trial' | 'starter' | 'growth' | 'enterprise' }).tier ?? 'trial';
+  const subscription = await Subscription.findOne({ tenantId: args.tenantId }).lean().exec();
+  const tier = subscription?.tier ?? 'trial';
   const estimatedTokens = Math.max(2_000, Math.ceil(JSON.stringify(metrics).length / 4) + 1_500);
   const quota = await checkQuota({
     tenantId: args.tenantId,
@@ -84,6 +90,20 @@ export async function generateWeeklyReport(args: {
   const prompt = renderReportPrompt(inputs);
   const aiResult = await runTextPipeline(prompt);
   const markdown = aiResult.text.trim();
+  await AiInsight.create({
+    tenantId: args.tenantId,
+    kind: 'procurement_brief',
+    prompt,
+    response: markdown,
+    provenance: {
+      provider: aiResult.provider,
+      model: aiResult.model,
+      promptTokens: aiResult.promptTokens,
+      completionTokens: aiResult.completionTokens,
+      latencyMs: aiResult.latencyMs,
+      failoverInvoked: aiResult.failoverInvoked,
+    },
+  });
 
   const cost = estimateCostMicroUsd({
     provider: aiResult.provider,
@@ -100,6 +120,49 @@ export async function generateWeeklyReport(args: {
 
   const html = markdownToHtml(markdown, factory.name, inputs.weekStart, inputs.weekEnd);
   const pdfResult = await renderHtmlToPdf(html);
+  if (factory.ownerUserId) {
+    const artifact = await ReportArtifact.create({
+      tenantId: args.tenantId,
+      kind: 'weekly_digest',
+      format: 'pdf',
+      status: pdfResult.rendered ? 'rendering' : 'failed',
+      rangeFrom: args.weekStart,
+      rangeTo: args.weekEnd,
+      requestedBy: factory.ownerUserId,
+      errorMessage: pdfResult.rendered ? null : 'Chromium PDF renderer unavailable',
+    });
+    if (pdfResult.buffer) {
+      try {
+        const key = tenantKey(
+          args.tenantId.toString(),
+          'weekly-reports',
+          `${artifact._id.toString()}.pdf`,
+        );
+        const upload = await uploadObject({
+          key,
+          body: pdfResult.buffer,
+          contentType: 'application/pdf',
+        });
+        await ReportArtifact.updateOne(
+          { _id: artifact._id },
+          {
+            $set: {
+              status: upload.uploaded ? 'ready' : 'failed',
+              objectKey: upload.uploaded ? key : null,
+              byteSize: pdfResult.buffer.length,
+              generatedAt: new Date(),
+              errorMessage: upload.uploaded ? null : 'Object storage is not configured',
+            },
+          },
+        );
+      } catch (err) {
+        await ReportArtifact.updateOne(
+          { _id: artifact._id },
+          { $set: { status: 'failed', errorMessage: (err as Error).message.slice(0, 1000) } },
+        );
+      }
+    }
+  }
 
   const owner = await resolveOwnerEmail(args.tenantId, factory.ownerUserId);
   let emailSent = false;
@@ -114,7 +177,11 @@ export async function generateWeeklyReport(args: {
     emailSent = emailResult.delivered;
     if (!emailResult.delivered) {
       logger.warn(
-        { event: 'report.email_failed', err: emailResult.error, tenantId: args.tenantId.toString() },
+        {
+          event: 'report.email_failed',
+          err: emailResult.error,
+          tenantId: args.tenantId.toString(),
+        },
         'weekly report email failed',
       );
     }
@@ -164,7 +231,11 @@ async function aggregateWeeklyMetrics(args: {
     forecastsGenerated,
     onTimeDeliveryRate,
   ] = await Promise.all([
-    StockMovement.aggregate<{ totalMovements: number; totalConsumed: number; totalReceived: number }>([
+    StockMovement.aggregate<{
+      totalMovements: number;
+      totalConsumed: number;
+      totalReceived: number;
+    }>([
       {
         $match: {
           tenantId: args.tenantId,
@@ -359,11 +430,13 @@ async function resolveOwnerEmail(
  * conversion. Intentionally minimal - no external CSS, no JS, and
  * single-pass regex transforms for predictability.
  */
-function markdownToHtml(markdown: string, tenantName: string, weekStart: string, weekEnd: string): string {
-  const escaped = markdown
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
+function markdownToHtml(
+  markdown: string,
+  tenantName: string,
+  weekStart: string,
+  weekEnd: string,
+): string {
+  const escaped = markdown.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   const inlined = escaped
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
     .replace(/\*(.+?)\*/g, '<em>$1</em>')
@@ -448,7 +521,9 @@ interface ChromiumLike {
   args: string[];
 }
 
-async function renderHtmlToPdf(html: string): Promise<{ buffer: Buffer | null; rendered: boolean }> {
+async function renderHtmlToPdf(
+  html: string,
+): Promise<{ buffer: Buffer | null; rendered: boolean }> {
   let puppeteer: PuppeteerLike | null = null;
   let chromium: ChromiumLike | null = null;
   try {
@@ -457,18 +532,24 @@ async function renderHtmlToPdf(html: string): Promise<{ buffer: Buffer | null; r
     const chromiumMod: unknown = await import('@sparticuz/chromium');
     chromium = (chromiumMod as { default: ChromiumLike }).default;
   } catch (err) {
-    logger.warn({ err, event: 'report.pdf.deps_missing' }, 'puppeteer-core or chromium not available');
+    logger.warn(
+      { err, event: 'report.pdf.deps_missing' },
+      'puppeteer-core or chromium not available',
+    );
     return { buffer: null, rendered: false };
   }
   let browser: Awaited<ReturnType<PuppeteerLike['launch']>> | null = null;
   try {
-    const executablePath = await chromium.executablePath();
+    const executablePath = env.CHROMIUM_EXECUTABLE_PATH || (await chromium.executablePath());
     if (!executablePath) {
-      logger.info({ event: 'report.pdf.no_chromium' }, 'Chromium binary unavailable; skipping PDF render');
+      logger.info(
+        { event: 'report.pdf.no_chromium' },
+        'Chromium binary unavailable; skipping PDF render',
+      );
       return { buffer: null, rendered: false };
     }
     browser = await puppeteer.launch({
-      args: chromium.args ?? [],
+      args: env.CHROMIUM_EXECUTABLE_PATH ? [] : (chromium.args ?? []),
       executablePath,
       headless: true,
     });
@@ -481,7 +562,10 @@ async function renderHtmlToPdf(html: string): Promise<{ buffer: Buffer | null; r
     });
     return { buffer: Buffer.from(pdf), rendered: true };
   } catch (err) {
-    logger.warn({ err, event: 'report.pdf.render_failed' }, 'PDF render failed; falling back to Markdown email');
+    logger.warn(
+      { err, event: 'report.pdf.render_failed' },
+      'PDF render failed; falling back to Markdown email',
+    );
     return { buffer: null, rendered: false };
   } finally {
     if (browser) {

@@ -42,12 +42,16 @@ export interface SslCommerzValidationResult {
 }
 
 function gatewayBaseUrl(): string {
-  return env.SSLCOMMERZ_IS_LIVE ? 'https://securepay.sslcommerz.com' : 'https://sandbox.sslcommerz.com';
+  return env.SSLCOMMERZ_IS_LIVE
+    ? 'https://securepay.sslcommerz.com'
+    : 'https://sandbox.sslcommerz.com';
 }
 
 function ensureCredentials(): void {
   if (!env.SSLCOMMERZ_STORE_ID || !env.SSLCOMMERZ_STORE_PASSWORD) {
-    throw new Error('SSLCommerz credentials are missing: set SSLCOMMERZ_STORE_ID and SSLCOMMERZ_STORE_PASSWORD');
+    throw new Error(
+      'SSLCommerz credentials are missing: set SSLCOMMERZ_STORE_ID and SSLCOMMERZ_STORE_PASSWORD',
+    );
   }
 }
 
@@ -87,6 +91,7 @@ export async function initiateSslCommerzTransaction(
 ): Promise<SslCommerzInitiateResult> {
   ensureCredentials();
   const res = await fetch(`${gatewayBaseUrl()}/gwprocess/v4/api.php`, {
+    signal: AbortSignal.timeout(20000),
     method: 'POST',
     headers: { 'content-type': 'application/x-www-form-urlencoded' },
     body: encodeForm({
@@ -158,10 +163,10 @@ export async function validateSslCommerzTransaction(input: {
   const endpoint = input.valId
     ? '/validator/api/validationserverAPI.php'
     : '/validator/api/merchantTransIDvalidationAPI.php';
-  const res = await fetch(
-    `${gatewayBaseUrl()}${endpoint}?${params.toString()}`,
-    { method: 'GET' },
-  );
+  const res = await fetch(`${gatewayBaseUrl()}${endpoint}?${params.toString()}`, {
+    method: 'GET',
+    signal: AbortSignal.timeout(20000),
+  });
   const rawResponse = await readJsonResponse(res);
   // `merchantTransIDvalidationAPI.php` (the tran_id-only lookup, used when we
   // don't have a val_id) wraps the actual transaction fields in an `element`

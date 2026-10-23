@@ -27,15 +27,14 @@ export class AuthRepository {
     return Factory.findOne({ slug }).lean<FactoryDoc>().exec();
   }
 
-  async createFactory(input: Omit<FactoryDoc, '_id' | 'createdAt' | 'updatedAt'>): Promise<FactoryDoc> {
+  async createFactory(
+    input: Omit<FactoryDoc, '_id' | 'createdAt' | 'updatedAt'>,
+  ): Promise<FactoryDoc> {
     const doc = await Factory.create(input);
     return doc.toObject();
   }
 
-  async updateFactory(
-    id: Types.ObjectId,
-    patch: Partial<FactoryDoc>,
-  ): Promise<FactoryDoc | null> {
+  async updateFactory(id: Types.ObjectId, patch: Partial<FactoryDoc>): Promise<FactoryDoc | null> {
     return Factory.findByIdAndUpdate(id, patch, { new: true }).lean<FactoryDoc>().exec();
   }
 
@@ -45,9 +44,11 @@ export class AuthRepository {
     return User.findById(id).lean<UserDoc>().exec();
   }
 
-  async createUser(input: Omit<UserDoc, '_id' | 'createdAt' | 'updatedAt' | 'tenantId'> & {
-    tenantId?: Types.ObjectId;
-  }): Promise<UserDoc> {
+  async createUser(
+    input: Omit<UserDoc, '_id' | 'createdAt' | 'updatedAt' | 'tenantId'> & {
+      tenantId?: Types.ObjectId;
+    },
+  ): Promise<UserDoc> {
     const doc = await User.create(input);
     return doc.toObject();
   }
@@ -57,17 +58,17 @@ export class AuthRepository {
   }
 
   async incrementFailedLogins(id: Types.ObjectId, lockUntil: Date | null): Promise<void> {
-    await User.updateOne({ _id: id }, {
-      $inc: { failedLoginCount: 1 },
-      $set: lockUntil ? { lockedUntil: lockUntil } : {},
-    }).exec();
+    await User.updateOne(
+      { _id: id },
+      {
+        $inc: { failedLoginCount: 1 },
+        $set: lockUntil ? { lockedUntil: lockUntil } : {},
+      },
+    ).exec();
   }
 
   async resetFailedLogins(id: Types.ObjectId): Promise<void> {
-    await User.updateOne(
-      { _id: id },
-      { $set: { failedLoginCount: 0, lockedUntil: null } },
-    ).exec();
+    await User.updateOne({ _id: id }, { $set: { failedLoginCount: 0, lockedUntil: null } }).exec();
   }
 
   async listUsers(query: {
@@ -104,7 +105,9 @@ export class AuthRepository {
 
   // ----- Sessions (tenant-scoped) -----
 
-  async createSession(input: Omit<SessionDoc, '_id' | 'createdAt' | 'updatedAt'>): Promise<SessionDoc> {
+  async createSession(
+    input: Omit<SessionDoc, '_id' | 'createdAt' | 'updatedAt'>,
+  ): Promise<SessionDoc> {
     const doc = await Session.create(input);
     return doc.toObject();
   }
@@ -127,7 +130,10 @@ export class AuthRepository {
     ).exec();
   }
 
-  async revokeFamily(family: string, reason: 'reuse_detected' | 'admin' | 'logout'): Promise<number> {
+  async revokeFamily(
+    family: string,
+    reason: 'reuse_detected' | 'admin' | 'logout',
+  ): Promise<number> {
     const result = await Session.updateMany(
       { family, revokedAt: null },
       { $set: { revokedAt: new Date(), revokeReason: reason } },

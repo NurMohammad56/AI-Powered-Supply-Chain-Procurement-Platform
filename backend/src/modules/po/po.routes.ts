@@ -26,12 +26,7 @@ import { poController } from './po.controller.js';
 
 export const poRouter = Router();
 
-poRouter.get(
-  '/',
-  rbacFor('po.read'),
-  validate(ListPosQuerySchema, 'query'),
-  poController.list,
-);
+poRouter.get('/', rbacFor('po.read'), validate(ListPosQuerySchema, 'query'), poController.list);
 poRouter.post(
   '/',
   rbacFor('po.create'),
@@ -39,12 +34,7 @@ poRouter.post(
   validate(CreatePoRequestSchema),
   poController.create,
 );
-poRouter.get(
-  '/:id',
-  rbacFor('po.read'),
-  validate(PoIdParamSchema, 'params'),
-  poController.get,
-);
+poRouter.get('/:id', rbacFor('po.read'), validate(PoIdParamSchema, 'params'), poController.get);
 poRouter.patch(
   '/:id',
   rbacFor('po.update'),

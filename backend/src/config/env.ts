@@ -24,6 +24,7 @@ const envSchema = z.object({
 
   REDIS_URL: z.string().min(1, 'REDIS_URL is required'),
   REDIS_TLS: z.preprocess(truthy, z.boolean()).default(false),
+  QUEUE_PREFIX: z.string().min(1).default('bull'),
 
   JWT_ACCESS_SECRET: z.string().min(32, 'JWT_ACCESS_SECRET must be >= 32 chars'),
   JWT_REFRESH_SECRET: z.string().min(32, 'JWT_REFRESH_SECRET must be >= 32 chars'),
@@ -74,12 +75,30 @@ const envSchema = z.object({
   EMAIL_REPLY_TO: z.string().email().default('support@factory.bd'),
 
   GROQ_API_KEY: z.string().default(''),
-  GROQ_MODEL: z.string().default('llama-3.3-70b-versatile'),
+  GROQ_MODEL: z.string().default('openai/gpt-oss-120b'),
   GEMINI_API_KEY: z.string().default(''),
-  GEMINI_MODEL: z.string().default('gemini-1.5-flash'),
+  GEMINI_MODEL: z.string().default('gemini-3.5-flash-lite'),
   AI_PER_CALL_TIMEOUT_MS: numericString(30_000),
   AI_FAILURE_THRESHOLD: numericString(3),
   AI_COOLDOWN_MS: numericString(60_000),
+  LOW_STOCK_MONITOR_ENABLED: z.preprocess(truthy, z.boolean()).default(true),
+  LOW_STOCK_MONITOR_INTERVAL_MS: numericString(60_000).refine((n) => n >= 10_000),
+  LOW_STOCK_AI_ENABLED: z.preprocess(truthy, z.boolean()).default(true),
+  LOW_STOCK_AI_INTERVAL_HOURS: numericString(24).refine((n) => n >= 6),
+  // Empty = every active/trial factory. Useful for a dedicated presentation worker.
+  LOW_STOCK_MONITOR_TENANT_IDS: z
+    .string()
+    .default('')
+    .refine(
+      (value) =>
+        value
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean)
+          .every((id) => /^[a-f\d]{24}$/i.test(id)),
+      'Expected comma-separated tenant ObjectIds',
+    ),
+  CHROMIUM_EXECUTABLE_PATH: z.string().default(''),
 
   R2_ACCOUNT_ID: z.string().default(''),
   R2_ACCESS_KEY_ID: z.string().default(''),

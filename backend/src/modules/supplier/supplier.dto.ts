@@ -76,7 +76,12 @@ export const CompareSuppliersQuerySchema = z.object({
   ids: z
     .string()
     .min(1)
-    .transform((s) => s.split(',').map((v) => v.trim()).filter((v) => v.length > 0))
+    .transform((s) =>
+      s
+        .split(',')
+        .map((v) => v.trim())
+        .filter((v) => v.length > 0),
+    )
     .pipe(z.array(objectIdStringSchema).min(2).max(5)),
 });
 export type CompareSuppliersQuery = z.infer<typeof CompareSuppliersQuerySchema>;

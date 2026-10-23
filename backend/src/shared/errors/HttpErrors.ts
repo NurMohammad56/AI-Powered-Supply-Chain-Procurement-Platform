@@ -8,7 +8,11 @@ export class BadRequestError extends AppError {
 }
 
 export class UnauthorizedError extends AppError {
-  constructor(code: string = ErrorCodes.AUTH_TOKEN_INVALID, message = 'Unauthorized', details?: unknown) {
+  constructor(
+    code: string = ErrorCodes.AUTH_TOKEN_INVALID,
+    message = 'Unauthorized',
+    details?: unknown,
+  ) {
     super(401, code, message, details);
   }
 }
@@ -30,7 +34,11 @@ export class ForbiddenError extends AppError {
 }
 
 export class NotFoundError extends AppError {
-  constructor(code: string = ErrorCodes.NOT_FOUND, message = 'Resource not found', details?: unknown) {
+  constructor(
+    code: string = ErrorCodes.NOT_FOUND,
+    message = 'Resource not found',
+    details?: unknown,
+  ) {
     super(404, code, message, details);
   }
 }

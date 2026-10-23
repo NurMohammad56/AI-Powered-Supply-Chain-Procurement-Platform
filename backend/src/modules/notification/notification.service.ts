@@ -4,7 +4,11 @@ import type { TenantContext } from '../../shared/auth/types.js';
 import type { Page } from '../../shared/utils/pagination.js';
 import { notificationRepository } from './notification.repository.js';
 import type { NotificationDoc } from './models/notification.model.js';
-import type { ListNotificationsQuery, MarkReadRequest, NotificationView } from './notification.dto.js';
+import type {
+  ListNotificationsQuery,
+  MarkReadRequest,
+  NotificationView,
+} from './notification.dto.js';
 
 function toView(n: NotificationDoc): NotificationView {
   return {

@@ -4,12 +4,7 @@ import { tenancyPlugin } from '../../../shared/db/tenancyPlugin.js';
 import { auditPlugin } from '../../../shared/db/auditPlugin.js';
 
 export type StockMovementType =
-  | 'in'
-  | 'out'
-  | 'transfer_in'
-  | 'transfer_out'
-  | 'adjustment'
-  | 'opening';
+  'in' | 'out' | 'transfer_in' | 'transfer_out' | 'adjustment' | 'opening';
 
 export const STOCK_MOVEMENT_TYPES: readonly StockMovementType[] = [
   'in',
@@ -21,12 +16,7 @@ export const STOCK_MOVEMENT_TYPES: readonly StockMovementType[] = [
 ] as const;
 
 export type StockMovementReferenceKind =
-  | 'po_receipt'
-  | 'po_receipt_partial'
-  | 'transfer'
-  | 'adjustment'
-  | 'opening'
-  | 'manual';
+  'po_receipt' | 'po_receipt_partial' | 'transfer' | 'adjustment' | 'opening' | 'manual';
 
 export interface StockMovementReference {
   kind: StockMovementReferenceKind;

@@ -82,10 +82,7 @@ export const UpdateMyProfileRequestSchema = z.object({
     .object({
       lowStock: z.object({ email: z.boolean(), inApp: z.boolean() }).partial().optional(),
       poStatus: z.object({ email: z.boolean(), inApp: z.boolean() }).partial().optional(),
-      deliveryReminder: z
-        .object({ email: z.boolean(), inApp: z.boolean() })
-        .partial()
-        .optional(),
+      deliveryReminder: z.object({ email: z.boolean(), inApp: z.boolean() }).partial().optional(),
       weeklyDigest: z.object({ email: z.boolean(), inApp: z.boolean() }).partial().optional(),
     })
     .optional(),

@@ -1,0 +1,2925 @@
+{
+  "generatedAt": "2026-10-18T06:45:58.184Z",
+  "baseUrl": "http://localhost:4001/api/v1",
+  "tenantId": "6ad469df663965b6a909baf0",
+  "passed": 288,
+  "failed": 0,
+  "results": [
+    {
+      "name": "Readiness: real Mongo + Redis",
+      "pass": true
+    },
+    {
+      "name": "GET /inventory/items",
+      "status": 401,
+      "expected": [
+        401
+      ],
+      "pass": true,
+      "durationMs": 6
+    },
+    {
+      "name": "POST /auth/login",
+      "status": 401,
+      "expected": [
+        401
+      ],
+      "pass": true,
+      "durationMs": 70
+    },
+    {
+      "name": "POST /auth/register",
+      "status": 201,
+      "expected": [
+        201
+      ],
+      "pass": true,
+      "durationMs": 433
+    },
+    {
+      "name": "POST /auth/login",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true,
+      "durationMs": 436
+    },
+    {
+      "name": "POST /auth/login",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true,
+      "durationMs": 390
+    },
+    {
+      "name": "Paid subscription tier carried by real login JWT",
+      "pass": true,
+      "detail": "growth"
+    },
+    {
+      "name": "POST /inventory/warehouses",
+      "status": 201,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 101
+    },
+    {
+      "name": "POST /inventory/warehouses",
+      "status": 201,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 93
+    },
+    {
+      "name": "POST /inventory/warehouses",
+      "status": 201,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 98
+    },
+    {
+      "name": "POST /inventory/categories",
+      "status": 201,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 96
+    },
+    {
+      "name": "POST /inventory/categories",
+      "status": 201,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 92
+    },
+    {
+      "name": "POST /inventory/categories",
+      "status": 201,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 88
+    },
+    {
+      "name": "POST /inventory/categories",
+      "status": 201,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 90
+    },
+    {
+      "name": "POST /inventory/categories",
+      "status": 201,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 89
+    },
+    {
+      "name": "POST /inventory/categories",
+      "status": 201,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 103
+    },
+    {
+      "name": "POST /suppliers",
+      "status": 201,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 55
+    },
+    {
+      "name": "POST /suppliers",
+      "status": 201,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 54
+    },
+    {
+      "name": "POST /suppliers",
+      "status": 201,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 63
+    },
+    {
+      "name": "POST /suppliers",
+      "status": 201,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 54
+    },
+    {
+      "name": "POST /suppliers",
+      "status": 201,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 48
+    },
+    {
+      "name": "POST /suppliers",
+      "status": 201,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 52
+    },
+    {
+      "name": "POST /suppliers",
+      "status": 201,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 51
+    },
+    {
+      "name": "POST /suppliers",
+      "status": 201,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 52
+    },
+    {
+      "name": "POST /inventory/items",
+      "status": 201,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 92
+    },
+    {
+      "name": "POST /inventory/items",
+      "status": 201,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 89
+    },
+    {
+      "name": "POST /inventory/items",
+      "status": 201,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 91
+    },
+    {
+      "name": "POST /inventory/items",
+      "status": 201,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 88
+    },
+    {
+      "name": "POST /inventory/items",
+      "status": 201,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 93
+    },
+    {
+      "name": "POST /inventory/items",
+      "status": 201,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 94
+    },
+    {
+      "name": "POST /inventory/items",
+      "status": 201,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 89
+    },
+    {
+      "name": "POST /inventory/items",
+      "status": 201,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 90
+    },
+    {
+      "name": "POST /inventory/items",
+      "status": 201,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 92
+    },
+    {
+      "name": "POST /inventory/items",
+      "status": 201,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 89
+    },
+    {
+      "name": "POST /inventory/items",
+      "status": 201,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 94
+    },
+    {
+      "name": "POST /inventory/items",
+      "status": 201,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 89
+    },
+    {
+      "name": "POST /inventory/items",
+      "status": 201,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 90
+    },
+    {
+      "name": "POST /inventory/items",
+      "status": 201,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 91
+    },
+    {
+      "name": "POST /inventory/items",
+      "status": 201,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 96
+    },
+    {
+      "name": "POST /inventory/items",
+      "status": 201,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 88
+    },
+    {
+      "name": "POST /inventory/items",
+      "status": 201,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 89
+    },
+    {
+      "name": "POST /inventory/items",
+      "status": 201,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 90
+    },
+    {
+      "name": "POST /inventory/items",
+      "status": 201,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 89
+    },
+    {
+      "name": "POST /inventory/items",
+      "status": 201,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 91
+    },
+    {
+      "name": "POST /inventory/items",
+      "status": 201,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 93
+    },
+    {
+      "name": "POST /inventory/items",
+      "status": 201,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 89
+    },
+    {
+      "name": "POST /inventory/items",
+      "status": 201,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 93
+    },
+    {
+      "name": "POST /inventory/items",
+      "status": 201,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 93
+    },
+    {
+      "name": "GET /auth/me",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 49
+    },
+    {
+      "name": "GET /auth/users",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 50
+    },
+    {
+      "name": "PATCH /auth/me",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 88
+    },
+    {
+      "name": "POST /auth/login",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true,
+      "durationMs": 381
+    },
+    {
+      "name": "POST /inventory/items",
+      "status": 403,
+      "expected": [
+        403
+      ],
+      "pass": true,
+      "durationMs": 5
+    },
+    {
+      "name": "GET /inventory/items/not-an-id",
+      "status": 400,
+      "expected": [
+        400
+      ],
+      "pass": true,
+      "durationMs": 3
+    },
+    {
+      "name": "POST /inventory/items",
+      "status": 409,
+      "expected": [
+        409
+      ],
+      "pass": true,
+      "durationMs": 46
+    },
+    {
+      "name": "POST /inventory/items/6ad469e2663965b6a909bb41/adjust",
+      "status": 400,
+      "expected": [
+        400
+      ],
+      "pass": true,
+      "durationMs": 4
+    },
+    {
+      "name": "POST /inventory/items/6ad469e2663965b6a909bb41/adjust",
+      "status": 400,
+      "expected": [
+        400,
+        409
+      ],
+      "pass": true,
+      "durationMs": 181
+    },
+    {
+      "name": "POST /inventory/items/6ad469e2663965b6a909bb41/adjust",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 215
+    },
+    {
+      "name": "POST /inventory/items/6ad469e2663965b6a909bb41/transfer",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 382
+    },
+    {
+      "name": "POST /inventory/items/6ad469e2663965b6a909bb41/adjust",
+      "status": 200,
+      "expected": [
+        200,
+        201
+      ],
+      "pass": true,
+      "durationMs": 230
+    },
+    {
+      "name": "POST /inventory/items/6ad469e2663965b6a909bb41/adjust",
+      "status": 200,
+      "expected": [
+        200,
+        201
+      ],
+      "pass": true,
+      "durationMs": 5
+    },
+    {
+      "name": "Idempotency replay returns same movement",
+      "pass": true
+    },
+    {
+      "name": "POST /auth/register",
+      "status": 201,
+      "expected": [
+        201
+      ],
+      "pass": true,
+      "durationMs": 401
+    },
+    {
+      "name": "POST /auth/login",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true,
+      "durationMs": 393
+    },
+    {
+      "name": "GET /inventory/items/6ad469e2663965b6a909bb41",
+      "status": 404,
+      "expected": [
+        404
+      ],
+      "pass": true,
+      "durationMs": 47
+    },
+    {
+      "name": "POST /quotations",
+      "status": 201,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 101
+    },
+    {
+      "name": "POST /public/quotations/responses/4ab41747e1498f1739d8d822b7aca8d6f9f335d51a9875572a80b740a2644d50",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true,
+      "durationMs": 145
+    },
+    {
+      "name": "POST /public/quotations/responses/8786f28e88f8c70088cbdc0c42c74e2ffeb3597c6b449fae3e75afeda9781587",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true,
+      "durationMs": 131
+    },
+    {
+      "name": "POST /public/quotations/responses/8bcdfd647e46231cff37f23ff5c999648fd0e5320387c3e74c6e9be5c6a8d75d",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true,
+      "durationMs": 152
+    },
+    {
+      "name": "GET /quotations/6ad469ea663965b6a909bbeb/compare",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 1386
+    },
+    {
+      "name": "RFQ 1: live AI comparison",
+      "pass": true
+    },
+    {
+      "name": "POST /quotations/6ad469ea663965b6a909bbeb/accept",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 414
+    },
+    {
+      "name": "POST /quotations",
+      "status": 201,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 95
+    },
+    {
+      "name": "POST /public/quotations/responses/409b8b48b88264f256961438a7eb32cdac311d2b0613348d2a8307e55747a05e",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true,
+      "durationMs": 145
+    },
+    {
+      "name": "POST /public/quotations/responses/c748e963b54d9b4176cc5d358eb27f8e7cb2b7c80947f567baaf1f77bf8b9ee6",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true,
+      "durationMs": 143
+    },
+    {
+      "name": "POST /public/quotations/responses/965c636a7cbfb2727dcb499a7da9b8c50086cd3001d9a28efa0114b1ddc61e96",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true,
+      "durationMs": 134
+    },
+    {
+      "name": "GET /quotations/6ad469ec663965b6a909bc12/compare",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 981
+    },
+    {
+      "name": "RFQ 2: live AI comparison",
+      "pass": true
+    },
+    {
+      "name": "POST /quotations/6ad469ec663965b6a909bc12/accept",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 388
+    },
+    {
+      "name": "POST /quotations",
+      "status": 201,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 102
+    },
+    {
+      "name": "POST /public/quotations/responses/da17c9113f357363dc9954314b7f0ab5c1358725ef0808baf6d3d35165105bf1",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true,
+      "durationMs": 129
+    },
+    {
+      "name": "POST /public/quotations/responses/bf0d7cc97ce7758482089d6d5e6913feec5aea6cbd1ec51b1d0ee891ebe78199",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true,
+      "durationMs": 140
+    },
+    {
+      "name": "POST /public/quotations/responses/f55226285c4fce22d141c484d68ba6e364713ff986079ecaac6a83d20ccd3757",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true,
+      "durationMs": 136
+    },
+    {
+      "name": "GET /quotations/6ad469ee663965b6a909bc39/compare",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 1032
+    },
+    {
+      "name": "RFQ 3: live AI comparison",
+      "pass": true
+    },
+    {
+      "name": "POST /quotations/6ad469ee663965b6a909bc39/accept",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 407
+    },
+    {
+      "name": "POST /quotations",
+      "status": 201,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 99
+    },
+    {
+      "name": "POST /public/quotations/responses/b6fe9bc33591855ef77bb9226f175dd9a7b12dd61bf0f4ccf2497b975931ac8c",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true,
+      "durationMs": 130
+    },
+    {
+      "name": "POST /public/quotations/responses/5e79fb294bb70ec8c27c4775084963031f5a5ffa89849d137548b5efc91279c1",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true,
+      "durationMs": 141
+    },
+    {
+      "name": "POST /public/quotations/responses/dfa66e85f5a9d18d438071fe8571ada2e1c700dfa7db5a2b274a8f626b63fdb9",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true,
+      "durationMs": 130
+    },
+    {
+      "name": "GET /quotations/6ad469f0663965b6a909bc60/compare",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 1055
+    },
+    {
+      "name": "RFQ 4: live AI comparison",
+      "pass": true
+    },
+    {
+      "name": "POST /quotations/6ad469f0663965b6a909bc60/accept",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 393
+    },
+    {
+      "name": "POST /quotations",
+      "status": 201,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 102
+    },
+    {
+      "name": "POST /public/quotations/responses/2f90564c461eb8e74242d54107758ffb5b5d3c7a5aebe9715590856f138bcf41",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true,
+      "durationMs": 141
+    },
+    {
+      "name": "POST /public/quotations/responses/05cdca9b4b795189a2d774b935ccbc51207b6995fac8b5b519d2c7ee6015994c",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true,
+      "durationMs": 136
+    },
+    {
+      "name": "POST /public/quotations/responses/e150863bd88e6021ea367e80c1f4b31efdd6cfb82fe0265eab7c662f7c8dbedc",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true,
+      "durationMs": 138
+    },
+    {
+      "name": "GET /quotations/6ad469f2663965b6a909bc87/compare",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 596
+    },
+    {
+      "name": "RFQ 5: live AI comparison",
+      "pass": true
+    },
+    {
+      "name": "POST /quotations",
+      "status": 201,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 91
+    },
+    {
+      "name": "POST /public/quotations/responses/b314802c8aebd5f0759c26bb7f546ff875f8bb780602c24b48d91086e9e78974",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true,
+      "durationMs": 131
+    },
+    {
+      "name": "POST /public/quotations/responses/09dfdee474f89b011d1ba0cb194788ed6082b56dc1496561969a3cfef7bdc0cb",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true,
+      "durationMs": 137
+    },
+    {
+      "name": "POST /public/quotations/responses/97f72e9f8e9f9f80b896aa2b24c89f011f9b016066a675026b530666c86f4ddc",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true,
+      "durationMs": 131
+    },
+    {
+      "name": "GET /quotations/6ad469f3663965b6a909bc9f/compare",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 1026
+    },
+    {
+      "name": "RFQ 6: live AI comparison",
+      "pass": true
+    },
+    {
+      "name": "POST /purchase-orders",
+      "status": 201,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 188
+    },
+    {
+      "name": "POST /purchase-orders/6ad469f5663965b6a909bcb9/receipts",
+      "status": 409,
+      "expected": [
+        409
+      ],
+      "pass": true,
+      "durationMs": 91
+    },
+    {
+      "name": "PO state draft",
+      "pass": true,
+      "detail": "draft"
+    },
+    {
+      "name": "POST /purchase-orders",
+      "status": 201,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 174
+    },
+    {
+      "name": "POST /purchase-orders/6ad469f5663965b6a909bcc2/receipts",
+      "status": 409,
+      "expected": [
+        409
+      ],
+      "pass": true,
+      "durationMs": 91
+    },
+    {
+      "name": "POST /purchase-orders/6ad469f5663965b6a909bcc2/submit",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 97
+    },
+    {
+      "name": "PO state pending_approval",
+      "pass": true,
+      "detail": "pending_approval"
+    },
+    {
+      "name": "POST /purchase-orders",
+      "status": 201,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 184
+    },
+    {
+      "name": "POST /purchase-orders/6ad469f5663965b6a909bcd3/receipts",
+      "status": 409,
+      "expected": [
+        409
+      ],
+      "pass": true,
+      "durationMs": 88
+    },
+    {
+      "name": "POST /purchase-orders/6ad469f5663965b6a909bcd3/submit",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 95
+    },
+    {
+      "name": "POST /purchase-orders/6ad469f5663965b6a909bcd3/approve",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 103
+    },
+    {
+      "name": "PO state approved",
+      "pass": true,
+      "detail": "approved"
+    },
+    {
+      "name": "POST /purchase-orders",
+      "status": 201,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 223
+    },
+    {
+      "name": "POST /purchase-orders/6ad469f6663965b6a909bce9/receipts",
+      "status": 409,
+      "expected": [
+        409
+      ],
+      "pass": true,
+      "durationMs": 104
+    },
+    {
+      "name": "POST /purchase-orders/6ad469f6663965b6a909bce9/submit",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 105
+    },
+    {
+      "name": "POST /purchase-orders/6ad469f6663965b6a909bce9/approve",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 100
+    },
+    {
+      "name": "POST /purchase-orders/6ad469f6663965b6a909bce9/dispatch",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 594
+    },
+    {
+      "name": "PO state sent",
+      "pass": true,
+      "detail": "sent"
+    },
+    {
+      "name": "POST /purchase-orders",
+      "status": 201,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 182
+    },
+    {
+      "name": "POST /purchase-orders/6ad469f7663965b6a909bd10/receipts",
+      "status": 409,
+      "expected": [
+        409
+      ],
+      "pass": true,
+      "durationMs": 111
+    },
+    {
+      "name": "POST /purchase-orders/6ad469f7663965b6a909bd10/submit",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 95
+    },
+    {
+      "name": "POST /purchase-orders/6ad469f7663965b6a909bd10/approve",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 94
+    },
+    {
+      "name": "POST /purchase-orders/6ad469f7663965b6a909bd10/dispatch",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 587
+    },
+    {
+      "name": "POST /purchase-orders/6ad469f7663965b6a909bd10/receipts",
+      "status": 400,
+      "expected": [
+        400
+      ],
+      "pass": true,
+      "durationMs": 139
+    },
+    {
+      "name": "POST /purchase-orders/6ad469f7663965b6a909bd10/receipts",
+      "status": 201,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 469
+    },
+    {
+      "name": "PO state partially_received",
+      "pass": true,
+      "detail": "partially_received"
+    },
+    {
+      "name": "POST /purchase-orders",
+      "status": 201,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 187
+    },
+    {
+      "name": "POST /purchase-orders/6ad469f9663965b6a909bd45/receipts",
+      "status": 409,
+      "expected": [
+        409
+      ],
+      "pass": true,
+      "durationMs": 92
+    },
+    {
+      "name": "POST /purchase-orders/6ad469f9663965b6a909bd45/submit",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 96
+    },
+    {
+      "name": "POST /purchase-orders/6ad469f9663965b6a909bd45/approve",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 94
+    },
+    {
+      "name": "POST /purchase-orders/6ad469f9663965b6a909bd45/dispatch",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 600
+    },
+    {
+      "name": "POST /purchase-orders/6ad469f9663965b6a909bd45/receipts",
+      "status": 400,
+      "expected": [
+        400
+      ],
+      "pass": true,
+      "durationMs": 134
+    },
+    {
+      "name": "POST /purchase-orders/6ad469f9663965b6a909bd45/receipts",
+      "status": 201,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 453
+    },
+    {
+      "name": "POST /purchase-orders/6ad469f9663965b6a909bd45/receipts",
+      "status": 201,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 458
+    },
+    {
+      "name": "PO state fully_received",
+      "pass": true,
+      "detail": "fully_received"
+    },
+    {
+      "name": "POST /purchase-orders",
+      "status": 201,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 184
+    },
+    {
+      "name": "POST /purchase-orders/6ad469fb663965b6a909bd8c/receipts",
+      "status": 409,
+      "expected": [
+        409
+      ],
+      "pass": true,
+      "durationMs": 90
+    },
+    {
+      "name": "POST /purchase-orders/6ad469fb663965b6a909bd8c/submit",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 113
+    },
+    {
+      "name": "POST /purchase-orders/6ad469fb663965b6a909bd8c/approve",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 100
+    },
+    {
+      "name": "POST /purchase-orders/6ad469fb663965b6a909bd8c/dispatch",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 621
+    },
+    {
+      "name": "POST /purchase-orders/6ad469fb663965b6a909bd8c/receipts",
+      "status": 400,
+      "expected": [
+        400
+      ],
+      "pass": true,
+      "durationMs": 149
+    },
+    {
+      "name": "POST /purchase-orders/6ad469fb663965b6a909bd8c/receipts",
+      "status": 201,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 449
+    },
+    {
+      "name": "POST /purchase-orders/6ad469fb663965b6a909bd8c/receipts",
+      "status": 201,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 450
+    },
+    {
+      "name": "POST /purchase-orders/6ad469fb663965b6a909bd8c/close",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 95
+    },
+    {
+      "name": "PO state closed",
+      "pass": true,
+      "detail": "closed"
+    },
+    {
+      "name": "POST /purchase-orders",
+      "status": 201,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 171
+    },
+    {
+      "name": "POST /purchase-orders/6ad469fd663965b6a909bddb/receipts",
+      "status": 409,
+      "expected": [
+        409
+      ],
+      "pass": true,
+      "durationMs": 91
+    },
+    {
+      "name": "POST /purchase-orders/6ad469fd663965b6a909bddb/cancel",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 96
+    },
+    {
+      "name": "PO state cancelled",
+      "pass": true,
+      "detail": "cancelled"
+    },
+    {
+      "name": "POST /purchase-orders",
+      "status": 201,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 177
+    },
+    {
+      "name": "POST /purchase-orders/6ad469fd663965b6a909bde8/receipts",
+      "status": 409,
+      "expected": [
+        409
+      ],
+      "pass": true,
+      "durationMs": 91
+    },
+    {
+      "name": "POST /purchase-orders/6ad469fd663965b6a909bde8/submit",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 95
+    },
+    {
+      "name": "POST /purchase-orders/6ad469fd663965b6a909bde8/reject",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 96
+    },
+    {
+      "name": "PO state rejected",
+      "pass": true,
+      "detail": "rejected"
+    },
+    {
+      "name": "POST /ai/forecasts",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 2658
+    },
+    {
+      "name": "Live AI forecast BD-RMG-001/30",
+      "pass": true,
+      "detail": {
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "promptVersion": "forecast-v1.0.1",
+        "failoverInvoked": false,
+        "latencyMs": 2277,
+        "cacheHit": false,
+        "promptTokens": 3357,
+        "completionTokens": 565,
+        "fallback": false
+      }
+    },
+    {
+      "name": "POST /ai/forecasts",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 2795
+    },
+    {
+      "name": "Live AI forecast BD-RMG-001/60",
+      "pass": true,
+      "detail": {
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "promptVersion": "forecast-v1.0.1",
+        "failoverInvoked": true,
+        "latencyMs": 1991,
+        "cacheHit": false,
+        "promptTokens": 4123,
+        "completionTokens": 326,
+        "fallback": false
+      }
+    },
+    {
+      "name": "POST /ai/forecasts",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 2575
+    },
+    {
+      "name": "Live AI forecast BD-RMG-001/90",
+      "pass": true,
+      "detail": {
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "promptVersion": "forecast-v1.0.1",
+        "failoverInvoked": true,
+        "latencyMs": 1886,
+        "cacheHit": false,
+        "promptTokens": 4123,
+        "completionTokens": 340,
+        "fallback": false
+      }
+    },
+    {
+      "name": "POST /ai/forecasts",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 2656
+    },
+    {
+      "name": "Live AI forecast BD-RMG-002/30",
+      "pass": true,
+      "detail": {
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "promptVersion": "forecast-v1.0.1",
+        "failoverInvoked": true,
+        "latencyMs": 2057,
+        "cacheHit": false,
+        "promptTokens": 4105,
+        "completionTokens": 324,
+        "fallback": false
+      }
+    },
+    {
+      "name": "POST /ai/forecasts",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 2488
+    },
+    {
+      "name": "Live AI forecast BD-RMG-002/60",
+      "pass": true,
+      "detail": {
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "promptVersion": "forecast-v1.0.1",
+        "failoverInvoked": true,
+        "latencyMs": 2110,
+        "cacheHit": false,
+        "promptTokens": 4105,
+        "completionTokens": 360,
+        "fallback": false
+      }
+    },
+    {
+      "name": "POST /ai/forecasts",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 2571
+    },
+    {
+      "name": "Live AI forecast BD-RMG-002/90",
+      "pass": true,
+      "detail": {
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "promptVersion": "forecast-v1.0.1",
+        "failoverInvoked": true,
+        "latencyMs": 2202,
+        "cacheHit": false,
+        "promptTokens": 4105,
+        "completionTokens": 294,
+        "fallback": false
+      }
+    },
+    {
+      "name": "POST /ai/forecasts",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 2254
+    },
+    {
+      "name": "Live AI forecast BD-RMG-003/30",
+      "pass": true,
+      "detail": {
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "promptVersion": "forecast-v1.0.1",
+        "failoverInvoked": true,
+        "latencyMs": 1877,
+        "cacheHit": false,
+        "promptTokens": 4095,
+        "completionTokens": 310,
+        "fallback": false
+      }
+    },
+    {
+      "name": "POST /ai/forecasts",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 3050
+    },
+    {
+      "name": "Live AI forecast BD-RMG-003/60",
+      "pass": true,
+      "detail": {
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "promptVersion": "forecast-v1.0.1",
+        "failoverInvoked": true,
+        "latencyMs": 2681,
+        "cacheHit": false,
+        "promptTokens": 4095,
+        "completionTokens": 357,
+        "fallback": false
+      }
+    },
+    {
+      "name": "POST /ai/forecasts",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 2239
+    },
+    {
+      "name": "Live AI forecast BD-RMG-003/90",
+      "pass": true,
+      "detail": {
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "promptVersion": "forecast-v1.0.1",
+        "failoverInvoked": true,
+        "latencyMs": 1864,
+        "cacheHit": false,
+        "promptTokens": 4095,
+        "completionTokens": 294,
+        "fallback": false
+      }
+    },
+    {
+      "name": "POST /ai/forecasts",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 2195
+    },
+    {
+      "name": "Live AI forecast BD-RMG-004/30",
+      "pass": true,
+      "detail": {
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "promptVersion": "forecast-v1.0.1",
+        "failoverInvoked": true,
+        "latencyMs": 1825,
+        "cacheHit": false,
+        "promptTokens": 4104,
+        "completionTokens": 316,
+        "fallback": false
+      }
+    },
+    {
+      "name": "POST /ai/forecasts",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 2449
+    },
+    {
+      "name": "Live AI forecast BD-RMG-004/60",
+      "pass": true,
+      "detail": {
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "promptVersion": "forecast-v1.0.1",
+        "failoverInvoked": false,
+        "latencyMs": 2076,
+        "cacheHit": false,
+        "promptTokens": 3353,
+        "completionTokens": 720,
+        "fallback": false
+      }
+    },
+    {
+      "name": "POST /ai/forecasts",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 2433
+    },
+    {
+      "name": "Live AI forecast BD-RMG-004/90",
+      "pass": true,
+      "detail": {
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "promptVersion": "forecast-v1.0.1",
+        "failoverInvoked": false,
+        "latencyMs": 2064,
+        "cacheHit": false,
+        "promptTokens": 3353,
+        "completionTokens": 762,
+        "fallback": false
+      }
+    },
+    {
+      "name": "POST /ai/forecasts",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 2451
+    },
+    {
+      "name": "Live AI forecast BD-RMG-005/30",
+      "pass": true,
+      "detail": {
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "promptVersion": "forecast-v1.0.1",
+        "failoverInvoked": true,
+        "latencyMs": 1985,
+        "cacheHit": false,
+        "promptTokens": 4218,
+        "completionTokens": 365,
+        "fallback": false
+      }
+    },
+    {
+      "name": "POST /ai/forecasts",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 2349
+    },
+    {
+      "name": "Live AI forecast BD-RMG-005/60",
+      "pass": true,
+      "detail": {
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "promptVersion": "forecast-v1.0.1",
+        "failoverInvoked": true,
+        "latencyMs": 1868,
+        "cacheHit": false,
+        "promptTokens": 4218,
+        "completionTokens": 350,
+        "fallback": false
+      }
+    },
+    {
+      "name": "POST /ai/forecasts",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 2815
+    },
+    {
+      "name": "Live AI forecast BD-RMG-005/90",
+      "pass": true,
+      "detail": {
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "promptVersion": "forecast-v1.0.1",
+        "failoverInvoked": true,
+        "latencyMs": 2352,
+        "cacheHit": false,
+        "promptTokens": 4218,
+        "completionTokens": 336,
+        "fallback": false
+      }
+    },
+    {
+      "name": "POST /ai/forecasts",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 2242
+    },
+    {
+      "name": "Live AI forecast BD-RMG-006/30",
+      "pass": true,
+      "detail": {
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "promptVersion": "forecast-v1.0.1",
+        "failoverInvoked": true,
+        "latencyMs": 1871,
+        "cacheHit": false,
+        "promptTokens": 4137,
+        "completionTokens": 339,
+        "fallback": false
+      }
+    },
+    {
+      "name": "POST /ai/forecasts",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 2539
+    },
+    {
+      "name": "Live AI forecast BD-RMG-006/60",
+      "pass": true,
+      "detail": {
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "promptVersion": "forecast-v1.0.1",
+        "failoverInvoked": true,
+        "latencyMs": 2162,
+        "cacheHit": false,
+        "promptTokens": 4137,
+        "completionTokens": 336,
+        "fallback": false
+      }
+    },
+    {
+      "name": "POST /ai/forecasts",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 1932
+    },
+    {
+      "name": "Live AI forecast BD-RMG-006/90",
+      "pass": true,
+      "detail": {
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "promptVersion": "forecast-v1.0.1",
+        "failoverInvoked": true,
+        "latencyMs": 1560,
+        "cacheHit": false,
+        "promptTokens": 4137,
+        "completionTokens": 302,
+        "fallback": false
+      }
+    },
+    {
+      "name": "POST /ai/forecasts",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 2067
+    },
+    {
+      "name": "Live AI forecast BD-RMG-007/30",
+      "pass": true,
+      "detail": {
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "promptVersion": "forecast-v1.0.1",
+        "failoverInvoked": true,
+        "latencyMs": 1702,
+        "cacheHit": false,
+        "promptTokens": 4108,
+        "completionTokens": 311,
+        "fallback": false
+      }
+    },
+    {
+      "name": "POST /ai/forecasts",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 2076
+    },
+    {
+      "name": "Live AI forecast BD-RMG-007/60",
+      "pass": true,
+      "detail": {
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "promptVersion": "forecast-v1.0.1",
+        "failoverInvoked": true,
+        "latencyMs": 1709,
+        "cacheHit": false,
+        "promptTokens": 4108,
+        "completionTokens": 337,
+        "fallback": false
+      }
+    },
+    {
+      "name": "POST /ai/forecasts",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 2863
+    },
+    {
+      "name": "Live AI forecast BD-RMG-007/90",
+      "pass": true,
+      "detail": {
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "promptVersion": "forecast-v1.0.1",
+        "failoverInvoked": false,
+        "latencyMs": 2485,
+        "cacheHit": false,
+        "promptTokens": 3356,
+        "completionTokens": 769,
+        "fallback": false
+      }
+    },
+    {
+      "name": "POST /ai/forecasts",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 2147
+    },
+    {
+      "name": "Live AI forecast BD-RMG-008/30",
+      "pass": true,
+      "detail": {
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "promptVersion": "forecast-v1.0.1",
+        "failoverInvoked": false,
+        "latencyMs": 1806,
+        "cacheHit": false,
+        "promptTokens": 3345,
+        "completionTokens": 494,
+        "fallback": false
+      }
+    },
+    {
+      "name": "POST /ai/forecasts",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 2275
+    },
+    {
+      "name": "Live AI forecast BD-RMG-008/60",
+      "pass": true,
+      "detail": {
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "promptVersion": "forecast-v1.0.1",
+        "failoverInvoked": true,
+        "latencyMs": 1854,
+        "cacheHit": false,
+        "promptTokens": 3917,
+        "completionTokens": 274,
+        "fallback": false
+      }
+    },
+    {
+      "name": "POST /ai/forecasts",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 2149
+    },
+    {
+      "name": "Live AI forecast BD-RMG-008/90",
+      "pass": true,
+      "detail": {
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "promptVersion": "forecast-v1.0.1",
+        "failoverInvoked": true,
+        "latencyMs": 1724,
+        "cacheHit": false,
+        "promptTokens": 3917,
+        "completionTokens": 273,
+        "fallback": false
+      }
+    },
+    {
+      "name": "POST /ai/forecasts",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 2630
+    },
+    {
+      "name": "Live AI forecast BD-RMG-009/30",
+      "pass": true,
+      "detail": {
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "promptVersion": "forecast-v1.0.1",
+        "failoverInvoked": true,
+        "latencyMs": 2014,
+        "cacheHit": false,
+        "promptTokens": 4260,
+        "completionTokens": 339,
+        "fallback": false
+      }
+    },
+    {
+      "name": "POST /ai/forecasts",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 1947
+    },
+    {
+      "name": "Live AI forecast BD-RMG-009/60",
+      "pass": true,
+      "detail": {
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "promptVersion": "forecast-v1.0.1",
+        "failoverInvoked": true,
+        "latencyMs": 1581,
+        "cacheHit": false,
+        "promptTokens": 4260,
+        "completionTokens": 298,
+        "fallback": false
+      }
+    },
+    {
+      "name": "POST /ai/forecasts",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 2035
+    },
+    {
+      "name": "Live AI forecast BD-RMG-009/90",
+      "pass": true,
+      "detail": {
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "promptVersion": "forecast-v1.0.1",
+        "failoverInvoked": true,
+        "latencyMs": 1668,
+        "cacheHit": false,
+        "promptTokens": 4260,
+        "completionTokens": 348,
+        "fallback": false
+      }
+    },
+    {
+      "name": "POST /ai/forecasts",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 2342
+    },
+    {
+      "name": "Live AI forecast BD-RMG-010/30",
+      "pass": true,
+      "detail": {
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "promptVersion": "forecast-v1.0.1",
+        "failoverInvoked": true,
+        "latencyMs": 1964,
+        "cacheHit": false,
+        "promptTokens": 4264,
+        "completionTokens": 302,
+        "fallback": false
+      }
+    },
+    {
+      "name": "POST /ai/forecasts",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 2143
+    },
+    {
+      "name": "Live AI forecast BD-RMG-010/60",
+      "pass": true,
+      "detail": {
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "promptVersion": "forecast-v1.0.1",
+        "failoverInvoked": true,
+        "latencyMs": 1775,
+        "cacheHit": false,
+        "promptTokens": 4264,
+        "completionTokens": 290,
+        "fallback": false
+      }
+    },
+    {
+      "name": "POST /ai/forecasts",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 2443
+    },
+    {
+      "name": "Live AI forecast BD-RMG-010/90",
+      "pass": true,
+      "detail": {
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "promptVersion": "forecast-v1.0.1",
+        "failoverInvoked": true,
+        "latencyMs": 2078,
+        "cacheHit": false,
+        "promptTokens": 4264,
+        "completionTokens": 309,
+        "fallback": false
+      }
+    },
+    {
+      "name": "POST /ai/forecasts",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 2280
+    },
+    {
+      "name": "Live AI forecast BD-RMG-011/30",
+      "pass": true,
+      "detail": {
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "promptVersion": "forecast-v1.0.1",
+        "failoverInvoked": false,
+        "latencyMs": 1884,
+        "cacheHit": false,
+        "promptTokens": 3357,
+        "completionTokens": 618,
+        "fallback": false
+      }
+    },
+    {
+      "name": "POST /ai/forecasts",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 2706
+    },
+    {
+      "name": "Live AI forecast BD-RMG-011/60",
+      "pass": true,
+      "detail": {
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "promptVersion": "forecast-v1.0.1",
+        "failoverInvoked": false,
+        "latencyMs": 2328,
+        "cacheHit": false,
+        "promptTokens": 3357,
+        "completionTokens": 810,
+        "fallback": false
+      }
+    },
+    {
+      "name": "POST /ai/forecasts",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 2535
+    },
+    {
+      "name": "Live AI forecast BD-RMG-011/90",
+      "pass": true,
+      "detail": {
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "promptVersion": "forecast-v1.0.1",
+        "failoverInvoked": true,
+        "latencyMs": 1947,
+        "cacheHit": false,
+        "promptTokens": 4270,
+        "completionTokens": 307,
+        "fallback": false
+      }
+    },
+    {
+      "name": "POST /ai/forecasts",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 2833
+    },
+    {
+      "name": "Live AI forecast BD-RMG-012/30",
+      "pass": true,
+      "detail": {
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "promptVersion": "forecast-v1.0.1",
+        "failoverInvoked": true,
+        "latencyMs": 2234,
+        "cacheHit": false,
+        "promptTokens": 4263,
+        "completionTokens": 340,
+        "fallback": false
+      }
+    },
+    {
+      "name": "POST /ai/forecasts",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 2356
+    },
+    {
+      "name": "Live AI forecast BD-RMG-012/60",
+      "pass": true,
+      "detail": {
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "promptVersion": "forecast-v1.0.1",
+        "failoverInvoked": true,
+        "latencyMs": 1762,
+        "cacheHit": false,
+        "promptTokens": 4263,
+        "completionTokens": 324,
+        "fallback": false
+      }
+    },
+    {
+      "name": "POST /ai/forecasts",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 2535
+    },
+    {
+      "name": "Live AI forecast BD-RMG-012/90",
+      "pass": true,
+      "detail": {
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "promptVersion": "forecast-v1.0.1",
+        "failoverInvoked": true,
+        "latencyMs": 2163,
+        "cacheHit": false,
+        "promptTokens": 4263,
+        "completionTokens": 325,
+        "fallback": false
+      }
+    },
+    {
+      "name": "Live AI brief: production planning and stockout risk",
+      "pass": true
+    },
+    {
+      "name": "Live AI brief: supplier diversification and lead times",
+      "pass": true
+    },
+    {
+      "name": "Live AI brief: inventory carrying cost and dead stock",
+      "pass": true
+    },
+    {
+      "name": "Live AI brief: export packaging readiness",
+      "pass": true
+    },
+    {
+      "name": "Live AI brief: budget and cash flow",
+      "pass": true
+    },
+    {
+      "name": "Live AI brief: management presentation executive summary",
+      "pass": true
+    },
+    {
+      "name": "POST /reports/budget",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 58
+    },
+    {
+      "name": "GET /reports/inventory-turnover?from=2026-04-21T06%3A45%3A54.838Z&to=2026-10-19T06%3A45%3A54.838Z",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 499
+    },
+    {
+      "name": "GET /reports/spend-by-supplier?from=2026-04-21T06%3A45%3A54.838Z&to=2026-10-19T06%3A45%3A54.838Z",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 51
+    },
+    {
+      "name": "GET /reports/supplier-cost-comparison?from=2026-04-21T06%3A45%3A54.838Z&to=2026-10-19T06%3A45%3A54.838Z",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 51
+    },
+    {
+      "name": "GET /reports/dead-stock?from=2026-04-21T06%3A45%3A54.838Z&to=2026-10-19T06%3A45%3A54.838Z",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 84
+    },
+    {
+      "name": "GET /reports/abc-analysis?from=2026-04-21T06%3A45%3A54.838Z&to=2026-10-19T06%3A45%3A54.838Z",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 390
+    },
+    {
+      "name": "GET /reports/cash-flow-projection",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 52
+    },
+    {
+      "name": "GET /reports/budget",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 98
+    },
+    {
+      "name": "GET /reports/eoq?itemId=6ad469e2663965b6a909bb41&orderingCost=1500&holdingCostRate=0.2",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 230
+    },
+    {
+      "name": "GET /billing/plans",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 3
+    },
+    {
+      "name": "GET /billing/subscription",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 48
+    },
+    {
+      "name": "GET /billing/invoices",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 49
+    },
+    {
+      "name": "GET /ai/usage",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 47
+    },
+    {
+      "name": "GET /ai/insights",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 49
+    },
+    {
+      "name": "GET /ai/forecasts?limit=100",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 142
+    },
+    {
+      "name": "GET /suppliers",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 50
+    },
+    {
+      "name": "GET /quotations",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 48
+    },
+    {
+      "name": "GET /purchase-orders",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 50
+    },
+    {
+      "name": "GET /inventory/low-stock",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 50
+    },
+    {
+      "name": "GET /inventory/items/6ad469e2663965b6a909bb41/history",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 96
+    },
+    {
+      "name": "GET /inventory/items/6ad469e2663965b6a909bb41/balances",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 91
+    },
+    {
+      "name": "GET /ai/forecasts/6ad46a00663965b6a909be03",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 47
+    },
+    {
+      "name": "GET /ai/forecasts/6ad46a00663965b6a909be03/evaluation",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 47
+    },
+    {
+      "name": "GET /ai/forecasts/6ad46a00663965b6a909be03/visualization",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 50
+    },
+    {
+      "name": "POST /ai/forecasts/6ad46a00663965b6a909be03/override",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 94
+    },
+    {
+      "name": "POST /ai/forecasts",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 4
+    },
+    {
+      "name": "Every stock balance reconciles with append-only movement ledger",
+      "pass": true
+    },
+    {
+      "name": "GET /notifications",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 53
+    },
+    {
+      "name": "GET /notifications/unread-count",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 49
+    },
+    {
+      "name": "POST /notifications/mark-read",
+      "status": 200,
+      "expected": [
+        200,
+        201,
+        204
+      ],
+      "pass": true,
+      "durationMs": 66
+    },
+    {
+      "name": "Concurrent real inventory GET",
+      "pass": true
+    },
+    {
+      "name": "Concurrent real inventory GET",
+      "pass": true
+    },
+    {
+      "name": "Concurrent real inventory GET",
+      "pass": true
+    },
+    {
+      "name": "Concurrent real inventory GET",
+      "pass": true
+    },
+    {
+      "name": "Concurrent real inventory GET",
+      "pass": true
+    },
+    {
+      "name": "Concurrent real inventory GET",
+      "pass": true
+    },
+    {
+      "name": "Concurrent real inventory GET",
+      "pass": true
+    },
+    {
+      "name": "Concurrent real inventory GET",
+      "pass": true
+    },
+    {
+      "name": "Concurrent real inventory GET",
+      "pass": true
+    },
+    {
+      "name": "Concurrent real inventory GET",
+      "pass": true
+    },
+    {
+      "name": "Concurrent real inventory GET",
+      "pass": true
+    },
+    {
+      "name": "Concurrent real inventory GET",
+      "pass": true
+    },
+    {
+      "name": "Concurrent real inventory GET",
+      "pass": true
+    },
+    {
+      "name": "Concurrent real inventory GET",
+      "pass": true
+    },
+    {
+      "name": "Concurrent real inventory GET",
+      "pass": true
+    },
+    {
+      "name": "Concurrent real inventory GET",
+      "pass": true
+    },
+    {
+      "name": "Concurrent real inventory GET",
+      "pass": true
+    },
+    {
+      "name": "Concurrent real inventory GET",
+      "pass": true
+    },
+    {
+      "name": "Concurrent real inventory GET",
+      "pass": true
+    },
+    {
+      "name": "Concurrent real inventory GET",
+      "pass": true
+    },
+    {
+      "name": "POST /auth/refresh",
+      "status": 403,
+      "expected": [
+        403
+      ],
+      "pass": true,
+      "durationMs": 2
+    }
+  ]
+}
