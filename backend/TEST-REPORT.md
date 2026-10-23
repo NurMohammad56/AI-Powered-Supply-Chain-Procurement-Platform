@@ -1,5 +1,14 @@
 # Bangladesh garments backend verification
 
+## Low-stock automation update — 2026-10-23
+
+- Real dependency regression: **53/53 checks passed** using a newly registered synthetic QA factory on the configured Atlas, an isolated Redis queue prefix, actual localhost SMTP, real provider AI and HTTP PO/GRN operations. Evidence: [low-stock-test-results.json](artifacts/low-stock-test-results.json). These are additional checks; the historical results below describe the earlier verification run.
+- Verified strict threshold boundary, warehouse overrides/zero thresholds, immediate API visibility, preferences and disabled/viewer exclusions, duplicate prevention, recovery/re-alert, threshold edits, archive, concurrent consumption, transfer, atomic import rollback, quota and automatic minute limit, daily due-job dispatch, stale queued email/forecast suppression, tenant isolation and actual periodic BullMQ monitor execution.
+- Existing Jest suite: **105 passed, 3 opt-in integration cases skipped**; this new real regression runs separately through `npm run test:low-stock`. Typecheck/build/format checks pass; changed TypeScript files lint without warnings/errors.
+- Stock transactions persist pending alert state; the worker monitors every 60 seconds by default. Automatic forecasts retain the existing cache, six-hour cooldown and monthly quota; low items are rechecked daily. Low-stock emails go to active owner/manager/warehouse staff according to channel preferences. Recovery keeps notification history with `metadata.resolvedAt`.
+- Presentation setup restricts the monitor to the manifest's dedicated demo tenant. SMTP remains local capture; production external inbox delivery and exactly-once SMTP delivery across every crash window are outside this verification.
+- Manual instructions: [LOW-STOCK-AUTOMATION.bn.md](../postman/LOW-STOCK-AUTOMATION.bn.md).
+
 Generated: 2026-10-18T07:20:45.723Z. API: http://localhost:4001/api/v1. Atlas tenant: 6ad469df663965b6a909baf0.
 
 ## Verified results

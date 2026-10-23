@@ -19,6 +19,8 @@ export type QueueName = (typeof QueueNames)[keyof typeof QueueNames];
 
 // ---------- Email queue ----------
 export interface SendEmailJob {
+  lowStockBalanceId?: string;
+  lowStockEpisodeId?: string;
   emailDeliveryId?: string;
   tenantId?: string;
   to: string | string[];
@@ -72,15 +74,20 @@ export interface PoDeliveryOverdueCheckJob {
 }
 
 export type ScheduledJobName =
-  'scheduled.quotation.expiry_check' | 'scheduled.po.delivery_overdue_check';
+  | 'scheduled.quotation.expiry_check'
+  | 'scheduled.po.delivery_overdue_check'
+  | 'scheduled.inventory.low_stock_monitor';
 
 export type ScheduledJobMap = {
+  'scheduled.inventory.low_stock_monitor': { tenantId?: never };
   'scheduled.quotation.expiry_check': QuotationExpiryCheckJob;
   'scheduled.po.delivery_overdue_check': PoDeliveryOverdueCheckJob;
 };
 
 // ---------- Forecast queue ----------
 export interface ForecastSingleItemJob {
+  lowStockBalanceId?: string;
+  lowStockEpisodeId?: string;
   tenantId: string;
   itemId: string;
   /** When set, the worker emits a per-item progress update on the batch. */

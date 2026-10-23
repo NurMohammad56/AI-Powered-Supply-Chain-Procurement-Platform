@@ -24,6 +24,7 @@
     "test:coverage:unit": "jest --coverage",
     "test:coverage:real": "node --env-file=.env.presentation scripts/run-real-coverage.mjs",
     "test:integration": "tsx --env-file=.env.presentation scripts/real-regression.ts",
+    "test:low-stock": "node --env-file=.env.presentation scripts/run-low-stock-test.mjs",
     "migrate": "tsx --env-file=.env scripts/migrate.ts",
     "demo:db": "tsx scripts/local-demo-db.ts",
     "demo:setup": "node scripts/setup-presentation.mjs",

@@ -17,6 +17,12 @@ if (process.argv.includes('--local'))
   overrides.MONGO_URI = 'mongodb://127.0.0.1:27018/garments_demo?replicaSet=demo-rs';
 const chrome = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
 try {
+  const manifest = JSON.parse(await readFile('artifacts/garments-demo-manifest.json', 'utf8'));
+  overrides.LOW_STOCK_MONITOR_TENANT_IDS = manifest.tenantId;
+} catch {
+  // A fresh setup has no presentation tenant until seeding finishes.
+}
+try {
   await access(chrome);
   overrides.CHROMIUM_EXECUTABLE_PATH = chrome;
 } catch {}

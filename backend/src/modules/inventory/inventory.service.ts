@@ -312,6 +312,14 @@ export class InventoryService {
     id: Types.ObjectId,
     patch: UpdateItemRequest,
   ): Promise<ItemView> {
+    return mongoose.connection.transaction(() => this.updateItemInTransaction(ctx, id, patch));
+  }
+
+  private async updateItemInTransaction(
+    ctx: TenantContext,
+    id: Types.ObjectId,
+    patch: UpdateItemRequest,
+  ): Promise<ItemView> {
     const i = await inventoryRepository.findItemById(id);
     assertTenantOwns(i, ctx);
     if (patch.sku && patch.sku !== i.sku) {
@@ -338,6 +346,11 @@ export class InventoryService {
     if (patch.currency !== undefined) update.currency = patch.currency;
     const updated = await inventoryRepository.updateItem(id, update);
     if (!updated) throw new NotFoundError();
+    if (patch.reorderLevel !== undefined) {
+      for (const balance of await inventoryRepository.listBalancesForItem(id)) {
+        await inventoryRepository.reconcileLowStock(balance);
+      }
+    }
     void recordAudit({
       tenantId: ctx.tenantId,
       actorUserId: ctx.userId,
@@ -352,9 +365,16 @@ export class InventoryService {
   }
 
   async archiveItem(ctx: TenantContext, id: Types.ObjectId): Promise<void> {
+    return mongoose.connection.transaction(() => this.archiveItemInTransaction(ctx, id));
+  }
+
+  private async archiveItemInTransaction(ctx: TenantContext, id: Types.ObjectId): Promise<void> {
     const i = await inventoryRepository.findItemById(id);
     assertTenantOwns(i, ctx);
     await inventoryRepository.archiveItem(id);
+    for (const balance of await inventoryRepository.listBalancesForItem(id)) {
+      await inventoryRepository.reconcileLowStock(balance);
+    }
     void recordAudit({
       tenantId: ctx.tenantId,
       actorUserId: ctx.userId,

@@ -1,0 +1,220 @@
+{
+  "at": "2026-10-23T15:04:15.380Z",
+  "tenantId": "6adb7750e63091b6a1ad1d37",
+  "queuePrefix": "low-stock-qa-1792767821179",
+  "checks": [
+    {
+      "name": "Opening above threshold is not low stock",
+      "pass": true
+    },
+    {
+      "name": "Equality (100/100) is healthy",
+      "pass": true
+    },
+    {
+      "name": "Consumption creates durable low-stock episode immediately",
+      "pass": true
+    },
+    {
+      "name": "Low-stock API includes new item immediately",
+      "pass": true
+    },
+    {
+      "name": "Channel preferences respected: owner + warehouse in-app only",
+      "pass": true
+    },
+    {
+      "name": "Viewer receives no low-stock alert",
+      "pass": true
+    },
+    {
+      "name": "Real SMTP delivered owner + manager alerts",
+      "pass": true
+    },
+    {
+      "name": "Warehouse email preference disabled",
+      "pass": true
+    },
+    {
+      "name": "Low stock automatically queued forecast as owner",
+      "pass": true
+    },
+    {
+      "name": "Automatic forecast persisted by real worker/provider",
+      "pass": true
+    },
+    {
+      "name": "Automatic AI is actual provider output, not fallback",
+      "pass": true
+    },
+    {
+      "name": "Idempotent retry does not consume twice",
+      "pass": true
+    },
+    {
+      "name": "Same low episode has no duplicate notifications",
+      "pass": true
+    },
+    {
+      "name": "Same low episode has no duplicate emails",
+      "pass": true
+    },
+    {
+      "name": "Same episode identity retained after further consumption",
+      "pass": true
+    },
+    {
+      "name": "Recent forecast schedules next check without new item job",
+      "pass": true
+    },
+    {
+      "name": "Daily due low-stock check queues a fresh item job",
+      "pass": true
+    },
+    {
+      "name": "Rejected adjustment preserves balance and alert episode",
+      "pass": true
+    },
+    {
+      "name": "Partial GRN below threshold retains same episode",
+      "pass": true
+    },
+    {
+      "name": "Final GRN restores stock and immediately clears episode",
+      "pass": true
+    },
+    {
+      "name": "Original notifications persist with resolvedAt metadata",
+      "pass": true
+    },
+    {
+      "name": "Recovered item leaves low-stock API",
+      "pass": true
+    },
+    {
+      "name": "Falling again creates distinct episode",
+      "pass": true
+    },
+    {
+      "name": "Second episode delivers one fresh email per subscribed recipient",
+      "pass": true
+    },
+    {
+      "name": "Second episode creates fresh in-app notifications",
+      "pass": true
+    },
+    {
+      "name": "Lowering reorder threshold immediately resolves alert",
+      "pass": true
+    },
+    {
+      "name": "Raising threshold immediately detects low stock",
+      "pass": true
+    },
+    {
+      "name": "Warehouse override takes precedence over item threshold",
+      "pass": true
+    },
+    {
+      "name": "Zero warehouse threshold disables low stock",
+      "pass": true
+    },
+    {
+      "name": "Removing override restores item threshold",
+      "pass": true
+    },
+    {
+      "name": "Zero item threshold disables low stock",
+      "pass": true
+    },
+    {
+      "name": "Archiving item immediately resolves pending episode",
+      "pass": true
+    },
+    {
+      "name": "Archive marks episode notifications resolved",
+      "pass": true
+    },
+    {
+      "name": "Atomic import failure returns errors",
+      "pass": true
+    },
+    {
+      "name": "Rolled-back item/low-stock state never persisted",
+      "pass": true
+    },
+    {
+      "name": "Concurrent consumption commits correct balance and one active episode",
+      "pass": true
+    },
+    {
+      "name": "Concurrent crossing creates one notification per recipient",
+      "pass": true
+    },
+    {
+      "name": "Resolved pending email is skipped by real worker",
+      "pass": true
+    },
+    {
+      "name": "Resolved episode sends no obsolete low-stock email",
+      "pass": true
+    },
+    {
+      "name": "Transfer reconciles both warehouses and preserves total stock",
+      "pass": true
+    },
+    {
+      "name": "Another factory cannot see this factory low-stock balances",
+      "pass": true
+    },
+    {
+      "name": "Another factory receives no leaked low-stock notifications",
+      "pass": true
+    },
+    {
+      "name": "Exhausted quota still creates low-stock notifications",
+      "pass": true
+    },
+    {
+      "name": "Exhausted quota does not enqueue provider work",
+      "pass": true
+    },
+    {
+      "name": "Quota failure uses six-hour retry delay",
+      "pass": true
+    },
+    {
+      "name": "Active low-stock item remains isolated from another factory",
+      "pass": true
+    },
+    {
+      "name": "Recovered/archived forecast jobs drained safely",
+      "pass": true
+    },
+    {
+      "name": "Stale automatic jobs produced no extra forecast/provider result",
+      "pass": true
+    },
+    {
+      "name": "Automatic AI minute cap prevents queue flooding",
+      "pass": true
+    },
+    {
+      "name": "Minute limit retries after one minute, not a full day",
+      "pass": true
+    },
+    {
+      "name": "Disabled manager receives no email; active owner still receives alert",
+      "pass": true
+    },
+    {
+      "name": "BullMQ periodic monitor ran successfully",
+      "pass": true
+    },
+    {
+      "name": "Movement ledger matches recovered-then-consumed stock",
+      "pass": true
+    }
+  ],
+  "passed": true
+}

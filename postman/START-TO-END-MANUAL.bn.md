@@ -147,9 +147,9 @@ POST /inventory/items/{{testItemId}}/adjust
 
 - `GET /inventory/items/{{testItemId}}/balances` → নির্বাচিত warehouse-এ **20 kg**।
 - `GET /inventory/items/{{testItemId}}/history` → +200 opening ও -180 production consumption।
-- `GET /inventory/low-stock` → item খুঁজুন; paginated হলে পরের page দেখুন। 20 < reorder level 100।
+- `GET /inventory/low-stock` → এই নতুন item পাওয়া যাবে, কারণ 20 < reorder level 100। Stock transaction-এই low-stock marker set হয়। Threshold-এর সমান quantity healthy; threshold 0 হলে alert বন্ধ।
 
-**কী trigger হলো:** balance ও movement transactionalভাবে বদলেছে। এই adjustment নিজে RFQ/PO তৈরি করে না; AI call-ও করে না। Low-stock list-এ দেখা এবং notification email আসা আলাদা বিষয়; email-কে এই ধাপের success condition ধরবেন না।
+**কী trigger হলো:** balance, movement ও low-stock marker transactionalভাবে বদলেছে। Worker-এর monitor সাধারণত ৬০ সেকেন্ডের মধ্যে Owner/Manager/Warehouse staff-এর preference অনুযায়ী in-app alert/email queue করে এবং 30-day AI forecast queue করতে পারে। একই low-stock episode-এ বারবার email যায় না। Recent forecast, cache ও quota থাকলে নতুন provider call নাও হতে পারে। এটি নিজে RFQ/PO তৈরি করে না। বিস্তারিত: [Low-stock automation](LOW-STOCK-AUTOMATION.bn.md)।
 
 ## ৫. দুই supplier-কে RFQ পাঠান
 

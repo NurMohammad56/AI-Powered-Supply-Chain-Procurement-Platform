@@ -22,6 +22,10 @@ export interface StockBalanceDoc {
   reorderLevelOverride: number | null;
   lastMovementAt: Date | null;
   lowStockSince: Date | null;
+  /** Durable alert episode; reset only after stock recovers. */
+  lowStockEpisodeId?: Types.ObjectId | null;
+  lowStockNotifiedAt?: Date | null;
+  lowStockNextForecastAt?: Date | null;
   version: number;
   createdAt: Date;
   updatedAt: Date;
@@ -38,6 +42,9 @@ const stockBalanceSchema = new Schema<StockBalanceDoc>(
     reorderLevelOverride: { type: Number, default: null, min: 0 },
     lastMovementAt: { type: Date, default: null },
     lowStockSince: { type: Date, default: null },
+    lowStockEpisodeId: { type: Schema.Types.ObjectId, default: null },
+    lowStockNotifiedAt: { type: Date, default: null },
+    lowStockNextForecastAt: { type: Date, default: null },
     version: { type: Number, default: 0 },
   },
   { timestamps: true },

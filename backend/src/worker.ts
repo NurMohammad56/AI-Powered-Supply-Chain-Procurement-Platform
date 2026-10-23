@@ -1,7 +1,8 @@
 import { connectDatabase, disconnectDatabase } from './config/database.js';
 import { connectRedis, disconnectRedis } from './config/redis.js';
 import { logger } from './config/logger.js';
-import { closeQueues } from './shared/queue/queues.js';
+import { closeQueues, scheduledQueue } from './shared/queue/queues.js';
+import { env } from './config/env.js';
 import { startEmailWorker } from './workers/email.worker.js';
 import { startReportWorker } from './workers/report.worker.js';
 import { startForecastWorker } from './workers/forecast.worker.js';
@@ -26,6 +27,18 @@ async function bootstrap(): Promise<void> {
     startForecastWorker(),
     startScheduledWorker(),
   ];
+  // A stable scheduler ID prevents multiple worker processes registering duplicate timers.
+  if (env.LOW_STOCK_MONITOR_ENABLED) {
+    await scheduledQueue.upsertJobScheduler(
+      'inventory-low-stock-monitor',
+      {
+        every: env.LOW_STOCK_MONITOR_INTERVAL_MS,
+      },
+      { name: 'scheduled.inventory.low_stock_monitor', data: {} },
+    );
+  } else {
+    await scheduledQueue.removeJobScheduler('inventory-low-stock-monitor');
+  }
 
   logger.info(
     { event: 'worker.ready', queues: workers.map((w) => w.name) },

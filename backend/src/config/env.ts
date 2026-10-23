@@ -81,6 +81,23 @@ const envSchema = z.object({
   AI_PER_CALL_TIMEOUT_MS: numericString(30_000),
   AI_FAILURE_THRESHOLD: numericString(3),
   AI_COOLDOWN_MS: numericString(60_000),
+  LOW_STOCK_MONITOR_ENABLED: z.preprocess(truthy, z.boolean()).default(true),
+  LOW_STOCK_MONITOR_INTERVAL_MS: numericString(60_000).refine((n) => n >= 10_000),
+  LOW_STOCK_AI_ENABLED: z.preprocess(truthy, z.boolean()).default(true),
+  LOW_STOCK_AI_INTERVAL_HOURS: numericString(24).refine((n) => n >= 6),
+  // Empty = every active/trial factory. Useful for a dedicated presentation worker.
+  LOW_STOCK_MONITOR_TENANT_IDS: z
+    .string()
+    .default('')
+    .refine(
+      (value) =>
+        value
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean)
+          .every((id) => /^[a-f\d]{24}$/i.test(id)),
+      'Expected comma-separated tenant ObjectIds',
+    ),
   CHROMIUM_EXECUTABLE_PATH: z.string().default(''),
 
   R2_ACCOUNT_ID: z.string().default(''),

@@ -9,6 +9,7 @@ import { QueueNames, type ScheduledJobMap } from '../shared/queue/jobTypes.js';
 import { QuotationRequest } from '../modules/supplier/models/quotationRequest.model.js';
 import { PurchaseOrder } from '../modules/po/models/purchaseOrder.model.js';
 import { notifyDeliveryOverdue } from '../modules/po/po.notifications.js';
+import { runLowStockMonitor } from '../modules/inventory/lowStock.automation.js';
 
 /**
  * Scheduled worker for "fire later" cron-style jobs:
@@ -27,8 +28,13 @@ const OVERDUE_FOLLOWUP_DAYS = 7;
 export function startScheduledWorker(): Worker<ScheduledJobMap[keyof ScheduledJobMap]> {
   const worker = new Worker<ScheduledJobMap[keyof ScheduledJobMap]>(
     QueueNames.Scheduled,
-    async (job: Job<ScheduledJobMap[keyof ScheduledJobMap]>) =>
-      tenantStorage.run({ tenantId: new Types.ObjectId(job.data.tenantId) }, async () => {
+    async (job: Job<ScheduledJobMap[keyof ScheduledJobMap]>) => {
+      if (job.name === 'scheduled.inventory.low_stock_monitor') {
+        await runLowStockMonitor();
+        return { ok: true };
+      }
+      if (!job.data.tenantId) throw new Error('Tenant ID required for scheduled job');
+      return tenantStorage.run({ tenantId: new Types.ObjectId(job.data.tenantId) }, async () => {
         const log = logger.child({
           worker: QueueNames.Scheduled,
           jobId: job.id,
@@ -46,7 +52,8 @@ export function startScheduledWorker(): Worker<ScheduledJobMap[keyof ScheduledJo
           default:
             throw new Error(`Unknown scheduled job name: ${String(job.name)}`);
         }
-      }),
+      });
+    },
     {
       connection: redisQueue,
       prefix: env.QUEUE_PREFIX,

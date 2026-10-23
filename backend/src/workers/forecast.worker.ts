@@ -21,6 +21,7 @@ import { User } from '../modules/auth/models/user.model.js';
 import { Subscription } from '../modules/billing/models/subscription.model.js';
 import type { TenantContext, SubscriptionTier } from '../shared/auth/types.js';
 import type { ForecastHorizonDays } from '../modules/ai/models/forecast.model.js';
+import { StockBalance } from '../modules/inventory/models/stockBalance.model.js';
 
 /**
  * Forecast worker. Two job kinds:
@@ -97,6 +98,14 @@ async function handleSingleItem(
   forecastId: string;
 }> {
   const { tenantId, itemId, requestedBy, batchJobId, batchTotal, batchIndex } = job.data;
+  if (job.data.lowStockBalanceId && job.data.lowStockEpisodeId) {
+    const active = await StockBalance.exists({
+      _id: job.data.lowStockBalanceId,
+      lowStockEpisodeId: job.data.lowStockEpisodeId,
+      lowStockSince: { $type: 'date' },
+    });
+    if (!active) return { ok: true, forecastId: '' };
+  }
   log.info({ event: 'forecast.single.start', tenantId, itemId }, 'forecast job received');
 
   const ctx = await buildTenantContextForJob({ tenantId, userId: requestedBy });
