@@ -1,0 +1,465 @@
+{
+  "capturedAt": "2026-10-24T05:07:55.420Z",
+  "passed": true,
+  "requestCount": 57,
+  "examples": 57,
+  "tenantId": "6ad469df663965b6a909baf0",
+  "results": [
+    {
+      "folder": "01 - Login",
+      "request": "Login as demo owner",
+      "method": "POST",
+      "route": "/auth/login",
+      "status": 200,
+      "durationMs": 603
+    },
+    {
+      "folder": "02 - Presentation - saved data",
+      "request": "Owner profile",
+      "method": "GET",
+      "route": "/auth/me",
+      "status": 200,
+      "durationMs": 106
+    },
+    {
+      "folder": "02 - Presentation - saved data",
+      "request": "All demo roles",
+      "method": "GET",
+      "route": "/auth/users",
+      "status": 200,
+      "durationMs": 111
+    },
+    {
+      "folder": "02 - Presentation - saved data",
+      "request": "Gazipur, Savar, Chattogram stores",
+      "method": "GET",
+      "route": "/inventory/warehouses",
+      "status": 200,
+      "durationMs": 96
+    },
+    {
+      "folder": "02 - Presentation - saved data",
+      "request": "Garments categories",
+      "method": "GET",
+      "route": "/inventory/categories",
+      "status": 200,
+      "durationMs": 110
+    },
+    {
+      "folder": "02 - Presentation - saved data",
+      "request": "Garments catalogue",
+      "method": "GET",
+      "route": "/inventory/items?limit=100",
+      "status": 200,
+      "durationMs": 99
+    },
+    {
+      "folder": "02 - Presentation - saved data",
+      "request": "Low-stock warnings",
+      "method": "GET",
+      "route": "/inventory/low-stock",
+      "status": 200,
+      "durationMs": 91
+    },
+    {
+      "folder": "02 - Presentation - saved data",
+      "request": "Item stock across stores",
+      "method": "GET",
+      "route": "/inventory/items/{{itemId}}/balances",
+      "status": 200,
+      "durationMs": 133
+    },
+    {
+      "folder": "02 - Presentation - saved data",
+      "request": "Actual movement ledger",
+      "method": "GET",
+      "route": "/inventory/items/{{itemId}}/history?limit=100",
+      "status": 200,
+      "durationMs": 193
+    },
+    {
+      "folder": "02 - Presentation - saved data",
+      "request": "Bangladesh demo suppliers",
+      "method": "GET",
+      "route": "/suppliers?limit=100",
+      "status": 200,
+      "durationMs": 101
+    },
+    {
+      "folder": "02 - Presentation - saved data",
+      "request": "Supplier performance",
+      "method": "GET",
+      "route": "/suppliers/{{supplierId}}/performance",
+      "status": 200,
+      "durationMs": 86
+    },
+    {
+      "folder": "02 - Presentation - saved data",
+      "request": "Supplier comparison",
+      "method": "GET",
+      "route": "/suppliers/compare?ids={{supplierId}},{{secondSupplierId}}",
+      "status": 200,
+      "durationMs": 104
+    },
+    {
+      "folder": "02 - Presentation - saved data",
+      "request": "RFQ history",
+      "method": "GET",
+      "route": "/quotations",
+      "status": 200,
+      "durationMs": 99
+    },
+    {
+      "folder": "02 - Presentation - saved data",
+      "request": "RFQ with submitted offers",
+      "method": "GET",
+      "route": "/quotations/{{quotationId}}",
+      "status": 200,
+      "durationMs": 87
+    },
+    {
+      "folder": "02 - Presentation - saved data",
+      "request": "All PO states",
+      "method": "GET",
+      "route": "/purchase-orders?limit=100",
+      "status": 200,
+      "durationMs": 232
+    },
+    {
+      "folder": "02 - Presentation - saved data",
+      "request": "Saved live AI forecasts",
+      "method": "GET",
+      "route": "/ai/forecasts?limit=100",
+      "status": 200,
+      "durationMs": 191
+    },
+    {
+      "folder": "02 - Presentation - saved data",
+      "request": "Forecast detail",
+      "method": "GET",
+      "route": "/ai/forecasts/{{forecastId}}",
+      "status": 200,
+      "durationMs": 96
+    },
+    {
+      "folder": "02 - Presentation - saved data",
+      "request": "Forecast evaluation",
+      "method": "GET",
+      "route": "/ai/forecasts/{{forecastId}}/evaluation",
+      "status": 200,
+      "durationMs": 87
+    },
+    {
+      "folder": "02 - Presentation - saved data",
+      "request": "Forecast chart data",
+      "method": "GET",
+      "route": "/ai/forecasts/{{forecastId}}/visualization",
+      "status": 200,
+      "durationMs": 88
+    },
+    {
+      "folder": "02 - Presentation - saved data",
+      "request": "Persisted AI comparisons and briefs",
+      "method": "GET",
+      "route": "/ai/insights",
+      "status": 200,
+      "durationMs": 90
+    },
+    {
+      "folder": "02 - Presentation - saved data",
+      "request": "AI quota and usage",
+      "method": "GET",
+      "route": "/ai/usage",
+      "status": 200,
+      "durationMs": 89
+    },
+    {
+      "folder": "02 - Presentation - saved data",
+      "request": "Inventory turnover",
+      "method": "GET",
+      "route": "/reports/inventory-turnover?from={{from}}&to={{to}}",
+      "status": 200,
+      "durationMs": 520
+    },
+    {
+      "folder": "02 - Presentation - saved data",
+      "request": "Supplier spend",
+      "method": "GET",
+      "route": "/reports/spend-by-supplier?from={{from}}&to={{to}}",
+      "status": 200,
+      "durationMs": 94
+    },
+    {
+      "folder": "02 - Presentation - saved data",
+      "request": "Cost comparison",
+      "method": "GET",
+      "route": "/reports/supplier-cost-comparison?from={{from}}&to={{to}}",
+      "status": 200,
+      "durationMs": 90
+    },
+    {
+      "folder": "02 - Presentation - saved data",
+      "request": "Dead stock",
+      "method": "GET",
+      "route": "/reports/dead-stock?from={{from}}&to={{to}}",
+      "status": 200,
+      "durationMs": 121
+    },
+    {
+      "folder": "02 - Presentation - saved data",
+      "request": "ABC classification",
+      "method": "GET",
+      "route": "/reports/abc-analysis?from={{from}}&to={{to}}",
+      "status": 200,
+      "durationMs": 327
+    },
+    {
+      "folder": "02 - Presentation - saved data",
+      "request": "EOQ recommendation",
+      "method": "GET",
+      "route": "/reports/eoq?itemId={{itemId}}&orderingCost=1500&holdingCostRate=0.2",
+      "status": 200,
+      "durationMs": 267
+    },
+    {
+      "folder": "02 - Presentation - saved data",
+      "request": "Cash flow",
+      "method": "GET",
+      "route": "/reports/cash-flow-projection",
+      "status": 200,
+      "durationMs": 94
+    },
+    {
+      "folder": "02 - Presentation - saved data",
+      "request": "Procurement budget",
+      "method": "GET",
+      "route": "/reports/budget",
+      "status": 200,
+      "durationMs": 138
+    },
+    {
+      "folder": "02 - Presentation - saved data",
+      "request": "Generated report PDFs",
+      "method": "GET",
+      "route": "/reports/artifacts",
+      "status": 200,
+      "durationMs": 91
+    },
+    {
+      "folder": "02 - Presentation - saved data",
+      "request": "Notification feed",
+      "method": "GET",
+      "route": "/notifications",
+      "status": 200,
+      "durationMs": 92
+    },
+    {
+      "folder": "02 - Presentation - saved data",
+      "request": "Unread count",
+      "method": "GET",
+      "route": "/notifications/unread-count",
+      "status": 200,
+      "durationMs": 87
+    },
+    {
+      "folder": "02 - Presentation - saved data",
+      "request": "Plans",
+      "method": "GET",
+      "route": "/billing/plans",
+      "status": 200,
+      "durationMs": 3
+    },
+    {
+      "folder": "02 - Presentation - saved data",
+      "request": "Presentation subscription (Enterprise demo)",
+      "method": "GET",
+      "route": "/billing/subscription",
+      "status": 200,
+      "durationMs": 86
+    },
+    {
+      "folder": "02 - Presentation - saved data",
+      "request": "Synthetic invoice examples",
+      "method": "GET",
+      "route": "/billing/invoices",
+      "status": 200,
+      "durationMs": 96
+    },
+    {
+      "folder": "03 - Complete new PO workflow",
+      "request": "Create draft PO (100 kg cotton)",
+      "method": "POST",
+      "route": "/purchase-orders",
+      "status": 201,
+      "durationMs": 229
+    },
+    {
+      "folder": "03 - Complete new PO workflow",
+      "request": "Submit for approval",
+      "method": "POST",
+      "route": "/purchase-orders/{{poId}}/submit",
+      "status": 200,
+      "durationMs": 161
+    },
+    {
+      "folder": "03 - Complete new PO workflow",
+      "request": "Approve as owner",
+      "method": "POST",
+      "route": "/purchase-orders/{{poId}}/approve",
+      "status": 200,
+      "durationMs": 148
+    },
+    {
+      "folder": "03 - Complete new PO workflow",
+      "request": "Send PDF to supplier (local SMTP capture)",
+      "method": "POST",
+      "route": "/purchase-orders/{{poId}}/send",
+      "status": 200,
+      "durationMs": 598
+    },
+    {
+      "folder": "03 - Complete new PO workflow",
+      "request": "Receive first 40 kg",
+      "method": "POST",
+      "route": "/purchase-orders/{{poId}}/receipts",
+      "status": 201,
+      "durationMs": 590
+    },
+    {
+      "folder": "03 - Complete new PO workflow",
+      "request": "Receive remaining 60 kg",
+      "method": "POST",
+      "route": "/purchase-orders/{{poId}}/receipts",
+      "status": 201,
+      "durationMs": 612
+    },
+    {
+      "folder": "03 - Complete new PO workflow",
+      "request": "List GRNs",
+      "method": "GET",
+      "route": "/purchase-orders/{{poId}}/receipts",
+      "status": 200,
+      "durationMs": 156
+    },
+    {
+      "folder": "03 - Complete new PO workflow",
+      "request": "Close fulfilled PO",
+      "method": "POST",
+      "route": "/purchase-orders/{{poId}}/close",
+      "status": 200,
+      "durationMs": 168
+    },
+    {
+      "folder": "03 - Complete new PO workflow",
+      "request": "Get PDF signed download URL",
+      "method": "GET",
+      "route": "/purchase-orders/{{poId}}/pdf",
+      "status": 200,
+      "durationMs": 706
+    },
+    {
+      "folder": "03 - Complete new PO workflow",
+      "request": "Verify resulting stock",
+      "method": "GET",
+      "route": "/inventory/items/{{itemId}}/balances",
+      "status": 200,
+      "durationMs": 152
+    },
+    {
+      "folder": "04 - New RFQ workflow - manual email token",
+      "request": "Create RFQ and send invitation",
+      "method": "POST",
+      "route": "/quotations",
+      "status": 201,
+      "durationMs": 162
+    },
+    {
+      "folder": "04 - New RFQ workflow - manual email token",
+      "request": "Submit offer - set quoteToken from captured email first",
+      "method": "POST",
+      "route": "/public/quotations/responses/{{quoteToken}}",
+      "status": 200,
+      "durationMs": 218
+    },
+    {
+      "folder": "04 - New RFQ workflow - manual email token",
+      "request": "Compare offers with live AI and persist response",
+      "method": "GET",
+      "route": "/quotations/{{quotationId}}/compare?includeAi=true",
+      "status": 200,
+      "durationMs": 1002
+    },
+    {
+      "folder": "04 - New RFQ workflow - manual email token",
+      "request": "Accept supplier and create draft PO",
+      "method": "POST",
+      "route": "/quotations/{{quotationId}}/accept",
+      "status": 200,
+      "durationMs": 459
+    },
+    {
+      "folder": "05 - Live AI workflow",
+      "request": "Generate live forecast or use valid cached result",
+      "method": "POST",
+      "route": "/ai/forecasts",
+      "status": 200,
+      "durationMs": 102
+    },
+    {
+      "folder": "05 - Live AI workflow",
+      "request": "Generate batch for two items",
+      "method": "POST",
+      "route": "/ai/forecasts/batch",
+      "status": 200,
+      "durationMs": 197
+    },
+    {
+      "folder": "05 - Live AI workflow",
+      "request": "Apply reviewed forecast override",
+      "method": "POST",
+      "route": "/ai/forecasts/{{forecastId}}/override",
+      "status": 200,
+      "durationMs": 196
+    },
+    {
+      "folder": "05 - Live AI workflow",
+      "request": "Create PO from forecast",
+      "method": "POST",
+      "route": "/purchase-orders/from-forecast",
+      "status": 201,
+      "durationMs": 488
+    },
+    {
+      "folder": "06 - AI report and budget workflow",
+      "request": "Set procurement budget",
+      "method": "POST",
+      "route": "/reports/budget",
+      "status": 200,
+      "durationMs": 119
+    },
+    {
+      "folder": "06 - AI report and budget workflow",
+      "request": "Queue weekly AI report + PDF",
+      "method": "POST",
+      "route": "/reports/weekly-digest",
+      "status": 202,
+      "durationMs": 55
+    },
+    {
+      "folder": "06 - AI report and budget workflow",
+      "request": "Poll report artifacts until ready",
+      "method": "GET",
+      "route": "/reports/artifacts",
+      "status": 200,
+      "durationMs": 102
+    },
+    {
+      "folder": "06 - AI report and budget workflow",
+      "request": "Get report signed URL - set reportArtifactId",
+      "method": "GET",
+      "route": "/reports/artifacts/{{reportArtifactId}}/download",
+      "status": 200,
+      "durationMs": 104
+    }
+  ]
+}

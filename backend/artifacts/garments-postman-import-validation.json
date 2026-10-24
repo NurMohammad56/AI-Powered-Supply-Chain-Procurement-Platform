@@ -1,0 +1,16 @@
+{
+  "at": "2026-10-24T05:19:13.678Z",
+  "passed": true,
+  "requests": 57,
+  "examples": 57,
+  "allBodiesPreserved": true,
+  "officialPostmanSchema": true,
+  "responseFields": "name, originalRequest, status, code, header, body",
+  "desktopImport": {
+    "version": "12.32.3",
+    "result": "1 imported",
+    "observedVia": "actual desktop file import",
+    "collectionId": "6d121a49-5cb3-4a2b-a930-a4388fd1bdfa"
+  },
+  "fileSha256": "2305dbf4a3c8b48f755f30f334c3c58f04e3105389fa0101ebe266599b583b4a"
+}
