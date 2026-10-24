@@ -8,7 +8,9 @@ import {
   CancelSubscriptionRequestSchema,
   ChangeSubscriptionRequestSchema,
   CreateCheckoutSessionRequestSchema,
+  CreatePortalSessionRequestSchema,
   ListInvoicesQuerySchema,
+  RestartTrialRequestSchema,
 } from './billing.dto.js';
 import { billingController } from './billing.controller.js';
 
@@ -16,6 +18,19 @@ import { billingController } from './billing.controller.js';
  * Authenticated billing routes - mounted under `/api/billing`.
  */
 export const billingRouter = Router();
+billingRouter.post(
+  '/trial/restart',
+  rbacFor('billing.subscription.change'),
+  idempotencyKey,
+  validate(RestartTrialRequestSchema),
+  billingController.restartTrial,
+);
+billingRouter.post(
+  '/portal-session',
+  rbacFor('billing.subscription.change'),
+  validate(CreatePortalSessionRequestSchema),
+  billingController.createPortalSession,
+);
 
 billingRouter.get('/plans', billingController.listPlans);
 billingRouter.get('/subscription', rbacFor('billing.read'), billingController.getSubscription);
@@ -48,9 +63,8 @@ billingRouter.get(
 );
 
 /**
- * Webhook router - mounted under `/api/webhooks` with NO JWT.
- * Each webhook uses raw-body parsing for signature verification by the
- * gateway adapter (lands in a later prompt).
+ * Webhook router - mounted under `/api/v1/webhooks` with NO JWT.
+ * Stripe authenticates the exact raw payload through its timestamped signature.
  *
  * Rate limit: 1000 req/min per IP (Prompt 06 §5). Legitimate gateway
  * traffic can spike during settlement windows; signature verification
@@ -64,9 +78,4 @@ webhookRouter.post(
   '/stripe',
   raw({ type: 'application/json', limit: '1mb' }),
   billingController.webhookStripe,
-);
-webhookRouter.post(
-  '/sslcommerz',
-  raw({ type: '*/*', limit: '1mb' }),
-  billingController.webhookSslCommerz,
 );

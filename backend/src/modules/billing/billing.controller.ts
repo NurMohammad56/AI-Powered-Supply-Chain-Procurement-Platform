@@ -15,6 +15,9 @@ function requireContext(req: Request): TenantContext {
 }
 
 export const billingController = {
+  restartTrial: asyncHandler(async (req, res) => {
+    return ok(req, res, await billingService.restartTrial(requireContext(req)));
+  }),
   listPlans: asyncHandler(async (req, res) => {
     const result = billingService.listPlans();
     return ok(req, res, result);
@@ -28,6 +31,9 @@ export const billingController = {
     const ctx = requireContext(req);
     const result = await billingService.createCheckoutSession(ctx, req.body);
     return ok(req, res, result);
+  }),
+  createPortalSession: asyncHandler(async (req, res) => {
+    return ok(req, res, await billingService.createPortalSession(requireContext(req), req.body));
   }),
   changeSubscription: asyncHandler(async (req, res) => {
     const ctx = requireContext(req);
@@ -53,16 +59,6 @@ export const billingController = {
     const raw = Buffer.isBuffer(req.body) ? req.body : Buffer.from(JSON.stringify(req.body));
     const result = await billingService.ingestWebhook({
       gateway: 'stripe',
-      rawBody: raw,
-      signature: sig,
-    });
-    return ok(req, res, result);
-  }),
-  webhookSslCommerz: asyncHandler(async (req, res) => {
-    const sig = (req.headers['x-sslcommerz-signature'] as string | undefined) ?? null;
-    const raw = Buffer.isBuffer(req.body) ? req.body : Buffer.from(JSON.stringify(req.body));
-    const result = await billingService.ingestWebhook({
-      gateway: 'sslcommerz',
       rawBody: raw,
       signature: sig,
     });

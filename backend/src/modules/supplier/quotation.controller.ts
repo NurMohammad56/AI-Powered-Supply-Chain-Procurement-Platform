@@ -59,7 +59,11 @@ export const quotationController = {
   }),
   compareQuotes: asyncHandler(async (req, res) => {
     const ctx = requireContext(req);
-    const result = await quotationService.compareQuotes(ctx, objId(req.params.id ?? ''));
+    const result = await quotationService.compareQuotes(
+      ctx,
+      objId(req.params.id ?? ''),
+      req.query.includeAi === 'true',
+    );
     return ok(req, res, result);
   }),
 };

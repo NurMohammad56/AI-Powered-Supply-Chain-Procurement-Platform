@@ -10,6 +10,7 @@ import { emailClient } from '../../shared/email/resend.client.js';
 import { recordAudit } from '../../shared/audit/index.js';
 import { Factory } from '../auth/models/factory.model.js';
 import { User } from '../auth/models/user.model.js';
+import { requireFeature } from '../billing/access.policy.js';
 import { StockMovement } from '../inventory/models/stockMovement.model.js';
 import { StockBalance } from '../inventory/models/stockBalance.model.js';
 import { PurchaseOrder } from '../po/models/purchaseOrder.model.js';
@@ -55,6 +56,28 @@ export async function generateWeeklyReport(args: {
   if (!factory) {
     throw new Error(`Tenant not found: ${args.tenantId.toString()}`);
   }
+  const actor = await User.findOne({
+    role: { $in: ['owner', 'manager'] },
+    status: 'active',
+    emailVerifiedAt: { $type: 'date' },
+  })
+    .sort({ role: -1 })
+    .lean()
+    .exec();
+  if (!actor) throw new Error('No verified report author available');
+  await requireFeature(
+    {
+      tenantId: args.tenantId,
+      userId: actor._id,
+      role: actor.role,
+      subscriptionTier: 'trial',
+      seats: 0,
+      features: new Set(),
+      requestId: 'report-worker',
+    },
+    'advanced_reports',
+    ['owner', 'manager'],
+  );
 
   const metrics = await aggregateWeeklyMetrics({
     tenantId: args.tenantId,

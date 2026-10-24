@@ -970,7 +970,7 @@
           ]
         },
         {
-          "name": "Compare Quotes (deterministic + AI)",
+          "name": "Compare quotes (numeric; add includeAi=true for eligible Owner/Manager)",
           "request": {
             "method": "GET",
             "url": "{{baseUrl}}/quotations/{{quotationId}}/compare"
@@ -1467,7 +1467,10 @@
           "name": "List Plans",
           "request": {
             "method": "GET",
-            "url": "{{baseUrl}}/billing/plans"
+            "url": "{{baseUrl}}/billing/plans",
+            "auth": {
+              "type": "noauth"
+            }
           }
         },
         {
@@ -1478,7 +1481,7 @@
           }
         },
         {
-          "name": "Create Checkout Session (Stripe disabled; use SSLCommerz sandbox)",
+          "name": "Create Stripe Checkout Session",
           "request": {
             "method": "POST",
             "header": [
@@ -1489,7 +1492,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"tier\": \"growth\",\n  \"gateway\": \"stripe\",\n  \"successUrl\": \"http://localhost:3000/billing/success\",\n  \"cancelUrl\": \"http://localhost:3000/billing/cancel\"\n}"
+              "raw": "{\n  \"tier\": \"starter\",\n  \"gateway\": \"stripe\",\n  \"successUrl\": \"{{frontendUrl}}/settings/billing?checkout=success\",\n  \"cancelUrl\": \"{{frontendUrl}}/settings/billing?checkout=cancel\"\n}"
             },
             "url": "{{baseUrl}}/billing/checkout-session"
           }
@@ -1565,30 +1568,69 @@
             "url": "{{baseUrl}}/webhooks/stripe",
             "description": "Webhook router is mounted at /api/webhooks (NOT /api/v1/webhooks). Adjust the URL when running."
           }
+        }
+      ]
+    },
+    {
+      "name": "Subscription access - new APIs",
+      "item": [
+        {
+          "name": "Current account access / features / seats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/auth/access"
+          }
         },
         {
-          "name": "SSLCommerz Webhook",
+          "name": "Resend own email verification",
           "request": {
-            "auth": {
-              "type": "noauth"
-            },
             "method": "POST",
             "header": [
               {
                 "key": "Content-Type",
-                "value": "application/x-www-form-urlencoded"
-              },
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/resend-verification",
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "Stripe self-service portal - verified Owner",
+          "request": {
+            "method": "POST",
+            "header": [
               {
-                "key": "X-SSLCommerz-Signature",
-                "value": "dev-stub"
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/billing/portal-session",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"returnUrl\": \"{{frontendUrl}}/settings/billing\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Restart free trial - Owner (optional, new 14 days)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
               }
             ],
             "body": {
               "mode": "raw",
-              "raw": "tran_id=DEV001&val_id=val_dev&amount=4900&card_type=VISA&store_amount=4800&status=VALID"
+              "raw": "{}"
             },
-            "url": "{{baseUrl}}/webhooks/sslcommerz",
-            "description": "Webhook router is mounted at /api/webhooks (NOT /api/v1/webhooks). Adjust the URL when running."
+            "url": "{{baseUrl}}/billing/trial/restart"
           }
         }
       ]

@@ -63,22 +63,24 @@ realSuite('Real Atlas, Redis, SMTP, R2, AI and payment sandbox regression', () =
     expect(result.failed).toBe(0);
     expect(result.passed).toBeGreaterThan(100);
   }, 600000);
-  it('validates actual sandbox payment, risk decisions and idempotent IPN replay', async () => {
+  it('validates actual Stripe Checkout for every paid plan and signed webhook replay', async () => {
     const code = await new Promise<number | null>((resolve, reject) => {
       const child = spawn(
         process.execPath,
-        ['--env-file=.env.presentation', 'scripts/sandbox-payment.mjs'],
+        ['--env-file=.env.presentation', 'scripts/run-stripe-test.mjs'],
         { env: { ...process.env }, stdio: 'pipe' },
       );
       child.once('error', reject);
       child.once('exit', resolve);
     });
     expect(code).toBe(0);
-    const result = JSON.parse(await readFile('artifacts/sandbox-payment-results.json', 'utf8')) as {
+    const result = JSON.parse(
+      await readFile('artifacts/stripe-subscription-test-results.json', 'utf8'),
+    ) as {
       passed: boolean;
     };
     expect(result.passed).toBe(true);
-  }, 120000);
+  }, 900000);
   it('enforces Redis token revocation without rejecting a newly issued token in the same second', async () => {
     const { randomUUID } = await import('node:crypto');
     const { redisCache } = await import('./config/redis.js');

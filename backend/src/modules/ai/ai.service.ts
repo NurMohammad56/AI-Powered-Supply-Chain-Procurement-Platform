@@ -1,4 +1,5 @@
 import { Types } from 'mongoose';
+import { requireFeature } from '../billing/access.policy.js';
 
 import {
   BadRequestError,
@@ -125,7 +126,8 @@ export class AiService {
    * batch worker. Idempotent under the 6-hour rate-limit window.
    */
   async runForecastForItem(args: RunForecastArgs): Promise<ForecastDoc> {
-    const { ctx, itemId, horizonDays } = args;
+    const { itemId, horizonDays } = args;
+    const ctx = await requireFeature(args.ctx, 'ai_forecast', ['owner', 'manager']);
 
     // 1. Rate limit (per-item / per-horizon) - cheap Redis SETNX.
     if (!args.skipRateLimit) {
@@ -343,6 +345,7 @@ export class AiService {
     estimatedCostUsd: number;
     estimatedTokens: number;
   }> {
+    args = { ...args, ctx: await requireFeature(args.ctx, 'ai_forecast', ['owner', 'manager']) };
     const items =
       args.itemIds && args.itemIds.length > 0
         ? await Item.find({
@@ -389,7 +392,8 @@ export class AiService {
     period: string;
     tier: string;
     used: { tokens: number; forecastCalls: number; reportCalls: number };
-    cap: { tokens: number; forecastCalls: number; reportCalls: number };
+    cap: { tokens: number | null; forecastCalls: number | null; reportCalls: number | null };
+    unlimited: boolean;
     estimatedCostUsd: number;
   }> {
     const snapshot = await aiUsageRepository.getCurrentPeriodUsage(ctx.tenantId);
@@ -403,10 +407,13 @@ export class AiService {
         reportCalls: snapshot.reportCalls,
       },
       cap: {
-        tokens: cap.monthlyTokenCap,
-        forecastCalls: cap.monthlyForecastCallCap,
-        reportCalls: cap.monthlyReportCallCap,
+        tokens: Number.isFinite(cap.monthlyTokenCap) ? cap.monthlyTokenCap : null,
+        forecastCalls: Number.isFinite(cap.monthlyForecastCallCap)
+          ? cap.monthlyForecastCallCap
+          : null,
+        reportCalls: Number.isFinite(cap.monthlyReportCallCap) ? cap.monthlyReportCallCap : null,
       },
+      unlimited: ctx.subscriptionTier === 'trial',
       estimatedCostUsd: snapshot.estimatedCostUsd,
     };
   }

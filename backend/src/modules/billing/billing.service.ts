@@ -1,550 +1,662 @@
-import { randomBytes } from 'node:crypto';
-
-import { logger } from '../../config/logger.js';
-import { recordAudit, AuditActions } from '../../shared/audit/index.js';
-import type { TenantContext } from '../../shared/auth/types.js';
-import { authRepository } from '../auth/auth.repository.js';
+import crypto from 'node:crypto';
+import { Types } from 'mongoose';
+import type Stripe from 'stripe';
+import { mongoose } from '../../config/database.js';
+import { env } from '../../config/env.js';
+import { redisCache } from '../../config/redis.js';
+import { tenantStorage } from '../../shared/db/tenancyPlugin.js';
 import {
   BadRequestError,
-  InternalError,
+  ConflictError,
+  ForbiddenError,
   NotFoundError,
-  NotImplementedError,
+  UnauthorizedError,
 } from '../../shared/errors/HttpErrors.js';
+import type { TenantContext, SubscriptionTier } from '../../shared/auth/types.js';
+import { authRepository } from '../auth/auth.repository.js';
+import { Factory } from '../auth/models/factory.model.js';
+import { User } from '../auth/models/user.model.js';
 import { billingRepository } from './billing.repository.js';
-import type { SubscriptionDoc } from './models/subscription.model.js';
-import type { InvoiceDoc } from './models/invoice.model.js';
-import {
-  initiateSslCommerzTransaction,
-  validateSslCommerzTransaction,
-} from './sslcommerz.client.js';
+import { Subscription, type SubscriptionDoc } from './models/subscription.model.js';
+import { CheckoutOrder, StripeEventReceipt } from './models/checkoutOrder.model.js';
+import { stripeClient, stripePrice, tierForPrice } from './stripe.client.js';
+import { ensureSubscription, resolveAccount, subscriptionAccess } from './access.policy.js';
+import { PLANS, TRIAL_MS } from './plans.js';
 import type {
-  CancelSubscriptionRequest,
-  ChangeSubscriptionRequest,
-  CheckoutSessionView,
   CreateCheckoutSessionRequest,
-  InvoiceView,
+  ChangeSubscriptionRequest,
+  CancelSubscriptionRequest,
   ListInvoicesQuery,
-  PlanView,
-  SubscriptionView,
 } from './billing.dto.js';
 
-const PLAN_CATALOGUE: PlanView[] = [
-  {
-    tier: 'trial',
-    monthlyPrice: { amount: 0, currency: 'USD' },
-    features: ['core_inventory', 'core_suppliers', 'core_po', '14_day_trial'],
-    seatLimit: 3,
-  },
-  {
-    tier: 'starter',
-    monthlyPrice: { amount: 49, currency: 'USD' },
-    features: ['core_inventory', 'core_suppliers', 'core_po', 'basic_reports'],
-    seatLimit: 5,
-  },
-  {
-    tier: 'growth',
-    monthlyPrice: { amount: 149, currency: 'USD' },
-    features: [
-      'core_inventory',
-      'core_suppliers',
-      'core_po',
-      'ai_forecast',
-      'advanced_reports',
-      'webhooks',
-    ],
-    seatLimit: 20,
-  },
-  {
-    tier: 'enterprise',
-    monthlyPrice: { amount: 499, currency: 'USD' },
-    features: [
-      'core_inventory',
-      'core_suppliers',
-      'core_po',
-      'ai_forecast',
-      'advanced_reports',
-      'webhooks',
-      'sso',
-      'audit_export',
-    ],
-    seatLimit: 100,
-  },
-];
-
-const PLAN_BY_TIER = new Map<string, PlanView>(PLAN_CATALOGUE.map((plan) => [plan.tier, plan]));
-const BILLING_PERIOD_MS = 30 * 24 * 60 * 60 * 1000;
-
-function toSubscriptionView(s: SubscriptionDoc): SubscriptionView {
+const idOf = (value: string | { id: string } | null | undefined): string | null =>
+  typeof value === 'string' ? value : (value?.id ?? null);
+function view(sub: SubscriptionDoc) {
   return {
-    tier: s.tier,
-    status: s.status,
-    trialEndsAt: s.trialEndsAt ? s.trialEndsAt.toISOString() : null,
-    currentPeriodStart: s.currentPeriodStart.toISOString(),
-    currentPeriodEnd: s.currentPeriodEnd.toISOString(),
-    cancelAtPeriodEnd: s.cancelAtPeriodEnd,
-    scheduledTier: s.scheduledTier,
-    gateway: s.gateway,
-    seats: s.seats,
-    paymentMethod: s.paymentMethod
-      ? {
-          brand: s.paymentMethod.brand,
-          last4: s.paymentMethod.last4,
-          expMonth: s.paymentMethod.expMonth,
-          expYear: s.paymentMethod.expYear,
-        }
-      : null,
+    tier: sub.tier,
+    status: sub.status,
+    trialEndsAt: sub.trialEndsAt,
+    currentPeriodStart: sub.currentPeriodStart,
+    currentPeriodEnd: sub.currentPeriodEnd,
+    cancelAtPeriodEnd: sub.cancelAtPeriodEnd,
+    scheduledTier: sub.scheduledTier,
+    gateway: sub.gateway,
+    seats: PLANS[sub.tier].seatLimit,
+    paymentMethod: sub.paymentMethod,
+    accessMode: subscriptionAccess(sub),
+    trialRestartCount: sub.trialRestartCount ?? 0,
+    lastTrialRestartedAt: sub.lastTrialRestartedAt ?? null,
   };
 }
-
-function toInvoiceView(i: InvoiceDoc): InvoiceView {
-  return {
-    id: i._id.toString(),
-    number: i.number,
-    amountSubtotal: i.amountSubtotal,
-    amountTax: i.amountTax,
-    amountTotal: i.amountTotal,
-    currency: i.currency,
-    status: i.status,
-    pdfUrl: i.pdfUrl,
-    issuedAt: i.issuedAt.toISOString(),
-    paidAt: i.paidAt ? i.paidAt.toISOString() : null,
-    dueAt: i.dueAt ? i.dueAt.toISOString() : null,
-  };
+function returnUrl(value: string): string {
+  const url = new URL(value);
+  if (url.origin !== new URL(env.FRONTEND_BASE_URL).origin)
+    throw new BadRequestError('INVALID_RETURN_URL', 'Return URL must use FRONTEND_BASE_URL origin');
+  return value;
 }
-
-function pagedView<T, V>(
-  page: { rows: T[]; nextCursor: string | null; hasMore: boolean; limit: number },
-  mapper: (row: T) => V,
-) {
-  return {
-    rows: page.rows.map(mapper),
-    nextCursor: page.nextCursor,
-    hasMore: page.hasMore,
-    limit: page.limit,
-  };
-}
-
-function genReference(prefix: string): string {
-  return `${prefix}-${Date.now().toString(36).toUpperCase()}-${randomBytes(3).toString('hex').toUpperCase()}`;
-}
-
-function parseBody(raw: Buffer): Record<string, string> {
-  const text = raw.toString('utf8').trim();
-  if (!text) return {};
-
-  try {
-    const parsed = JSON.parse(text) as unknown;
-    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
-      return Object.fromEntries(
-        Object.entries(parsed).map(([k, v]) => [k, typeof v === 'string' ? v : String(v)]),
-      );
+async function billingLock<T>(tenantId: Types.ObjectId, fn: () => Promise<T>): Promise<T> {
+  const key = `${env.QUEUE_PREFIX}:billing-lock:${tenantId}`,
+    token = crypto.randomUUID();
+  let acquired = false;
+  for (let n = 0; n < 50; n++) {
+    if (await redisCache.set(key, token, 'PX', 60_000, 'NX')) {
+      acquired = true;
+      break;
     }
-  } catch {
-    // Fall through to form parsing.
+    await new Promise((resolve) => setTimeout(resolve, 100));
   }
-
-  const params = new URLSearchParams(text);
-  return Object.fromEntries(params.entries());
+  if (!acquired)
+    throw new ConflictError('BILLING_BUSY', 'Another billing operation is running; retry shortly');
+  try {
+    return await fn();
+  } finally {
+    await redisCache.eval(
+      "if redis.call('GET',KEYS[1])==ARGV[1] then return redis.call('DEL',KEYS[1]) else return 0 end",
+      1,
+      key,
+      token,
+    );
+  }
 }
-
-function tierPrice(tier: string): PlanView {
-  const plan = PLAN_BY_TIER.get(tier);
-  if (!plan) throw new BadRequestError('INVALID_TIER', `Unsupported tier: ${tier}`);
-  return plan;
-}
-
-function normalizeUrl(input: string): string {
-  return input.replace(/\/$/, '');
+async function verifiedOwner(ctx: TenantContext) {
+  const account = await resolveAccount(ctx);
+  if (account.role !== 'owner')
+    throw new ForbiddenError('RBAC_CAPABILITY_DENIED', 'Only the company owner manages billing');
+  if (!account.emailVerified)
+    throw new ForbiddenError('EMAIL_VERIFICATION_REQUIRED', 'Verify your email before checkout');
+  if (account.accessMode === 'suspended')
+    throw new ForbiddenError('COMPANY_SUSPENDED', 'Company is suspended');
+  return account;
 }
 
 export class BillingService {
-  listPlans(): { plans: PlanView[] } {
-    return { plans: PLAN_CATALOGUE };
+  listPlans() {
+    return { plans: Object.values(PLANS), trialDays: 14 };
+  }
+  async getSubscription(ctx: TenantContext) {
+    return view(await ensureSubscription(ctx.tenantId));
   }
 
-  async getSubscription(ctx: TenantContext): Promise<SubscriptionView> {
-    const sub = await billingRepository.findSubscriptionForTenant(ctx.tenantId);
-    if (!sub) throw new NotFoundError();
-    return toSubscriptionView(sub);
+  async restartTrial(ctx: TenantContext) {
+    await verifiedOwner(ctx);
+    return billingLock(ctx.tenantId, async () => {
+      const sub = await ensureSubscription(ctx.tenantId);
+      if (sub.tier !== 'trial' && subscriptionAccess(sub) === 'full') {
+        throw new ConflictError(
+          'PAID_SUBSCRIPTION_EXISTS',
+          'Cancel the paid subscription before restarting a trial',
+        );
+      }
+      if (sub.gatewaySubscriptionId) {
+        if (sub.gateway !== 'stripe' || !sub.gatewaySubscriptionId.startsWith('sub_')) {
+          throw new ConflictError(
+            'PAID_SUBSCRIPTION_EXISTS',
+            'Resolve the existing provider subscription before restarting a trial',
+          );
+        }
+        const remote = await stripeClient().subscriptions.retrieve(sub.gatewaySubscriptionId);
+        if (!['canceled', 'incomplete_expired'].includes(remote.status)) {
+          throw new ConflictError(
+            'PAID_SUBSCRIPTION_EXISTS',
+            'Cancel the Stripe subscription first; restarting a trial does not cancel provider billing',
+          );
+        }
+      }
+      // Open Checkout URLs must stop working before a new free trial is granted.
+      for (const order of await CheckoutOrder.find({ state: 'pending' }).lean().exec()) {
+        if (order.sessionId) {
+          const session = await stripeClient().checkout.sessions.retrieve(order.sessionId);
+          if (session.status === 'complete') {
+            throw new ConflictError(
+              'CHECKOUT_CONFIRMATION_PENDING',
+              'Wait for the completed checkout to be confirmed',
+            );
+          }
+          if (session.status === 'open') await stripeClient().checkout.sessions.expire(session.id);
+        }
+        await CheckoutOrder.updateOne({ _id: order._id }, { $set: { state: 'expired' } }).exec();
+      }
+      const now = new Date();
+      await mongoose.connection.transaction(async () => {
+        await Subscription.updateOne({ _id: sub._id }, { $inc: { seatVersion: 1 } }).exec();
+        const used = await User.countDocuments({
+          $or: [
+            { status: 'active' },
+            { status: 'invited', emailVerifyTokenExpiresAt: { $gt: now } },
+          ],
+        }).exec();
+        if (used > PLANS.trial.seatLimit)
+          throw new ConflictError(
+            'SEAT_LIMIT_REACHED',
+            'Reduce occupied seats to ten before restarting a trial',
+            { used, limit: PLANS.trial.seatLimit },
+          );
+        await Subscription.updateOne(
+          { _id: sub._id },
+          {
+            $set: {
+              tier: 'trial',
+              status: 'trialing',
+              trialEndsAt: new Date(now.getTime() + TRIAL_MS),
+              currentPeriodStart: now,
+              currentPeriodEnd: new Date(now.getTime() + TRIAL_MS),
+              seats: PLANS.trial.seatLimit,
+              cancelAtPeriodEnd: false,
+              scheduledTier: null,
+              gateway: 'stripe',
+              gatewaySubscriptionId: null,
+              paymentMethod: null,
+              lastTrialRestartedAt: now,
+            },
+            $inc: { trialRestartCount: 1 },
+          },
+        ).exec();
+        await Factory.updateOne(
+          { _id: ctx.tenantId, status: { $ne: 'suspended' } },
+          { $set: { status: 'trial' } },
+        ).exec();
+      });
+      return view(await ensureSubscription(ctx.tenantId));
+    });
   }
 
-  async createCheckoutSession(
-    ctx: TenantContext,
-    input: CreateCheckoutSessionRequest,
-  ): Promise<CheckoutSessionView> {
-    if (input.gateway === 'stripe') {
-      throw new NotImplementedError('billing.stripe', 'Stripe is disabled in this deployment');
-    }
-
-    const plan = tierPrice(input.tier);
-    if (plan.tier === 'trial') {
-      throw new BadRequestError('INVALID_TIER', 'Trial tier cannot be purchased');
-    }
-
-    const [factory, user] = await Promise.all([
-      authRepository.findFactoryById(ctx.tenantId),
-      authRepository.findUserById(ctx.userId),
-    ]);
-    if (!factory || !user) throw new NotFoundError();
-
-    const now = new Date();
-    const existingSubscription = await billingRepository.findSubscriptionForTenant(ctx.tenantId);
-    const tranId = genReference('SCB');
-
-    const subscription = await billingRepository.upsertSubscription(ctx.tenantId, {
-      tier: existingSubscription?.tier ?? 'trial',
-      status: existingSubscription?.status ?? 'incomplete',
-      trialEndsAt: existingSubscription?.trialEndsAt ?? null,
-      currentPeriodStart: existingSubscription?.currentPeriodStart ?? now,
-      currentPeriodEnd:
-        existingSubscription?.currentPeriodEnd ?? new Date(now.getTime() + BILLING_PERIOD_MS),
-      cancelAtPeriodEnd: false,
-      scheduledTier: input.tier as SubscriptionDoc['scheduledTier'],
-      gateway: 'sslcommerz',
-      gatewayCustomerId: user.email,
-      gatewaySubscriptionId: tranId,
-      paymentMethod: null,
-      seats: existingSubscription?.seats ?? 0,
-    });
-    if (!subscription) throw new InternalError('BILLING_SUBSCRIPTION_UPSERT_FAILED');
-
-    const invoiceNumber = genReference('INV');
-    const invoice = await billingRepository.upsertInvoiceByGatewayId(ctx.tenantId, tranId, {
-      subscriptionId: subscription._id,
-      number: invoiceNumber,
-      amountSubtotal: Math.round(plan.monthlyPrice.amount * 100),
-      amountTax: 0,
-      amountTotal: Math.round(plan.monthlyPrice.amount * 100),
-      currency: plan.monthlyPrice.currency as InvoiceDoc['currency'],
-      status: 'open',
-      pdfUrl: null,
-      issuedAt: now,
-      paidAt: null,
-      dueAt: null,
-      gateway: 'sslcommerz',
-      gatewayInvoiceId: tranId,
-      gatewayPaymentIntentId: tranId,
-      failureReason: null,
-    });
-    if (!invoice) throw new InternalError('BILLING_INVOICE_UPSERT_FAILED');
-
-    const attempt = await billingRepository.upsertPaymentAttemptByGatewayId(ctx.tenantId, tranId, {
-      invoiceId: invoice._id,
-      subscriptionId: subscription._id,
-      amount: invoice.amountTotal,
-      currency: invoice.currency,
-      gateway: 'sslcommerz',
-      gatewayPaymentIntentId: tranId,
-      status: 'pending',
-      attemptNumber: 1,
-      errorCode: null,
-      errorMessage: null,
-      gatewayResponseSummary: null,
-      attemptedAt: now,
-      resolvedAt: null,
-    });
-    if (!attempt) throw new InternalError('BILLING_ATTEMPT_UPSERT_FAILED');
-
-    const failUrl = input.failUrl ?? input.cancelUrl;
-    const ipnUrl = input.ipnUrl ?? null;
-    const redirectBase = normalizeUrl(input.successUrl);
-
-    const session = await initiateSslCommerzTransaction({
-      totalAmount: invoice.amountTotal / 100,
-      currency: invoice.currency,
-      tranId,
-      productCategory: 'software',
-      successUrl: redirectBase,
-      failUrl,
-      cancelUrl: input.cancelUrl,
-      ipnUrl,
-      customerName: user.fullName,
-      customerEmail: user.email,
-      customerPhone: '01700000000',
-      customerAddress: factory.name,
-      customerCity: 'Dhaka',
-      customerCountry: 'Bangladesh',
-      shippingMethod: 'NO',
-      numOfItem: 1,
-      valueA: ctx.tenantId.toString(),
-      valueB: invoice._id.toString(),
-      valueC: input.tier,
-      valueD: ctx.userId.toString(),
-    });
-
-    void recordAudit({
-      tenantId: ctx.tenantId,
-      actorUserId: ctx.userId,
-      actorRole: ctx.role,
-      action: AuditActions.BillingSubscriptionCreated,
-      target: { kind: 'subscription', id: subscription._id },
-      payload: {
-        gateway: 'sslcommerz',
-        tier: input.tier,
-        invoiceId: invoice._id.toString(),
-        tranId,
-        sessionKey: session.sessionKey,
-      },
-      requestId: ctx.requestId,
-    });
-
-    void billingRepository
-      .upsertInvoiceByGatewayId(ctx.tenantId, tranId, {
-        gatewayPaymentIntentId: session.sessionKey ?? tranId,
+  async createCheckoutSession(ctx: TenantContext, input: CreateCheckoutSessionRequest) {
+    await verifiedOwner(ctx);
+    returnUrl(input.successUrl);
+    returnUrl(input.cancelUrl);
+    return billingLock(ctx.tenantId, async () => {
+      if (input.tier === 'trial')
+        throw new BadRequestError('INVALID_TIER', 'Trial cannot be purchased');
+      const tier = input.tier as SubscriptionTier,
+        plan = PLANS[tier];
+      const sub = await ensureSubscription(ctx.tenantId);
+      for (const pending of await CheckoutOrder.find({
+        state: 'pending',
+        sessionId: { $type: 'string' },
       })
-      .catch((err: unknown) =>
-        logger.warn(
-          { err, event: 'billing.invoice_session_update_failed', tranId },
-          'failed to persist SSLCommerz session key',
-        ),
-      );
-
-    void billingRepository
-      .upsertPaymentAttemptByGatewayId(ctx.tenantId, tranId, {
-        gatewayResponseSummary: {
-          gateway: 'sslcommerz',
-          sessionKey: session.sessionKey,
-          gatewayPageUrl: session.gatewayPageUrl,
+        .lean()
+        .exec()) {
+        const previous = await stripeClient().checkout.sessions.retrieve(pending.sessionId!);
+        if (previous.status === 'complete')
+          throw new ConflictError(
+            'CHECKOUT_CONFIRMATION_PENDING',
+            'Existing checkout is awaiting payment confirmation',
+          );
+        if (previous.status === 'open') await stripeClient().checkout.sessions.expire(previous.id);
+        await CheckoutOrder.updateOne({ _id: pending._id }, { $set: { state: 'expired' } }).exec();
+      }
+      if (sub.gateway === 'stripe' && sub.gatewaySubscriptionId?.startsWith('sub_')) {
+        const remote = await stripeClient().subscriptions.retrieve(sub.gatewaySubscriptionId);
+        if (!['canceled', 'incomplete_expired'].includes(remote.status))
+          throw new ConflictError(
+            'SUBSCRIPTION_EXISTS',
+            'Use plan change or billing portal for your existing Stripe subscription',
+          );
+      }
+      const user = await authRepository.findUserById(ctx.userId);
+      if (!user) throw new NotFoundError();
+      let customer =
+        sub.gateway === 'stripe' && sub.gatewayCustomerId?.startsWith('cus_')
+          ? sub.gatewayCustomerId
+          : null;
+      if (!customer) {
+        const created = await stripeClient().customers.create(
+          {
+            email: user.email,
+            name: user.fullName,
+            metadata: { tenantId: ctx.tenantId.toString(), application: 'scp-platform' },
+          },
+          { idempotencyKey: `scp-customer-${ctx.tenantId}` },
+        );
+        customer = created.id;
+        await billingRepository.upsertSubscription(ctx.tenantId, {
+          gateway: 'stripe',
+          gatewayCustomerId: customer,
+        });
+      }
+      const price = await stripePrice(tier);
+      // Immutable order binds the paid session to one server-defined tier and amount.
+      const order = await mongoose.connection.transaction(async () => {
+        await Subscription.updateOne({ _id: sub._id }, { $inc: { seatVersion: 1 } }).exec();
+        const used = await User.countDocuments({
+          $or: [
+            { status: 'active' },
+            { status: 'invited', emailVerifyTokenExpiresAt: { $gt: new Date() } },
+          ],
+        }).exec();
+        if (used > plan.seatLimit)
+          throw new ConflictError(
+            'SEAT_LIMIT_REACHED',
+            'Reduce occupied seats before choosing this plan',
+            { used, limit: plan.seatLimit },
+          );
+        return CheckoutOrder.create({
+          tier,
+          amount: plan.monthlyPrice.amount * 100,
+          currency: 'usd',
+        });
+      });
+      const metadata = {
+        tenantId: ctx.tenantId.toString(),
+        orderId: order._id.toString(),
+        tier,
+        application: 'scp-platform',
+      };
+      const session = await stripeClient().checkout.sessions.create(
+        {
+          mode: 'subscription',
+          customer,
+          client_reference_id: ctx.tenantId.toString(),
+          metadata,
+          subscription_data: { metadata },
+          line_items: [{ price: price.id, quantity: 1 }],
+          success_url: returnUrl(input.successUrl),
+          cancel_url: returnUrl(input.cancelUrl),
+          allowed_payment_method_types: ['card'],
         },
-      })
-      .catch((err: unknown) =>
-        logger.warn(
-          { err, event: 'billing.attempt_session_update_failed', tranId },
-          'failed to persist SSLCommerz response summary',
-        ),
+        { idempotencyKey: `scp-checkout-${order._id}` },
       );
-
-    return { redirectUrl: session.gatewayPageUrl };
+      await CheckoutOrder.updateOne({ _id: order._id }, { $set: { sessionId: session.id } }).exec();
+      return { redirectUrl: session.url, sessionId: session.id, orderId: order._id.toString() };
+    });
   }
 
-  async changeSubscription(
-    ctx: TenantContext,
-    input: ChangeSubscriptionRequest,
-  ): Promise<SubscriptionView> {
-    const sub = await billingRepository.findSubscriptionForTenant(ctx.tenantId);
-    if (!sub) throw new NotFoundError();
-    const updated = await billingRepository.upsertSubscription(ctx.tenantId, {
-      scheduledTier: input.tier as SubscriptionDoc['scheduledTier'],
+  async createPortalSession(ctx: TenantContext, input: { returnUrl: string }) {
+    await verifiedOwner(ctx);
+    const sub = await ensureSubscription(ctx.tenantId);
+    if (sub.gateway !== 'stripe' || !sub.gatewayCustomerId?.startsWith('cus_'))
+      throw new BadRequestError('STRIPE_CUSTOMER_MISSING', 'Start Stripe checkout first');
+    const api = stripeClient();
+    const configs = await api.billingPortal.configurations.list({ active: true, limit: 100 });
+    let config = configs.data.find((row) => row.metadata?.application === 'scp-platform');
+    if (!config)
+      config = await api.billingPortal.configurations.create({
+        metadata: { application: 'scp-platform' },
+        business_profile: { headline: 'Manage your Supply Chain subscription' },
+        features: {
+          invoice_history: { enabled: true },
+          payment_method_update: { enabled: true },
+          subscription_cancel: { enabled: true, mode: 'at_period_end' },
+        },
+      });
+    const session = await api.billingPortal.sessions.create({
+      customer: sub.gatewayCustomerId,
+      configuration: config.id,
+      return_url: returnUrl(input.returnUrl),
     });
-    if (!updated) throw new NotFoundError();
-    const fromRank = SUBSCRIPTION_TIER_RANK[sub.tier] ?? 0;
-    const toRank = SUBSCRIPTION_TIER_RANK[input.tier] ?? 0;
-    void recordAudit({
-      tenantId: ctx.tenantId,
-      actorUserId: ctx.userId,
-      actorRole: ctx.role,
-      action:
-        toRank > fromRank
-          ? AuditActions.BillingSubscriptionUpgraded
-          : AuditActions.BillingSubscriptionDowngraded,
-      target: { kind: 'subscription', id: sub._id },
-      payload: { from: sub.tier, to: input.tier },
-      requestId: ctx.requestId,
-    });
-    return toSubscriptionView(updated);
+    return { redirectUrl: session.url };
   }
 
-  async cancelSubscription(
-    ctx: TenantContext,
-    input: CancelSubscriptionRequest,
-  ): Promise<SubscriptionView> {
-    const sub = await billingRepository.findSubscriptionForTenant(ctx.tenantId);
-    if (!sub) throw new NotFoundError();
-    const updated = await billingRepository.upsertSubscription(ctx.tenantId, {
-      cancelAtPeriodEnd: !input.cancelImmediately,
-      status: input.cancelImmediately ? 'cancelled' : sub.status,
+  async changeSubscription(ctx: TenantContext, input: ChangeSubscriptionRequest) {
+    await verifiedOwner(ctx);
+    if (input.tier === 'trial')
+      throw new BadRequestError('INVALID_TIER', 'Cannot switch back to a free trial');
+    return billingLock(ctx.tenantId, async () => {
+      const sub = await ensureSubscription(ctx.tenantId);
+      if (sub.gateway !== 'stripe' || !sub.gatewaySubscriptionId?.startsWith('sub_'))
+        throw new BadRequestError(
+          'STRIPE_SUBSCRIPTION_MISSING',
+          'Purchase a Stripe subscription first',
+        );
+      const api = stripeClient(),
+        remote = await api.subscriptions.retrieve(sub.gatewaySubscriptionId);
+      if (remote.status !== 'active')
+        throw new ConflictError(
+          'SUBSCRIPTION_NOT_ACTIVE',
+          'Resolve the current subscription payment before changing plans',
+        );
+      const tier = input.tier as SubscriptionTier;
+      await mongoose.connection.transaction(async () => {
+        await Subscription.updateOne({ _id: sub._id }, { $inc: { seatVersion: 1 } }).exec();
+        const used = await User.countDocuments({
+          $or: [
+            { status: 'active' },
+            { status: 'invited', emailVerifyTokenExpiresAt: { $gt: new Date() } },
+          ],
+        }).exec();
+        if (used > PLANS[tier].seatLimit)
+          throw new ConflictError(
+            'SEAT_LIMIT_REACHED',
+            'Reduce occupied seats before downgrading',
+            { used, limit: PLANS[tier].seatLimit },
+          );
+        await Subscription.updateOne({ _id: sub._id }, { $set: { scheduledTier: tier } }).exec();
+      });
+      const item = remote.items.data[0];
+      if (!item)
+        throw new BadRequestError('STRIPE_SUBSCRIPTION_INVALID', 'Subscription has no item');
+      if (remote.schedule) await api.subscriptionSchedules.release(idOf(remote.schedule)!);
+      const price = await stripePrice(tier);
+      if (PLANS[tier].monthlyPrice.amount > PLANS[sub.tier].monthlyPrice.amount) {
+        await api.subscriptions.update(remote.id, {
+          items: [{ id: item.id, price: price.id }],
+          proration_behavior: 'always_invoice',
+          payment_behavior: 'pending_if_incomplete',
+        });
+      } else if (tier !== sub.tier) {
+        const schedule = await api.subscriptionSchedules.create({ from_subscription: remote.id });
+        await api.subscriptionSchedules.update(schedule.id, {
+          end_behavior: 'release',
+          phases: [
+            {
+              start_date: item.current_period_start,
+              end_date: item.current_period_end,
+              items: [{ price: item.price.id, quantity: 1 }],
+              proration_behavior: 'none',
+            },
+            {
+              items: [{ price: price.id, quantity: 1 }],
+              duration: { interval: 'month', interval_count: 1 },
+              proration_behavior: 'none',
+              metadata: { tenantId: ctx.tenantId.toString(), tier },
+            },
+          ],
+        });
+      }
+      await this.syncSubscription(remote.id, ctx.tenantId);
+      return view(await ensureSubscription(ctx.tenantId));
     });
-    if (!updated) throw new NotFoundError();
-    void recordAudit({
-      tenantId: ctx.tenantId,
-      actorUserId: ctx.userId,
-      actorRole: ctx.role,
-      action: AuditActions.BillingSubscriptionCancelled,
-      target: { kind: 'subscription', id: sub._id },
-      payload: { immediately: input.cancelImmediately },
-      requestId: ctx.requestId,
+  }
+
+  async cancelSubscription(ctx: TenantContext, input: CancelSubscriptionRequest) {
+    await verifiedOwner(ctx);
+    return billingLock(ctx.tenantId, async () => {
+      const sub = await ensureSubscription(ctx.tenantId);
+      if (sub.gateway === 'stripe' && sub.gatewaySubscriptionId?.startsWith('sub_')) {
+        const api = stripeClient(),
+          remote = await api.subscriptions.retrieve(sub.gatewaySubscriptionId);
+        if (remote.schedule) await api.subscriptionSchedules.release(idOf(remote.schedule)!);
+        if (input.cancelImmediately) await api.subscriptions.cancel(remote.id);
+        else await api.subscriptions.update(remote.id, { cancel_at_period_end: true });
+        await this.syncSubscription(remote.id, ctx.tenantId);
+      } else {
+        await billingRepository.upsertSubscription(ctx.tenantId, {
+          cancelAtPeriodEnd: !input.cancelImmediately,
+          ...(input.cancelImmediately ? { status: 'cancelled' } : {}),
+        });
+      }
+      return view(await ensureSubscription(ctx.tenantId));
     });
-    return toSubscriptionView(updated);
   }
 
   async listInvoices(_ctx: TenantContext, query: ListInvoicesQuery) {
     const page = await billingRepository.listInvoices(query);
-    return pagedView(page, toInvoiceView);
+    return {
+      ...page,
+      rows: page.rows.map((i) => ({
+        id: i._id.toString(),
+        number: i.number,
+        amountSubtotal: i.amountSubtotal,
+        amountTax: i.amountTax,
+        amountTotal: i.amountTotal,
+        currency: i.currency,
+        status: i.status,
+        pdfUrl: i.pdfUrl,
+        issuedAt: i.issuedAt,
+        paidAt: i.paidAt,
+        dueAt: i.dueAt,
+      })),
+    };
   }
 
-  async ingestWebhook(args: {
-    gateway: 'stripe' | 'sslcommerz';
-    rawBody: Buffer;
-    signature: string | null;
-  }): Promise<{ accepted: boolean }> {
-    if (args.gateway === 'stripe') {
-      throw new NotImplementedError(
-        'billing.stripe.webhook',
-        'Stripe webhook handling is disabled',
+  async ingestWebhook(args: { gateway: 'stripe'; rawBody: Buffer; signature: string | null }) {
+    if (!env.STRIPE_WEBHOOK_SECRET || !args.signature)
+      throw new UnauthorizedError(
+        'STRIPE_SIGNATURE_REQUIRED',
+        'Stripe webhook signature/configuration missing',
+      );
+    let event: Stripe.Event;
+    try {
+      event = stripeClient().webhooks.constructEvent(
+        args.rawBody,
+        args.signature,
+        env.STRIPE_WEBHOOK_SECRET,
+      );
+    } catch {
+      throw new UnauthorizedError(
+        'STRIPE_SIGNATURE_INVALID',
+        'Invalid or stale Stripe webhook signature',
       );
     }
-
-    const payload = parseBody(args.rawBody);
-    const tranId = payload.tran_id ?? payload.tranId ?? null;
-    const sessionKey = payload.sessionkey ?? payload.sessionKey ?? null;
-    const valId = payload.val_id ?? payload.valId ?? null;
-
-    if (!tranId && !sessionKey && !valId) {
-      return { accepted: true };
-    }
-
-    const invoiceRef = tranId ? await billingRepository.findInvoiceByGatewayIdGlobal(tranId) : null;
-    if (!invoiceRef) {
-      logger.warn(
-        { event: 'billing.sslcommerz_webhook_unmatched', tranId, sessionKey, valId },
-        'SSLCommerz webhook did not match any invoice',
+    if (await StripeEventReceipt.exists({ _id: event.id }))
+      return { accepted: true, duplicate: true };
+    const object = event.data.object as unknown as {
+      id: string;
+      metadata?: Record<string, string>;
+      subscription?: string;
+      parent?: { subscription_details?: { subscription?: string } };
+    };
+    if (event.type === 'checkout.session.expired') {
+      const session = await stripeClient().checkout.sessions.retrieve(object.id);
+      const rawTenant = session.metadata?.tenantId;
+      if (!rawTenant || !Types.ObjectId.isValid(rawTenant) || session.status !== 'expired')
+        return { accepted: true, ignored: true };
+      const tenantId = new Types.ObjectId(rawTenant);
+      return tenantStorage.run({ tenantId }, () =>
+        billingLock(tenantId, async () => {
+          if (await StripeEventReceipt.exists({ _id: event.id }))
+            return { accepted: true, duplicate: true };
+          await CheckoutOrder.updateOne(
+            { sessionId: session.id, state: 'pending' },
+            { $set: { state: 'expired' } },
+          ).exec();
+          await StripeEventReceipt.create({
+            _id: event.id,
+            type: event.type,
+            tenantId,
+            processedAt: new Date(),
+          });
+          return { accepted: true };
+        }),
       );
-      return { accepted: true };
     }
-
-    return billingRepository.withScope(invoiceRef.tenantId, async () => {
-      const [invoice, subscription] = await Promise.all([
-        billingRepository.findInvoiceByGatewayId(tranId ?? invoiceRef.gatewayInvoiceId ?? ''),
-        billingRepository.findSubscriptionForTenant(invoiceRef.tenantId),
-      ]);
-
-      if (!invoice || !subscription) {
-        throw new InternalError('BILLING_WEBHOOK_LOOKUP_FAILED');
-      }
-
-      const validation = await validateSslCommerzTransaction({ sessionKey, tranId, valId });
-      const status = (validation.status ?? '').toUpperCase();
-      const amountOk =
-        validation.amount !== null &&
-        Number.isFinite(Number(validation.amount)) &&
-        Math.round(Number(validation.amount) * 100) === invoice.amountTotal;
-      const currencyOk =
-        validation.currency !== null && validation.currency.toUpperCase() === invoice.currency;
-      const transactionOk = validation.tranId === (tranId ?? invoice.gatewayInvoiceId);
-      const isSuccess =
-        (status === 'VALID' || status === 'VALIDATED' || status === 'SUCCESS') &&
-        amountOk &&
-        currencyOk &&
-        transactionOk &&
-        (validation.riskLevel === null || validation.riskLevel === 0);
-
-      if (isSuccess) {
-        const paidAt = new Date();
-        const nextTier = subscription.scheduledTier ?? subscription.tier;
-        await billingRepository.upsertSubscription(invoiceRef.tenantId, {
-          tier: nextTier,
-          status: 'active',
-          scheduledTier: null,
-          gateway: 'sslcommerz',
-          gatewaySubscriptionId: tranId ?? subscription.gatewaySubscriptionId,
-          paymentMethod: null,
-          seats: PLAN_BY_TIER.get(nextTier)?.seatLimit ?? subscription.seats,
-        });
-        await billingRepository.upsertInvoiceByGatewayId(
-          invoiceRef.tenantId,
-          tranId ?? invoice.number,
-          {
-            status: 'paid',
-            paidAt,
-            gatewayPaymentIntentId: tranId ?? invoice.gatewayPaymentIntentId,
-            failureReason: null,
-          },
+    let remoteId: string | null = null;
+    if (event.type.startsWith('checkout.session.'))
+      remoteId = idOf((event.data.object as Stripe.Checkout.Session).subscription);
+    else if (event.type.startsWith('customer.subscription.')) remoteId = object.id;
+    else if (event.type.startsWith('invoice.'))
+      remoteId = idOf(object.parent?.subscription_details?.subscription ?? object.subscription);
+    if (!remoteId) return { accepted: true, ignored: true };
+    const remote = await stripeClient().subscriptions.retrieve(remoteId);
+    const rawTenant = remote.metadata.tenantId;
+    if (!rawTenant || !Types.ObjectId.isValid(rawTenant)) return { accepted: true, ignored: true };
+    const tenantId = new Types.ObjectId(rawTenant);
+    return tenantStorage.run({ tenantId }, () =>
+      billingLock(tenantId, async () => {
+        if (await StripeEventReceipt.exists({ _id: event.id }))
+          return { accepted: true, duplicate: true };
+        // Fetch current Stripe state inside the tenant lock: old events cannot restore old access.
+        if (event.type.startsWith('checkout.session.')) {
+          const session = await stripeClient().checkout.sessions.retrieve(object.id);
+          const order = await CheckoutOrder.findOne({ sessionId: session.id }).lean().exec();
+          if (
+            !order ||
+            session.customer !== idOf(remote.customer) ||
+            session.metadata?.orderId !== order._id.toString() ||
+            session.currency !== order.currency ||
+            session.amount_total !== order.amount
+          )
+            throw new BadRequestError(
+              'STRIPE_ORDER_MISMATCH',
+              'Checkout does not match its immutable order',
+            );
+        }
+        await this.syncSubscription(
+          remoteId,
+          tenantId,
+          event.type.startsWith('invoice.') ? object.id : undefined,
         );
-        await billingRepository.upsertPaymentAttemptByGatewayId(
-          invoiceRef.tenantId,
-          tranId ?? invoice.gatewayPaymentIntentId ?? invoice.number,
-          {
-            invoiceId: invoice._id,
-            subscriptionId: subscription._id,
-            amount: invoice.amountTotal,
-            currency: invoice.currency,
-            gateway: 'sslcommerz',
-            gatewayPaymentIntentId: tranId ?? invoice.gatewayPaymentIntentId ?? invoice.number,
-            status: 'succeeded',
-            resolvedAt: paidAt,
-            errorCode: null,
-            errorMessage: null,
-            gatewayResponseSummary: {
-              ...validation.raw,
-            },
-          },
-        );
-
-        void recordAudit({
-          tenantId: invoiceRef.tenantId,
-          actorUserId: null,
-          actorRole: 'system',
-          action: AuditActions.BillingPaymentSucceeded,
-          target: { kind: 'invoice', id: invoice._id },
-          payload: {
-            tranId,
-            sessionKey,
-            valId,
-            amount: validation.amount,
-            currency: validation.currency,
-          },
+        await StripeEventReceipt.create({
+          _id: event.id,
+          type: event.type,
+          tenantId,
+          processedAt: new Date(),
         });
         return { accepted: true };
-      }
+      }),
+    );
+  }
 
-      const failureReason =
-        validation.raw.failed_reason ??
-        validation.raw.errorReason ??
-        validation.raw.risk_title ??
-        validation.raw.riskTitle ??
-        validation.status ??
-        'payment_failed';
-
-      await Promise.all([
-        billingRepository.upsertInvoiceByGatewayId(invoiceRef.tenantId, tranId ?? invoice.number, {
-          status: 'failed',
-          failureReason: String(failureReason),
-          gatewayPaymentIntentId: tranId ?? invoice.gatewayPaymentIntentId,
-        }),
-        billingRepository.upsertPaymentAttemptByGatewayId(
-          invoiceRef.tenantId,
-          tranId ?? invoice.gatewayPaymentIntentId ?? invoice.number,
-          {
-            invoiceId: invoice._id,
-            subscriptionId: subscription._id,
-            amount: invoice.amountTotal,
-            currency: invoice.currency,
-            gateway: 'sslcommerz',
-            gatewayPaymentIntentId: tranId ?? invoice.gatewayPaymentIntentId ?? invoice.number,
-            status: 'failed',
-            resolvedAt: new Date(),
-            errorCode: 'SSL_COMMERZ_VALIDATION_FAILED',
-            errorMessage: String(failureReason),
-            gatewayResponseSummary: {
-              ...validation.raw,
-            },
-          },
-        ),
-      ]);
-
-      void recordAudit({
-        tenantId: invoiceRef.tenantId,
-        actorUserId: null,
-        actorRole: 'system',
-        action: AuditActions.BillingPaymentFailed,
-        target: { kind: 'invoice', id: invoice._id },
-        payload: {
-          tranId,
-          sessionKey,
-          valId,
-          reason: String(failureReason),
-        },
+  async syncSubscription(
+    remoteId: string,
+    tenantId: Types.ObjectId,
+    eventInvoiceId?: string,
+  ): Promise<void> {
+    const api = stripeClient();
+    const remote = await api.subscriptions.retrieve(remoteId);
+    if (remote.metadata.tenantId !== tenantId.toString())
+      throw new BadRequestError('STRIPE_TENANT_MISMATCH', 'Subscription tenant mismatch');
+    const local = await ensureSubscription(tenantId);
+    const item = remote.items.data[0];
+    if (!item || remote.items.data.length !== 1 || item.quantity !== 1)
+      throw new BadRequestError(
+        'STRIPE_SUBSCRIPTION_INVALID',
+        'Expected one monthly subscription item',
+      );
+    const price = await api.prices.retrieve(item.price.id),
+      tier = tierForPrice(price);
+    const customer = idOf(remote.customer);
+    if (customer !== local.gatewayCustomerId)
+      throw new BadRequestError('STRIPE_CUSTOMER_MISMATCH', 'Subscription customer mismatch');
+    const invoiceId = idOf(remote.latest_invoice);
+    const invoice = invoiceId ? await api.invoices.retrieve(invoiceId) : null;
+    const paid =
+      invoice?.status === 'paid' && invoice.amount_remaining === 0 && invoice.currency === 'usd';
+    const matching = local.gatewaySubscriptionId === remoteId;
+    if (!matching) {
+      // A delayed event for a terminated paid subscription must not touch a restarted trial.
+      if (remote.status === 'canceled' || remote.status === 'incomplete_expired') return;
+      if (
+        local.gateway === 'stripe' &&
+        local.gatewaySubscriptionId?.startsWith('sub_') &&
+        subscriptionAccess(local) === 'full'
+      )
+        return;
+      const order = remote.metadata.orderId
+        ? await CheckoutOrder.findById(remote.metadata.orderId).lean().exec()
+        : null;
+      if (
+        !order ||
+        order.tier !== tier ||
+        order.amount !== price.unit_amount ||
+        order.currency !== price.currency
+      )
+        throw new BadRequestError(
+          'STRIPE_ORDER_MISMATCH',
+          'Subscription does not match its checkout order',
+        );
+      if (!paid || remote.status !== 'active') return; // Starting checkout never removes a still-valid local trial.
+    }
+    const affected =
+      eventInvoiceId && eventInvoiceId !== invoiceId
+        ? await api.invoices.retrieve(eventInvoiceId)
+        : invoice;
+    await mongoose.connection.transaction(async () => {
+      const current = await Subscription.findOneAndUpdate(
+        { tenantId },
+        { $inc: { seatVersion: 1 } },
+        { new: true },
+      )
+        .lean()
+        .exec();
+      if (!current) throw new NotFoundError();
+      // A terminal Stripe subscription must never regain access from a delayed payment event.
+      const terminal =
+        remote.status === 'canceled' ||
+        remote.status === 'incomplete_expired' ||
+        (matching && current.status === 'cancelled');
+      const pendingUpgrade =
+        matching &&
+        !!remote.pending_update &&
+        current.status === 'active' &&
+        current.currentPeriodEnd > new Date();
+      const status = terminal
+        ? 'cancelled'
+        : remote.status === 'active' && (paid || pendingUpgrade)
+          ? 'active'
+          : 'past_due';
+      const grantedTier = status === 'active' ? tier : current.tier;
+      await billingRepository.upsertSubscription(tenantId, {
+        gateway: 'stripe',
+        gatewayCustomerId: customer,
+        gatewaySubscriptionId: remoteId,
+        status,
+        tier: grantedTier,
+        seats: PLANS[grantedTier].seatLimit,
+        currentPeriodStart: new Date(item.current_period_start * 1000),
+        currentPeriodEnd: new Date(item.current_period_end * 1000),
+        cancelAtPeriodEnd: remote.cancel_at_period_end || !!remote.cancel_at,
+        ...(status === 'active' && current.scheduledTier === tier ? { scheduledTier: null } : {}),
       });
-      return { accepted: true };
+      if (status === 'active')
+        await Factory.updateOne(
+          { _id: tenantId, status: { $ne: 'suspended' } },
+          { $set: { status: 'active' } },
+        ).exec();
+      if (remote.metadata.orderId && status === 'active')
+        await CheckoutOrder.updateOne(
+          { _id: remote.metadata.orderId },
+          { $set: { state: 'paid', subscriptionId: remoteId } },
+        ).exec();
+      if (affected && idOf(affected.customer) === customer) {
+        const invoiceSub = idOf(affected.parent?.subscription_details?.subscription);
+        if (invoiceSub !== remoteId)
+          throw new BadRequestError('STRIPE_INVOICE_MISMATCH', 'Invoice subscription mismatch');
+        const invoicePaid = affected.status === 'paid';
+        const saved = await billingRepository.upsertInvoiceByGatewayId(tenantId, affected.id, {
+          subscriptionId: current._id,
+          number: affected.number ?? `STR-${affected.id.slice(-24)}`,
+          amountSubtotal: affected.subtotal,
+          amountTax: Math.max(0, affected.total - affected.subtotal),
+          amountTotal: affected.total,
+          currency: 'USD',
+          status: invoicePaid
+            ? 'paid'
+            : affected.status === 'void'
+              ? 'void'
+              : affected.status === 'uncollectible'
+                ? 'failed'
+                : 'open',
+          gateway: 'stripe',
+          pdfUrl: affected.invoice_pdf,
+          issuedAt: new Date(affected.created * 1000),
+          paidAt: invoicePaid
+            ? new Date((affected.status_transitions.paid_at ?? affected.created) * 1000)
+            : null,
+          dueAt: affected.due_date ? new Date(affected.due_date * 1000) : null,
+        });
+        await billingRepository.upsertPaymentAttemptByGatewayId(tenantId, affected.id, {
+          invoiceId: saved!._id,
+          subscriptionId: current._id,
+          amount: affected.total,
+          currency: 'USD',
+          gateway: 'stripe',
+          status: invoicePaid ? 'succeeded' : affected.attempt_count > 0 ? 'failed' : 'pending',
+          resolvedAt: invoicePaid || affected.attempt_count > 0 ? new Date() : null,
+          errorCode: invoicePaid || affected.attempt_count === 0 ? null : 'PAYMENT_FAILED',
+        });
+      }
     });
   }
 }
-
-const SUBSCRIPTION_TIER_RANK: Record<string, number> = {
-  trial: 0,
-  starter: 1,
-  growth: 2,
-  enterprise: 3,
-};
-
 export const billingService = new BillingService();

@@ -533,7 +533,7 @@ async function main() {
   await call('POST', `/public/quotations/responses/${qt}`, offer, [200], '');
   await call('POST', `/public/quotations/responses/${qt}`, offer, [409], '');
   await call('GET', `/quotations/${rfq.id}`);
-  await call('GET', `/quotations/${rfq.id}/compare`);
+  await call('GET', `/quotations/${rfq.id}/compare?includeAi=true`);
   await call('POST', `/quotations/${rfq.id}/accept`, { supplierId: sid, warehouseId: wh.id });
   await call(
     'POST',
@@ -555,13 +555,28 @@ async function main() {
       role: 'viewer',
     })
   ).data;
-  const invited = await scope(() =>
-    User.findById(invite.id).select('+emailVerifyToken').lean().exec(),
-  );
+  const invited = { email: `invite.${tag}@garments.example.test` };
+  let invitationToken = '';
+  for (let n = 0; n < 60 && !invitationToken; n++) {
+    const names = (await readdir('.demo-data/mail'))
+      .filter((name) => name.endsWith('.eml'))
+      .sort()
+      .reverse();
+    for (const name of names.slice(0, 100)) {
+      const raw = (await readFile('.demo-data/mail/' + name, 'utf8'))
+        .replace(/=\r?\n/g, '')
+        .replace(/=([A-Fa-f\d]{2})/g, (_m, h) => String.fromCharCode(parseInt(h, 16)));
+      if (raw.includes(invited.email))
+        invitationToken = raw.match(/[?&]token=([A-Za-z0-9_-]+)/)?.[1] ?? '';
+      if (invitationToken) break;
+    }
+    if (!invitationToken) await new Promise((resolve) => setTimeout(resolve, 500));
+  }
+  if (!invitationToken) throw new Error('Actual invitation email was not captured');
   await call(
     'POST',
     '/auth/accept-invite',
-    { token: invited!.emailVerifyToken, password: m.password },
+    { token: invitationToken, password: m.password },
     [200],
     '',
   );
@@ -663,57 +678,29 @@ async function main() {
   );
   await call('POST', '/auth/logout-everywhere', {}, [204, 200], out.data.accessToken);
   await call('GET', '/auth/me', undefined, [401], out.data.accessToken);
-  await call('POST', '/webhooks/stripe', {}, [501], '');
-  await call('POST', '/webhooks/sslcommerz', { tran_id: 'unmatched-demo-test' }, [200], '');
-  await call(
-    'POST',
-    '/billing/checkout-session',
-    {
-      tier: 'growth',
-      gateway: 'stripe',
-      successUrl: 'http://localhost:3000/success',
-      cancelUrl: 'http://localhost:3000/cancel',
-    },
-    [501],
-  );
+  await call('POST', '/webhooks/stripe', {}, [401], '');
   await call(
     'POST',
     '/billing/checkout-session',
     {
       tier: 'trial',
+      gateway: 'stripe',
+      successUrl: 'http://localhost:3000/success',
+      cancelUrl: 'http://localhost:3000/cancel',
+    },
+    [400],
+  );
+  await call(
+    'POST',
+    '/billing/checkout-session',
+    {
+      tier: 'growth',
       gateway: 'sslcommerz',
       successUrl: 'http://localhost:3000/success',
       cancelUrl: 'http://localhost:3000/cancel',
     },
     [400],
   );
-  await call('POST', '/billing/subscription/change', { tier: 'growth' }); // retain the presentation plan
-  if (!env.SSLCOMMERZ_IS_LIVE) {
-    const checkout = await call(
-      'POST',
-      '/billing/checkout-session',
-      {
-        tier: 'growth',
-        gateway: 'sslcommerz',
-        successUrl: 'http://localhost:3000/success',
-        cancelUrl: 'http://localhost:3000/cancel',
-      },
-      [200],
-    );
-    check(
-      'Real SSLCommerz sandbox checkout URL',
-      typeof checkout.data.redirectUrl === 'string' &&
-        checkout.data.redirectUrl.includes('sslcommerz'),
-      checkout.data.redirectUrl?.split('?')[0],
-    );
-    await call('POST', '/billing/subscription/cancel', { cancelImmediately: false });
-    await scope(() =>
-      Subscription.updateOne(
-        { tenantId },
-        { $set: { cancelAtPeriodEnd: false, scheduledTier: null } },
-      ).exec(),
-    );
-  }
   for (let i = 1; i < m.suppliers.length; i++) {
     const it = m.items[i * 2];
     const additional = (

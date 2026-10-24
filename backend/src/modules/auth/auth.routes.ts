@@ -23,6 +23,7 @@ import {
   UpdateUserRoleRequestSchema,
   UserIdParamSchema,
   VerifyEmailRequestSchema,
+  ResendVerificationRequestSchema,
 } from './auth.dto.js';
 import { authController } from './auth.controller.js';
 
@@ -86,6 +87,13 @@ authPublicRouter.post(
 export const authPrivateRouter = Router();
 
 authPrivateRouter.get('/me', authController.me);
+authPrivateRouter.get('/access', authController.access);
+authPrivateRouter.post(
+  '/resend-verification',
+  rateLimitAuthSensitive,
+  validate(ResendVerificationRequestSchema),
+  authController.resendVerification,
+);
 
 authPrivateRouter.patch(
   '/me',

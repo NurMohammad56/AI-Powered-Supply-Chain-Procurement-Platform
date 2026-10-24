@@ -1038,7 +1038,7 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{baseUrl}}/quotations/{{quotationId}}/compare"
+            "url": "{{baseUrl}}/quotations/{{quotationId}}/compare?includeAi=true"
           },
           "event": [
             {

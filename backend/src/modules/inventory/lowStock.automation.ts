@@ -12,6 +12,8 @@ import { Factory } from '../auth/models/factory.model.js';
 import { User } from '../auth/models/user.model.js';
 import { Subscription } from '../billing/models/subscription.model.js';
 import { checkQuota } from '../ai/aiUsage.repository.js';
+import { ensureSubscription, subscriptionAccess } from '../billing/access.policy.js';
+import { PLANS } from '../billing/plans.js';
 import { Forecast } from '../ai/models/forecast.model.js';
 import { Notification } from '../notification/models/notification.model.js';
 import { inventoryRepository } from './inventory.repository.js';
@@ -27,6 +29,9 @@ const escapeHtml = (value: string) =>
 /** Tenant-scoped, durable pending markers survive API/Redis/worker outages. */
 export async function processTenantLowStock(tenantId: Types.ObjectId): Promise<void> {
   await tenantStorage.run({ tenantId }, async () => {
+    const sub = await ensureSubscription(tenantId);
+    const company = await Factory.findById(tenantId).lean().exec();
+    if (!company || company.status === 'suspended' || subscriptionAccess(sub) !== 'full') return;
     // Reconcile legacy balances and changed thresholds, with bounded memory.
     for await (const row of StockBalance.find().sort({ _id: 1 }).cursor()) {
       try {
@@ -178,8 +183,14 @@ async function processBalanceLowStock(balance: StockBalanceDoc): Promise<void> {
     await next(3600_000);
     return;
   }
+  const entitlement = await ensureSubscription(balance.tenantId);
+  if (!PLANS[entitlement.tier].features.includes('ai_forecast')) {
+    await next(6 * 3600_000);
+    return;
+  }
   const actor =
-    recipients.find((u) => u.role === 'owner') ?? recipients.find((u) => u.role === 'manager');
+    recipients.find((u) => u.role === 'owner' && u.emailVerifiedAt) ??
+    recipients.find((u) => u.role === 'manager' && u.emailVerifiedAt);
   if (!actor) {
     await next(3600_000);
     return;

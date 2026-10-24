@@ -1,4 +1,7 @@
 import { Types } from 'mongoose';
+jest.mock('../billing/access.policy.js', () => ({
+  requireTenantFeature: jest.fn(async () => undefined),
+}));
 
 process.env.MONGO_URI ??= 'mongodb://localhost:27017/test';
 process.env.REDIS_URL ??= 'redis://localhost:6379';

@@ -131,14 +131,22 @@ async function main() {
   manifest.tenantId = tenantId.toString();
   manifest.users.owner = login.user.email;
   await scope(async () => {
-    const sub = await Subscription.create({
-      tier: 'growth',
-      status: 'active',
-      gateway: 'sslcommerz',
-      currentPeriodStart: new Date(),
-      currentPeriodEnd: new Date(future(30)),
-      seats: 15,
-    });
+    const sub = await Subscription.findOneAndUpdate(
+      { tenantId },
+      {
+        $set: {
+          tier: 'growth',
+          status: 'active',
+          gateway: 'stripe',
+          currentPeriodStart: new Date(),
+          currentPeriodEnd: new Date(future(30)),
+          seats: 20,
+        },
+      },
+      { new: true, upsert: true },
+    );
+    if (!sub) throw new Error('Demo subscription fixture failed');
+    await User.updateOne({ _id: ownerId }, { $set: { emailVerifiedAt: new Date() } });
     await Factory.updateOne({ _id: tenantId }, { $set: { status: 'active' } });
     const hash = await hashPassword(password);
     for (const role of ['manager', 'warehouse_staff', 'viewer'] as const) {
@@ -167,7 +175,7 @@ async function main() {
         amountTotal: 2500000,
         currency: 'BDT',
         status,
-        gateway: 'sslcommerz',
+        gateway: 'stripe',
         issuedAt: new Date(Date.now() - i * 30 * 86400000),
         paidAt: status === 'paid' ? new Date() : null,
         dueAt: new Date(future(7)),

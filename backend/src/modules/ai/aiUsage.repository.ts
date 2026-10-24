@@ -21,9 +21,9 @@ export const AI_QUOTAS: Record<
   }
 > = {
   trial: {
-    monthlyTokenCap: 100_000,
-    monthlyForecastCallCap: 50,
-    monthlyReportCallCap: 4,
+    monthlyTokenCap: Infinity,
+    monthlyForecastCallCap: Infinity,
+    monthlyReportCallCap: Infinity,
     softAlertRatio: 0.8,
   },
   starter: {

@@ -3,14 +3,16 @@ import { z } from 'zod';
 import { cursorQuerySchema } from '../../shared/utils/pagination.js';
 import { SUBSCRIPTION_TIERS } from './models/subscription.model.js';
 
-export const CreateCheckoutSessionRequestSchema = z.object({
-  tier: z.enum(SUBSCRIPTION_TIERS as unknown as [string, ...string[]]),
-  gateway: z.enum(['stripe', 'sslcommerz']),
-  successUrl: z.string().url().max(2048),
-  cancelUrl: z.string().url().max(2048),
-  failUrl: z.string().url().max(2048).optional(),
-  ipnUrl: z.string().url().max(2048).optional(),
-});
+export const RestartTrialRequestSchema = z.object({}).strict();
+
+export const CreateCheckoutSessionRequestSchema = z
+  .object({
+    tier: z.enum(SUBSCRIPTION_TIERS as unknown as [string, ...string[]]),
+    gateway: z.literal('stripe').default('stripe'),
+    successUrl: z.string().url().max(2048),
+    cancelUrl: z.string().url().max(2048),
+  })
+  .strict();
 export type CreateCheckoutSessionRequest = z.infer<typeof CreateCheckoutSessionRequestSchema>;
 
 export const ChangeSubscriptionRequestSchema = z.object({
@@ -22,6 +24,9 @@ export const CancelSubscriptionRequestSchema = z.object({
   cancelImmediately: z.boolean().default(false),
 });
 export type CancelSubscriptionRequest = z.infer<typeof CancelSubscriptionRequestSchema>;
+export const CreatePortalSessionRequestSchema = z
+  .object({ returnUrl: z.string().url().max(2048) })
+  .strict();
 
 export const ListInvoicesQuerySchema = cursorQuerySchema.extend({
   status: z.enum(['paid', 'open', 'failed', 'refunded', 'void']).optional(),

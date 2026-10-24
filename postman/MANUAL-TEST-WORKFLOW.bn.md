@@ -1,5 +1,8 @@
 # বাংলাদেশের garments procurement: manual API test ও presentation
 
+> **2026-10-24 subscription update:** [Stripe, 14-day trial, verification, exact API changes and onboarding sequence](SUBSCRIPTION-STRIPE-API-CHANGES.bn.md). Follow that guide for billing; older SSLCommerz steps are superseded. Verify email before business APIs. RFQ comparison is numeric by default; Owner/Manager must explicitly add `?includeAi=true` for AI. Viewer cannot update budget, generate digest or upload.
+
+
 **বিস্তারিত start-to-end নির্দেশিকা:** [START-TO-END-MANUAL.bn.md](START-TO-END-MANUAL.bn.md)। কোন role দিয়ে কখন কোন API চালাবেন, সম্পূর্ণ JSON body, response থেকে ID রাখা, automatic trigger, অপেক্ষার checkpoint ও final stock reconciliation সেখানে ধাপে ধাপে দেওয়া আছে।
 
 সব supplier, price, stock history এবং commercial transaction presentation-এর synthetic data। Forecast, quotation comparison ও procurement brief-এর AI response আসল configured provider দিয়ে তৈরি এবং MongoDB-তে সংরক্ষিত। Synthetic billing invoice/payment fixture-কে বাস্তব settlement হিসেবে দেখাবেন না।
@@ -199,7 +202,7 @@ SSLCommerz sandbox-এ checkout, official test card/OTP দিয়ে payment, ga
 
 ম্যানুয়ালি `POST /billing/checkout-session`-এ `gateway=sslcommerz`, non-trial tier ও success/cancel URL দিন; redirect URL খুলে sandbox payment সম্পন্ন করুন। Internet থেকে automatic server-to-server IPN পেতে public callback URL লাগবে। Production merchant settlement ও external inbox delivery এই local test-এর আওতায় নয়। Synthetic `paid` invoice fixture-কে gateway-verified sandbox transaction-এর সঙ্গে গুলিয়ে ফেলবেন না।
 
-Webhook URL: **`/api/v1/webhooks/sslcommerz`**। পুরোনো `/api/webhooks` path ব্যবহার করবেন না। Raw form/JSON payload গ্রহণ করে gateway-এর validation API দিয়ে transaction, amount ও currency যাচাই করা হয়। Invoice/payment amounts smallest currency unit (BDT paisa/USD cents), plan display price major unit। Stripe এই deployment-এ disabled; Stripe checkout/webhook **501** expected।
+Webhook URL: **`/api/v1/webhooks/sslcommerz`**। পুরোনো `/api/v1/webhooks` path ব্যবহার করবেন না। Raw form/JSON payload গ্রহণ করে gateway-এর validation API দিয়ে transaction, amount ও currency যাচাই করা হয়। Invoice/payment amounts smallest currency unit (BDT paisa/USD cents), plan display price major unit। Stripe এই deployment-এ disabled; Stripe checkout/webhook **501** expected।
 
 ## ১১. Test evidence ও পুনরায় চালানো
 

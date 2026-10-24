@@ -1,8 +1,24 @@
 {
-  "at": "2026-10-23T15:04:15.380Z",
-  "tenantId": "6adb7750e63091b6a1ad1d37",
-  "queuePrefix": "low-stock-qa-1792767821179",
+  "at": "2026-10-23T18:07:10.495Z",
+  "tenantId": "6adba22a2515e5d73f47c41f",
+  "queuePrefix": "low-stock-qa-1792778790987",
   "checks": [
+    {
+      "name": "Actual verification/invitation email delivered",
+      "pass": true
+    },
+    {
+      "name": "Actual verification/invitation email delivered",
+      "pass": true
+    },
+    {
+      "name": "Actual verification/invitation email delivered",
+      "pass": true
+    },
+    {
+      "name": "Actual verification/invitation email delivered",
+      "pass": true
+    },
     {
       "name": "Opening above threshold is not low stock",
       "pass": true
@@ -161,6 +177,10 @@
     },
     {
       "name": "Transfer reconciles both warehouses and preserves total stock",
+      "pass": true
+    },
+    {
+      "name": "Actual verification/invitation email delivered",
       "pass": true
     },
     {

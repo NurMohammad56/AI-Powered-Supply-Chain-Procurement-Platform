@@ -1,8 +1,14 @@
 # AI-Powered Supply Chain & Procurement Platform
 
-Express/TypeScript backend with MongoDB tenancy, Redis/BullMQ, garments inventory, supplier RFQs, PO/GRN workflows, AI forecasting, reporting, R2 file storage and SSLCommerz billing.
+Express/TypeScript backend with MongoDB tenancy, Redis/BullMQ, garments inventory, supplier RFQs, PO/GRN workflows, AI forecasting, reporting, R2 file storage and Stripe subscriptions.
+
+Subscription integration: [14-day trial, self-service onboarding, new/changed API bodies and manual Stripe workflow](postman/SUBSCRIPTION-STRIPE-API-CHANGES.bn.md). Import [the subscription Postman collection](postman/stripe-subscription.collection.json) with [its environment](postman/stripe-subscription.environment.json). `npm run demo:stripe` forwards real test webhooks to the presentation API; `npm run test:subscriptions` tests all paid plans, and `npm run test:payment:renewals` verifies renewal/failure/recovery using real Stripe test clocks.
 
 Requires Node.js 22.12 or newer; verified on Node.js 22.17.
+
+Free trial: all implemented business features for 14 days, 10 seats, unlimited monthly trial AI quota. Verified Owners can restart using `POST /api/v1/billing/trial/restart` with `{}`; [API and frontend instructions](postman/TRIAL-RESTART.bn.md).
+
+Frontend integration: [role-wise API authorization guide](postman/FRONTEND-AUTHORIZATION.bn.md) covers public endpoints, role permissions, token refresh and action/state checks.
 
 For the prepared Bangladesh garments presentation, follow [the Bengali manual API workflow](postman/MANUAL-TEST-WORKFLOW.bn.md). Import the generated [Postman collection](postman/garments-demo.collection.json) and [environment](postman/garments-demo.environment.json).
 

@@ -1,4 +1,8 @@
 import crypto from 'node:crypto';
+import { mongoose } from '../../config/database.js';
+import { Subscription } from '../billing/models/subscription.model.js';
+import { PLANS, TRIAL_MS } from '../billing/plans.js';
+import { reserveSeat, ensureSubscription, subscriptionAccess } from '../billing/access.policy.js';
 
 import { Types } from 'mongoose';
 
@@ -96,15 +100,34 @@ function toFactoryView(f: FactoryDoc): FactoryView {
 }
 
 export class AuthService {
-  /**
-   * Register a new factory + owner user. Provisions a 14-day Growth-tier
-   * trial subscription (FR-BIL-01) - the subscription record itself lands
-   * in the billing module; for now we set factory.status = 'trial'.
-   *
-   * Tier inference for JWT claims is `trial` until the billing module
-   * upgrades it.
-   */
+  /** Atomically creates a factory, Owner and 14-day Growth-preview trial. */
   async registerFactory(input: RegisterFactoryRequest): Promise<{
+    factory: FactoryView;
+    owner: UserView;
+  }> {
+    const token = crypto.randomBytes(32).toString('base64url');
+    const result = await mongoose.connection.transaction(() =>
+      this.registerFactoryInTransaction(input, token),
+    );
+    await enqueueEmail('email.send', {
+      tenantId: result.factory.id,
+      to: result.owner.email,
+      subject: 'Verify your email - SCP Platform',
+      html: this.renderVerifyEmail(result.owner.fullName, token),
+      template: 'auth.verify_email',
+    }).catch((err: unknown) =>
+      logger.warn(
+        { err, event: 'email.enqueue_failed' },
+        'Verification email enqueue failed; user can resend',
+      ),
+    );
+    return result;
+  }
+
+  private async registerFactoryInTransaction(
+    input: RegisterFactoryRequest,
+    verifyToken: string,
+  ): Promise<{
     factory: FactoryView;
     owner: UserView;
   }> {
@@ -137,7 +160,6 @@ export class AuthService {
     });
 
     const passwordHash = await hashPassword(input.owner.password);
-    const verifyToken = crypto.randomBytes(32).toString('base64url');
 
     const owner = await authRepository.withScope(factory._id, () =>
       authRepository.createUser({
@@ -148,7 +170,8 @@ export class AuthService {
         role: 'owner',
         status: 'active',
         emailVerifiedAt: null,
-        emailVerifyToken: verifyToken,
+        emailVerifyToken: null,
+        emailVerifyTokenHash: sha256(verifyToken),
         emailVerifyTokenExpiresAt: new Date(Date.now() + EMAIL_VERIFY_TTL_MS),
         passwordResetTokenHash: null,
         passwordResetExpiresAt: null,
@@ -165,17 +188,16 @@ export class AuthService {
 
     await authRepository.updateFactory(factory._id, { ownerUserId: owner._id });
 
-    await enqueueEmail('email.send', {
-      tenantId: factory._id.toString(),
-      to: owner.email,
-      subject: 'Verify your email - SCP Platform',
-      html: this.renderVerifyEmail(owner.fullName, verifyToken),
-      template: 'auth.verify_email',
-    }).catch((err: unknown) =>
-      logger.warn(
-        { err, event: 'email.enqueue_failed', userId: owner._id.toString() },
-        'verify email enqueue failed',
-      ),
+    await authRepository.withScope(factory._id, () =>
+      Subscription.create({
+        tier: 'trial',
+        status: 'trialing',
+        gateway: 'stripe',
+        seats: PLANS.trial.seatLimit,
+        trialEndsAt: new Date(Date.now() + TRIAL_MS),
+        currentPeriodStart: new Date(),
+        currentPeriodEnd: new Date(Date.now() + TRIAL_MS),
+      }),
     );
 
     return {
@@ -230,7 +252,7 @@ export class AuthService {
     if (!factory) {
       throw new UnauthorizedError(ErrorCodes.AUTH_INVALID_CREDENTIALS, 'Tenant not found');
     }
-    if (factory.status === 'suspended' || factory.status === 'cancelled') {
+    if (factory.status === 'suspended') {
       throw new ForbiddenError(ErrorCodes.AUTH_ACCOUNT_DISABLED, 'Tenant access suspended');
     }
 
@@ -295,7 +317,7 @@ export class AuthService {
         throw new UnauthorizedError(ErrorCodes.AUTH_REFRESH_INVALID, 'User no longer active');
       }
       const factory = await authRepository.findFactoryById(tenantId);
-      if (!factory || factory.status === 'suspended' || factory.status === 'cancelled') {
+      if (!factory || factory.status === 'suspended') {
         throw new UnauthorizedError(ErrorCodes.AUTH_REFRESH_INVALID, 'Tenant inactive');
       }
 
@@ -435,29 +457,89 @@ export class AuthService {
 
   async verifyEmail(input: VerifyEmailRequest): Promise<void> {
     const { User } = await import('./models/user.model.js');
-    const stub = await User.collection.findOne({ emailVerifyToken: input.token });
-    if (!stub) {
+    const match = {
+      $or: [{ emailVerifyTokenHash: sha256(input.token) }, { emailVerifyToken: input.token }],
+    };
+    const stub = await User.collection.findOne(match);
+    if (!stub)
       throw new UnauthorizedError(
         ErrorCodes.AUTH_VERIFY_TOKEN_INVALID,
         'Verification token invalid',
       );
-    }
-    const expires = stub.emailVerifyTokenExpiresAt as Date | null;
-    if (!expires || expires.getTime() < Date.now()) {
+    const updated = await authRepository.withScope(stub.tenantId, () =>
+      User.findOneAndUpdate(
+        {
+          _id: stub._id,
+          ...match,
+          status: 'active',
+          emailVerifiedAt: null,
+          emailVerifyTokenExpiresAt: { $gt: new Date() },
+        },
+        {
+          $set: {
+            emailVerifiedAt: new Date(),
+            emailVerifyToken: null,
+            emailVerifyTokenHash: null,
+            emailVerifyTokenExpiresAt: null,
+          },
+        },
+        { new: true },
+      )
+        .lean()
+        .exec(),
+    );
+    if (!updated)
       throw new UnauthorizedError(
         ErrorCodes.AUTH_VERIFY_TOKEN_INVALID,
-        'Verification token expired',
+        'Verification token expired or already used',
       );
-    }
-    const userId = stub._id;
-    const tenantId = stub.tenantId;
-    await authRepository.withScope(tenantId, () =>
-      authRepository.updateUser(userId, {
-        emailVerifiedAt: new Date(),
-        emailVerifyToken: null,
-        emailVerifyTokenExpiresAt: null,
-      }),
-    );
+  }
+
+  async resendVerification(userId: Types.ObjectId, tenantId: Types.ObjectId): Promise<void> {
+    const { User } = await import('./models/user.model.js');
+    const token = crypto.randomBytes(32).toString('base64url');
+    await authRepository.withScope(tenantId, async () => {
+      const user = await User.findById(userId).lean().exec();
+      if (!user || user.status !== 'active')
+        throw new UnauthorizedError(ErrorCodes.AUTH_INVALID_CREDENTIALS, 'Account unavailable');
+      if (user.emailVerifiedAt) return;
+      const updated = await User.findOneAndUpdate(
+        {
+          _id: userId,
+          emailVerifiedAt: null,
+          $or: [
+            { emailVerifyTokenExpiresAt: null },
+            {
+              emailVerifyTokenExpiresAt: {
+                $lte: new Date(Date.now() + EMAIL_VERIFY_TTL_MS - 60_000),
+              },
+            },
+          ],
+        },
+        {
+          $set: {
+            emailVerifyToken: null,
+            emailVerifyTokenHash: sha256(token),
+            emailVerifyTokenExpiresAt: new Date(Date.now() + EMAIL_VERIFY_TTL_MS),
+          },
+        },
+        { new: true },
+      )
+        .lean()
+        .exec();
+      if (!updated)
+        throw new ConflictError(
+          'VERIFICATION_RESEND_COOLDOWN',
+          'Wait 60 seconds before requesting another verification email',
+        );
+      await enqueueEmail('email.send', {
+        tenantId: tenantId.toString(),
+        to: user.email,
+        subject: 'Verify your email - SCP Platform',
+        html: this.renderVerifyEmail(user.fullName, token),
+        template: 'auth.verify_email',
+      });
+    });
   }
 
   async acceptInvite(input: AcceptInviteRequest, meta: ClientMeta): Promise<LoginResult> {
@@ -467,7 +549,10 @@ export class AuthService {
     }
 
     const { User } = await import('./models/user.model.js');
-    const stub = await User.collection.findOne({ emailVerifyToken: input.token });
+    const tokenMatch = {
+      $or: [{ emailVerifyTokenHash: sha256(input.token) }, { emailVerifyToken: input.token }],
+    };
+    const stub = await User.collection.findOne(tokenMatch);
     if (!stub) {
       throw new UnauthorizedError(ErrorCodes.AUTH_INVITE_TOKEN_INVALID, 'Invite token invalid');
     }
@@ -478,39 +563,68 @@ export class AuthService {
     const userId = stub._id;
     const tenantId = stub.tenantId;
 
-    const updated = await authRepository.withScope(tenantId, async () => {
-      const user = await authRepository.findUserById(userId);
-      if (!user || user.status === 'disabled') {
-        throw new UnauthorizedError(ErrorCodes.AUTH_INVITE_TOKEN_INVALID, 'Invite token invalid');
-      }
-      if (user.status !== 'invited') {
-        throw new UnauthorizedError(
-          ErrorCodes.AUTH_INVITE_TOKEN_INVALID,
-          'Invite already accepted',
-        );
-      }
+    const updated = await authRepository.withScope(tenantId, () =>
+      mongoose.connection.transaction(async () => {
+        const user = await authRepository.findUserById(userId);
+        if (!user || user.status === 'disabled') {
+          throw new UnauthorizedError(ErrorCodes.AUTH_INVITE_TOKEN_INVALID, 'Invite token invalid');
+        }
+        if (user.status !== 'invited') {
+          throw new UnauthorizedError(
+            ErrorCodes.AUTH_INVITE_TOKEN_INVALID,
+            'Invite already accepted',
+          );
+        }
 
-      const passwordHash = await hashPassword(input.password);
-      const next = await authRepository.updateUser(userId, {
-        passwordHash,
-        status: 'active',
-        emailVerifiedAt: new Date(),
-        emailVerifyToken: null,
-        emailVerifyTokenExpiresAt: null,
-        failedLoginCount: 0,
-        lockedUntil: null,
-      });
-      if (!next) {
-        throw new UnauthorizedError(ErrorCodes.AUTH_INVITE_TOKEN_INVALID, 'Invite token invalid');
-      }
-      return next;
-    });
+        const currentSubscription = await ensureSubscription(tenantId);
+        const company = await authRepository.findFactoryById(tenantId);
+        if (
+          !company ||
+          company.status === 'suspended' ||
+          company.status === 'cancelled' ||
+          subscriptionAccess(currentSubscription) !== 'full'
+        )
+          throw new ForbiddenError(
+            'SUBSCRIPTION_READ_ONLY',
+            'Renew subscription before accepting an invitation',
+          );
+        await reserveSeat(tenantId, userId);
+        const passwordHash = await hashPassword(input.password);
+        const next = await User.findOneAndUpdate(
+          {
+            _id: userId,
+            ...tokenMatch,
+            status: 'invited',
+            emailVerifyTokenExpiresAt: { $gt: new Date() },
+          },
+          {
+            $set: {
+              passwordHash,
+              status: 'active',
+              emailVerifiedAt: new Date(),
+              emailVerifyToken: null,
+              emailVerifyTokenHash: null,
+              emailVerifyTokenExpiresAt: null,
+              failedLoginCount: 0,
+              lockedUntil: null,
+            },
+          },
+          { new: true },
+        )
+          .lean()
+          .exec();
+        if (!next) {
+          throw new UnauthorizedError(ErrorCodes.AUTH_INVITE_TOKEN_INVALID, 'Invite token invalid');
+        }
+        return next;
+      }),
+    );
 
     const factory = await authRepository.findFactoryById(tenantId);
     if (!factory) {
       throw new UnauthorizedError(ErrorCodes.AUTH_INVALID_CREDENTIALS, 'Tenant not found');
     }
-    if (factory.status === 'suspended' || factory.status === 'cancelled') {
+    if (factory.status === 'suspended') {
       throw new ForbiddenError(ErrorCodes.AUTH_ACCOUNT_DISABLED, 'Tenant access suspended');
     }
 
@@ -705,54 +819,59 @@ export class AuthService {
       );
     }
 
-    return authRepository.withScope(tenantId, async () => {
-      const existing = await authRepository.withScope(tenantId, async () => {
-        const { User } = await import('./models/user.model.js');
-        return User.findOne({ email: input.email }).lean<UserDoc>().exec();
-      });
-      if (existing) {
-        throw new ConflictError(
-          ErrorCodes.RESOURCE_DUPLICATE,
-          'User with that email already exists',
-        );
-      }
-      const tempPassword = crypto.randomBytes(24).toString('base64url') + 'A1!';
-      const passwordHash = await hashPassword(tempPassword);
-      const verifyToken = crypto.randomBytes(32).toString('base64url');
-      const created = await authRepository.createUser({
-        tenantId,
-        email: input.email,
-        passwordHash,
-        fullName: input.fullName,
-        role: input.role as Role,
-        status: 'invited',
-        emailVerifiedAt: null,
-        emailVerifyToken: verifyToken,
-        emailVerifyTokenExpiresAt: new Date(Date.now() + EMAIL_VERIFY_TTL_MS),
-        passwordResetTokenHash: null,
-        passwordResetExpiresAt: null,
-        failedLoginCount: 0,
-        lockedUntil: null,
-        notificationPrefs: {
-          lowStock: { email: true, inApp: true },
-          poStatus: { email: true, inApp: true },
-          deliveryReminder: { email: true, inApp: true },
-          weeklyDigest: { email: true, inApp: true },
-        },
-      });
+    const verifyToken = crypto.randomBytes(32).toString('base64url');
+    const created = await authRepository.withScope(tenantId, () =>
+      mongoose.connection.transaction(async () => {
+        const existing = await authRepository.withScope(tenantId, async () => {
+          const { User } = await import('./models/user.model.js');
+          return User.findOne({ email: input.email }).lean<UserDoc>().exec();
+        });
+        if (existing) {
+          throw new ConflictError(
+            ErrorCodes.RESOURCE_DUPLICATE,
+            'User with that email already exists',
+          );
+        }
+        const tempPassword = crypto.randomBytes(24).toString('base64url') + 'A1!';
+        const passwordHash = await hashPassword(tempPassword);
+        await reserveSeat(tenantId);
+        const created = await authRepository.createUser({
+          tenantId,
+          email: input.email,
+          passwordHash,
+          fullName: input.fullName,
+          role: input.role as Role,
+          status: 'invited',
+          emailVerifiedAt: null,
+          emailVerifyToken: null,
+          emailVerifyTokenHash: sha256(verifyToken),
+          emailVerifyTokenExpiresAt: new Date(Date.now() + EMAIL_VERIFY_TTL_MS),
+          passwordResetTokenHash: null,
+          passwordResetExpiresAt: null,
+          failedLoginCount: 0,
+          lockedUntil: null,
+          notificationPrefs: {
+            lowStock: { email: true, inApp: true },
+            poStatus: { email: true, inApp: true },
+            deliveryReminder: { email: true, inApp: true },
+            weeklyDigest: { email: true, inApp: true },
+          },
+        });
 
-      await enqueueEmail('email.send', {
-        tenantId: tenantId.toString(),
-        to: created.email,
-        subject: 'You have been invited to SCP Platform',
-        html: this.renderInviteEmail(created.fullName, verifyToken, actorUserId.toString()),
-        template: 'auth.invite',
-      }).catch((err: unknown) =>
-        logger.warn({ err, event: 'email.enqueue_failed' }, 'invite email enqueue failed'),
-      );
+        return created;
+      }),
+    );
+    await enqueueEmail('email.send', {
+      tenantId: tenantId.toString(),
+      to: created.email,
+      subject: 'You have been invited to SCP Platform',
+      html: this.renderInviteEmail(created.fullName, verifyToken, actorUserId.toString()),
+      template: 'auth.invite',
+    }).catch((err: unknown) =>
+      logger.warn({ err, event: 'email.enqueue_failed' }, 'invite email enqueue failed'),
+    );
 
-      return toUserView(created);
-    });
+    return toUserView(created);
   }
 
   // ---------- internals ----------
@@ -808,13 +927,10 @@ export class AuthService {
   }
 
   private async subscriptionTierForFactory(factory: FactoryDoc): Promise<SubscriptionTier> {
-    const { Subscription } = await import('../billing/models/subscription.model.js');
-    const subscription = await authRepository.withScope(factory._id, () =>
-      Subscription.findOne({ tenantId: factory._id }).lean().exec(),
+    return authRepository.withScope(
+      factory._id,
+      async () => (await ensureSubscription(factory._id)).tier,
     );
-    if (subscription && ['active', 'trialing'].includes(subscription.status))
-      return subscription.tier;
-    return factory.status === 'trial' ? 'trial' : 'starter';
   }
 
   /**

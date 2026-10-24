@@ -109,9 +109,6 @@ const envSchema = z.object({
 
   STRIPE_SECRET_KEY: z.string().default(''),
   STRIPE_WEBHOOK_SECRET: z.string().default(''),
-  SSLCOMMERZ_STORE_ID: z.string().default(''),
-  SSLCOMMERZ_STORE_PASSWORD: z.string().default(''),
-  SSLCOMMERZ_IS_LIVE: z.preprocess(truthy, z.boolean()).default(false),
 
   SENTRY_DSN: z.string().default(''),
   SENTRY_TRACES_SAMPLE_RATE: z

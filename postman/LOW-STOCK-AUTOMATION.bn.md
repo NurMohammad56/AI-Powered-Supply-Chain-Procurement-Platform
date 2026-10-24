@@ -1,5 +1,8 @@
 # Low-stock alert ও automatic AI
 
+> **2026-10-24 subscription update:** [Stripe, 14-day trial, verification, exact API changes and onboarding sequence](SUBSCRIPTION-STRIPE-API-CHANGES.bn.md). Follow that guide for billing; older SSLCommerz steps are superseded. Verify email before business APIs. RFQ comparison is numeric by default; Owner/Manager must explicitly add `?includeAi=true` for AI. Viewer cannot update budget, generate digest or upload.
+
+
 ## কখন low stock
 
 প্রতিটি item-এর `reorderLevel` আলাদা। Warehouse balance-এ override থাকলে সেটি অগ্রাধিকার পায়। **Quantity < threshold** হলে low stock; সমান বা বেশি হলে healthy। Threshold **0** হলে সেই balance-এর low-stock alert বন্ধ। Reserved quantity বাদ দিয়ে নয়, বর্তমান physical `quantity` দিয়ে এই তুলনা হয়।

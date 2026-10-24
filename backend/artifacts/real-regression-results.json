@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-10-18T07:12:36.199Z",
-  "passed": 218,
+  "generatedAt": "2026-10-23T18:15:32.756Z",
+  "passed": 213,
   "failed": 0,
   "results": [
     {
@@ -98,7 +98,7 @@
       }
     },
     {
-      "name": "GET /inventory/items/6ad469e2663965b6a909bb41/history?warehouseId=6ad469e1663965b6a909bb00&type=out&from=2026-04-21T07%3A11%3A46.419Z&to=2026-10-18T07%3A11%3A46.419Z&limit=1",
+      "name": "GET /inventory/items/6ad469e2663965b6a909bb41/history?warehouseId=6ad469e1663965b6a909bb00&type=out&from=2026-04-26T18%3A14%3A39.673Z&to=2026-10-23T18%3A14%3A39.673Z&limit=1",
       "pass": true,
       "detail": {
         "status": 200,
@@ -170,7 +170,7 @@
       }
     },
     {
-      "name": "GET /purchase-orders?state=sent&supplierId=6ad469e2663965b6a909bb20&q=PO&from=2026-04-21T07%3A11%3A46.419Z&to=2026-10-18T07%3A11%3A46.419Z&limit=1",
+      "name": "GET /purchase-orders?state=sent&supplierId=6ad469e2663965b6a909bb20&q=PO&from=2026-04-26T18%3A14%3A39.673Z&to=2026-10-23T18%3A14%3A39.673Z&limit=1",
       "pass": true,
       "detail": {
         "status": 200,
@@ -586,7 +586,7 @@
       }
     },
     {
-      "name": "GET /reports/inventory-turnover?from=2026-04-21T07%3A11%3A47.751Z&to=2026-10-18T07%3A11%3A47.751Z",
+      "name": "GET /reports/inventory-turnover?from=2026-04-26T18%3A14%3A42.436Z&to=2026-10-23T18%3A14%3A42.436Z",
       "pass": true,
       "detail": {
         "status": 200,
@@ -598,7 +598,7 @@
       }
     },
     {
-      "name": "GET /reports/spend-by-supplier?from=2026-04-21T07%3A11%3A47.751Z&to=2026-10-18T07%3A11%3A47.751Z",
+      "name": "GET /reports/spend-by-supplier?from=2026-04-26T18%3A14%3A42.436Z&to=2026-10-23T18%3A14%3A42.436Z",
       "pass": true,
       "detail": {
         "status": 200,
@@ -610,7 +610,7 @@
       }
     },
     {
-      "name": "GET /reports/supplier-cost-comparison?from=2026-04-21T07%3A11%3A47.751Z&to=2026-10-18T07%3A11%3A47.751Z",
+      "name": "GET /reports/supplier-cost-comparison?from=2026-04-26T18%3A14%3A42.436Z&to=2026-10-23T18%3A14%3A42.436Z",
       "pass": true,
       "detail": {
         "status": 200,
@@ -622,7 +622,7 @@
       }
     },
     {
-      "name": "GET /reports/dead-stock?from=2026-04-21T07%3A11%3A47.751Z&to=2026-10-18T07%3A11%3A47.751Z",
+      "name": "GET /reports/dead-stock?from=2026-04-26T18%3A14%3A42.436Z&to=2026-10-23T18%3A14%3A42.436Z",
       "pass": true,
       "detail": {
         "status": 200,
@@ -634,7 +634,7 @@
       }
     },
     {
-      "name": "GET /reports/abc-analysis?from=2026-04-21T07%3A11%3A47.751Z&to=2026-10-18T07%3A11%3A47.751Z",
+      "name": "GET /reports/abc-analysis?from=2026-04-26T18%3A14%3A42.436Z&to=2026-10-23T18%3A14%3A42.436Z",
       "pass": true,
       "detail": {
         "status": 200,
@@ -740,7 +740,7 @@
       }
     },
     {
-      "name": "GET /inventory/warehouses/6ad4713603313fdffb24c580",
+      "name": "GET /inventory/warehouses/6adba41639e59f9ac7a88689",
       "pass": true,
       "detail": {
         "status": 200,
@@ -752,7 +752,7 @@
       }
     },
     {
-      "name": "PATCH /inventory/warehouses/6ad4713603313fdffb24c580",
+      "name": "PATCH /inventory/warehouses/6adba41639e59f9ac7a88689",
       "pass": true,
       "detail": {
         "status": 200,
@@ -764,7 +764,7 @@
       }
     },
     {
-      "name": "DELETE /inventory/warehouses/6ad4713603313fdffb24c580",
+      "name": "DELETE /inventory/warehouses/6adba41639e59f9ac7a88689",
       "pass": true,
       "detail": {
         "status": 204,
@@ -788,7 +788,7 @@
       }
     },
     {
-      "name": "GET /inventory/categories/6ad4713603313fdffb24c58c",
+      "name": "GET /inventory/categories/6adba41639e59f9ac7a886a1",
       "pass": true,
       "detail": {
         "status": 200,
@@ -800,7 +800,7 @@
       }
     },
     {
-      "name": "PATCH /inventory/categories/6ad4713603313fdffb24c58c",
+      "name": "PATCH /inventory/categories/6adba41639e59f9ac7a886a1",
       "pass": true,
       "detail": {
         "status": 200,
@@ -812,7 +812,7 @@
       }
     },
     {
-      "name": "DELETE /inventory/categories/6ad4713603313fdffb24c58c",
+      "name": "DELETE /inventory/categories/6adba41639e59f9ac7a886a1",
       "pass": true,
       "detail": {
         "status": 204,
@@ -836,7 +836,7 @@
       }
     },
     {
-      "name": "PATCH /inventory/items/6ad4713703313fdffb24c594",
+      "name": "PATCH /inventory/items/6adba41739e59f9ac7a886b5",
       "pass": true,
       "detail": {
         "status": 200,
@@ -871,12 +871,12 @@
       "name": "Idempotency rejects changed payload without extra stock",
       "pass": true,
       "detail": {
-        "before": 672,
-        "after": 673
+        "before": 783,
+        "after": 784
       }
     },
     {
-      "name": "POST /inventory/items/6ad4713703313fdffb24c594/adjust",
+      "name": "POST /inventory/items/6adba41739e59f9ac7a886b5/adjust",
       "pass": true,
       "detail": {
         "status": 200,
@@ -888,7 +888,7 @@
       }
     },
     {
-      "name": "POST /inventory/items/6ad4713703313fdffb24c594/adjust",
+      "name": "POST /inventory/items/6adba41739e59f9ac7a886b5/adjust",
       "pass": true,
       "detail": {
         "status": 200,
@@ -900,7 +900,7 @@
       }
     },
     {
-      "name": "POST /inventory/items/6ad4713703313fdffb24c594/adjust",
+      "name": "POST /inventory/items/6adba41739e59f9ac7a886b5/adjust",
       "pass": true,
       "detail": {
         "status": 400,
@@ -923,7 +923,7 @@
       }
     },
     {
-      "name": "POST /inventory/items/6ad4713703313fdffb24c594/transfer",
+      "name": "POST /inventory/items/6adba41739e59f9ac7a886b5/transfer",
       "pass": true,
       "detail": {
         "status": 400,
@@ -1057,7 +1057,7 @@
       }
     },
     {
-      "name": "DELETE /suppliers/6ad4713903313fdffb24c5da",
+      "name": "DELETE /suppliers/6adba41a39e59f9ac7a8872e",
       "pass": true,
       "detail": {
         "status": 204,
@@ -1081,7 +1081,7 @@
       }
     },
     {
-      "name": "PATCH /purchase-orders/6ad4713903313fdffb24c5e5",
+      "name": "PATCH /purchase-orders/6adba41a39e59f9ac7a8873f",
       "pass": true,
       "detail": {
         "status": 200,
@@ -1093,7 +1093,7 @@
       }
     },
     {
-      "name": "PATCH /purchase-orders/6ad4713903313fdffb24c5e5",
+      "name": "PATCH /purchase-orders/6adba41a39e59f9ac7a8873f",
       "pass": true,
       "detail": {
         "status": 200,
@@ -1114,7 +1114,7 @@
       }
     },
     {
-      "name": "PATCH /purchase-orders/6ad4713903313fdffb24c5e5",
+      "name": "PATCH /purchase-orders/6adba41a39e59f9ac7a8873f",
       "pass": true,
       "detail": {
         "status": 200,
@@ -1135,7 +1135,7 @@
       }
     },
     {
-      "name": "POST /purchase-orders/6ad4713903313fdffb24c5e5/approve",
+      "name": "POST /purchase-orders/6adba41a39e59f9ac7a8873f/approve",
       "pass": true,
       "detail": {
         "status": 409,
@@ -1145,7 +1145,7 @@
       }
     },
     {
-      "name": "POST /purchase-orders/6ad4713903313fdffb24c5e5/close",
+      "name": "POST /purchase-orders/6adba41a39e59f9ac7a8873f/close",
       "pass": true,
       "detail": {
         "status": 409,
@@ -1155,7 +1155,7 @@
       }
     },
     {
-      "name": "POST /purchase-orders/6ad4713903313fdffb24c5e5/submit",
+      "name": "POST /purchase-orders/6adba41a39e59f9ac7a8873f/submit",
       "pass": true,
       "detail": {
         "status": 200,
@@ -1167,7 +1167,7 @@
       }
     },
     {
-      "name": "POST /purchase-orders/6ad4713903313fdffb24c5e5/approve",
+      "name": "POST /purchase-orders/6adba41a39e59f9ac7a8873f/approve",
       "pass": true,
       "detail": {
         "status": 200,
@@ -1179,7 +1179,7 @@
       }
     },
     {
-      "name": "POST /purchase-orders/6ad4713903313fdffb24c5e5/send",
+      "name": "POST /purchase-orders/6adba41a39e59f9ac7a8873f/send",
       "pass": true,
       "detail": {
         "status": 200,
@@ -1191,7 +1191,7 @@
       }
     },
     {
-      "name": "POST /purchase-orders/6ad4713903313fdffb24c5e5/receipts",
+      "name": "POST /purchase-orders/6adba41a39e59f9ac7a8873f/receipts",
       "pass": true,
       "detail": {
         "status": 400,
@@ -1201,7 +1201,7 @@
       }
     },
     {
-      "name": "POST /purchase-orders/6ad4713903313fdffb24c5e5/receipts",
+      "name": "POST /purchase-orders/6adba41a39e59f9ac7a8873f/receipts",
       "pass": true,
       "detail": {
         "status": 400,
@@ -1211,7 +1211,7 @@
       }
     },
     {
-      "name": "POST /purchase-orders/6ad4713903313fdffb24c5e5/receipts",
+      "name": "POST /purchase-orders/6adba41a39e59f9ac7a8873f/receipts",
       "pass": true,
       "detail": {
         "status": 201,
@@ -1224,7 +1224,7 @@
       }
     },
     {
-      "name": "POST /purchase-orders/6ad4713903313fdffb24c5e5/receipts",
+      "name": "POST /purchase-orders/6adba41a39e59f9ac7a8873f/receipts",
       "pass": true,
       "detail": {
         "status": 400,
@@ -1245,7 +1245,7 @@
       ]
     },
     {
-      "name": "GET /purchase-orders/6ad4713903313fdffb24c5e5/receipts",
+      "name": "GET /purchase-orders/6adba41a39e59f9ac7a8873f/receipts",
       "pass": true,
       "detail": {
         "status": 200,
@@ -1257,7 +1257,7 @@
       }
     },
     {
-      "name": "POST /purchase-orders/6ad4713903313fdffb24c5e5/receipts",
+      "name": "POST /purchase-orders/6adba41a39e59f9ac7a8873f/receipts",
       "pass": true,
       "detail": {
         "status": 201,
@@ -1269,7 +1269,7 @@
       }
     },
     {
-      "name": "POST /purchase-orders/6ad4713903313fdffb24c5e5/close",
+      "name": "POST /purchase-orders/6adba41a39e59f9ac7a8873f/close",
       "pass": true,
       "detail": {
         "status": 200,
@@ -1281,7 +1281,7 @@
       }
     },
     {
-      "name": "POST /purchase-orders/6ad4713903313fdffb24c5e5/cancel",
+      "name": "POST /purchase-orders/6adba41a39e59f9ac7a8873f/cancel",
       "pass": true,
       "detail": {
         "status": 409,
@@ -1291,7 +1291,7 @@
       }
     },
     {
-      "name": "PATCH /purchase-orders/6ad4713903313fdffb24c5e5",
+      "name": "PATCH /purchase-orders/6adba41a39e59f9ac7a8873f",
       "pass": true,
       "detail": {
         "status": 409,
@@ -1313,7 +1313,7 @@
       }
     },
     {
-      "name": "POST /purchase-orders/6ad4713d03313fdffb24c656/reject",
+      "name": "POST /purchase-orders/6adba41e39e59f9ac7a887e2/reject",
       "pass": true,
       "detail": {
         "status": 409,
@@ -1323,7 +1323,7 @@
       }
     },
     {
-      "name": "POST /purchase-orders/6ad4713d03313fdffb24c656/submit",
+      "name": "POST /purchase-orders/6adba41e39e59f9ac7a887e2/submit",
       "pass": true,
       "detail": {
         "status": 200,
@@ -1335,7 +1335,7 @@
       }
     },
     {
-      "name": "POST /purchase-orders/6ad4713d03313fdffb24c656/reject",
+      "name": "POST /purchase-orders/6adba41e39e59f9ac7a887e2/reject",
       "pass": true,
       "detail": {
         "status": 200,
@@ -1347,7 +1347,7 @@
       }
     },
     {
-      "name": "PATCH /purchase-orders/6ad4713d03313fdffb24c656",
+      "name": "PATCH /purchase-orders/6adba41e39e59f9ac7a887e2",
       "pass": true,
       "detail": {
         "status": 200,
@@ -1363,7 +1363,7 @@
       "pass": true
     },
     {
-      "name": "POST /purchase-orders/6ad4713d03313fdffb24c656/cancel",
+      "name": "POST /purchase-orders/6adba41e39e59f9ac7a887e2/cancel",
       "pass": true,
       "detail": {
         "status": 200,
@@ -1385,7 +1385,7 @@
       }
     },
     {
-      "name": "GET /purchase-orders/6ad4713903313fdffb24c5e5/pdf",
+      "name": "GET /purchase-orders/6adba41a39e59f9ac7a8873f/pdf",
       "pass": true,
       "detail": {
         "status": 200,
@@ -1401,7 +1401,7 @@
       "pass": true,
       "detail": {
         "status": 200,
-        "size": 3468
+        "size": 3472
       }
     },
     {
@@ -1474,7 +1474,7 @@
       }
     },
     {
-      "name": "POST /public/quotations/responses/949666680fafd32cfcd6424fb73dfcf74d08959c17b92eae248190636d625da7",
+      "name": "POST /public/quotations/responses/de1a16fed4030aa26522d524cd4a93bd0d61d3105549a6aa8dd79fd80ae580f2",
       "pass": true,
       "detail": {
         "status": 400,
@@ -1484,7 +1484,7 @@
       }
     },
     {
-      "name": "POST /public/quotations/responses/949666680fafd32cfcd6424fb73dfcf74d08959c17b92eae248190636d625da7",
+      "name": "POST /public/quotations/responses/de1a16fed4030aa26522d524cd4a93bd0d61d3105549a6aa8dd79fd80ae580f2",
       "pass": true,
       "detail": {
         "status": 400,
@@ -1494,7 +1494,7 @@
       }
     },
     {
-      "name": "POST /public/quotations/responses/949666680fafd32cfcd6424fb73dfcf74d08959c17b92eae248190636d625da7",
+      "name": "POST /public/quotations/responses/de1a16fed4030aa26522d524cd4a93bd0d61d3105549a6aa8dd79fd80ae580f2",
       "pass": true,
       "detail": {
         "status": 200,
@@ -1504,7 +1504,7 @@
       }
     },
     {
-      "name": "POST /public/quotations/responses/949666680fafd32cfcd6424fb73dfcf74d08959c17b92eae248190636d625da7",
+      "name": "POST /public/quotations/responses/de1a16fed4030aa26522d524cd4a93bd0d61d3105549a6aa8dd79fd80ae580f2",
       "pass": true,
       "detail": {
         "status": 409,
@@ -1514,7 +1514,7 @@
       }
     },
     {
-      "name": "GET /quotations/6ad4714003313fdffb24c68d",
+      "name": "GET /quotations/6adba42139e59f9ac7a88838",
       "pass": true,
       "detail": {
         "status": 200,
@@ -1526,7 +1526,7 @@
       }
     },
     {
-      "name": "GET /quotations/6ad4714003313fdffb24c68d/compare",
+      "name": "GET /quotations/6adba42139e59f9ac7a88838/compare?includeAi=true",
       "pass": true,
       "detail": {
         "status": 200,
@@ -1538,7 +1538,7 @@
       }
     },
     {
-      "name": "POST /quotations/6ad4714003313fdffb24c68d/accept",
+      "name": "POST /quotations/6adba42139e59f9ac7a88838/accept",
       "pass": true,
       "detail": {
         "status": 200,
@@ -1550,7 +1550,7 @@
       }
     },
     {
-      "name": "POST /quotations/6ad4714003313fdffb24c68d/accept",
+      "name": "POST /quotations/6adba42139e59f9ac7a88838/accept",
       "pass": true,
       "detail": {
         "status": 409,
@@ -1560,7 +1560,7 @@
       }
     },
     {
-      "name": "POST /quotations/6ad4714003313fdffb24c68d/cancel",
+      "name": "POST /quotations/6adba42139e59f9ac7a88838/cancel",
       "pass": true,
       "detail": {
         "status": 409,
@@ -1612,7 +1612,7 @@
       }
     },
     {
-      "name": "PATCH /auth/users/6ad4714203313fdffb24c6bb/role",
+      "name": "PATCH /auth/users/6adba42539e59f9ac7a8887d/role",
       "pass": true,
       "detail": {
         "status": 200,
@@ -1664,7 +1664,7 @@
       }
     },
     {
-      "name": "DELETE /auth/users/6ad4714203313fdffb24c6bb",
+      "name": "DELETE /auth/users/6adba42539e59f9ac7a8887d",
       "pass": true,
       "detail": {
         "status": 204,
@@ -1814,29 +1814,9 @@
       "name": "POST /webhooks/stripe",
       "pass": true,
       "detail": {
-        "status": 501,
+        "status": 401,
         "expected": [
-          501
-        ]
-      }
-    },
-    {
-      "name": "POST /webhooks/sslcommerz",
-      "pass": true,
-      "detail": {
-        "status": 200,
-        "expected": [
-          200
-        ]
-      }
-    },
-    {
-      "name": "POST /billing/checkout-session",
-      "pass": true,
-      "detail": {
-        "status": 501,
-        "expected": [
-          501
+          401
         ]
       }
     },
@@ -1851,34 +1831,53 @@
       }
     },
     {
-      "name": "POST /billing/subscription/change",
-      "pass": true,
-      "detail": {
-        "status": 200,
-        "expected": [
-          200,
-          201,
-          204
-        ]
-      }
-    },
-    {
       "name": "POST /billing/checkout-session",
       "pass": true,
       "detail": {
-        "status": 200,
+        "status": 400,
         "expected": [
-          200
+          400
         ]
       }
     },
     {
-      "name": "Real SSLCommerz sandbox checkout URL",
+      "name": "POST /purchase-orders",
       "pass": true,
-      "detail": "https://sandbox.sslcommerz.com/EasyCheckOut/testcde7029e2cd38d0af7af40240dfd66e4203"
+      "detail": {
+        "status": 201,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
     },
     {
-      "name": "POST /billing/subscription/cancel",
+      "name": "POST /purchase-orders/6adba42f39e59f9ac7a888e7/submit",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "POST /purchase-orders/6adba42f39e59f9ac7a888e7/approve",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "POST /purchase-orders/6adba42f39e59f9ac7a888e7/send",
       "pass": true,
       "detail": {
         "status": 200,
@@ -1902,7 +1901,7 @@
       }
     },
     {
-      "name": "POST /purchase-orders/6ad4714d03313fdffb24c720/submit",
+      "name": "POST /purchase-orders/6adba43039e59f9ac7a88914/submit",
       "pass": true,
       "detail": {
         "status": 200,
@@ -1914,7 +1913,7 @@
       }
     },
     {
-      "name": "POST /purchase-orders/6ad4714d03313fdffb24c720/approve",
+      "name": "POST /purchase-orders/6adba43039e59f9ac7a88914/approve",
       "pass": true,
       "detail": {
         "status": 200,
@@ -1926,7 +1925,7 @@
       }
     },
     {
-      "name": "POST /purchase-orders/6ad4714d03313fdffb24c720/send",
+      "name": "POST /purchase-orders/6adba43039e59f9ac7a88914/send",
       "pass": true,
       "detail": {
         "status": 200,
@@ -1938,55 +1937,7 @@
       }
     },
     {
-      "name": "POST /purchase-orders",
-      "pass": true,
-      "detail": {
-        "status": 201,
-        "expected": [
-          200,
-          201,
-          204
-        ]
-      }
-    },
-    {
-      "name": "POST /purchase-orders/6ad4715003313fdffb24c746/submit",
-      "pass": true,
-      "detail": {
-        "status": 200,
-        "expected": [
-          200,
-          201,
-          204
-        ]
-      }
-    },
-    {
-      "name": "POST /purchase-orders/6ad4715003313fdffb24c746/approve",
-      "pass": true,
-      "detail": {
-        "status": 200,
-        "expected": [
-          200,
-          201,
-          204
-        ]
-      }
-    },
-    {
-      "name": "POST /purchase-orders/6ad4715003313fdffb24c746/send",
-      "pass": true,
-      "detail": {
-        "status": 200,
-        "expected": [
-          200,
-          201,
-          204
-        ]
-      }
-    },
-    {
-      "name": "POST /purchase-orders/6ad4715003313fdffb24c746/receipts",
+      "name": "POST /purchase-orders/6adba43039e59f9ac7a88914/receipts",
       "pass": true,
       "detail": {
         "status": 201,
@@ -2010,7 +1961,7 @@
       }
     },
     {
-      "name": "POST /purchase-orders/6ad4715203313fdffb24c784/submit",
+      "name": "POST /purchase-orders/6adba43239e59f9ac7a88957/submit",
       "pass": true,
       "detail": {
         "status": 200,
@@ -2022,7 +1973,7 @@
       }
     },
     {
-      "name": "POST /purchase-orders/6ad4715203313fdffb24c784/approve",
+      "name": "POST /purchase-orders/6adba43239e59f9ac7a88957/approve",
       "pass": true,
       "detail": {
         "status": 200,
@@ -2034,115 +1985,7 @@
       }
     },
     {
-      "name": "POST /purchase-orders/6ad4715203313fdffb24c784/send",
-      "pass": true,
-      "detail": {
-        "status": 200,
-        "expected": [
-          200,
-          201,
-          204
-        ]
-      }
-    },
-    {
-      "name": "POST /purchase-orders",
-      "pass": true,
-      "detail": {
-        "status": 201,
-        "expected": [
-          200,
-          201,
-          204
-        ]
-      }
-    },
-    {
-      "name": "POST /purchase-orders/6ad4715303313fdffb24c7a3/submit",
-      "pass": true,
-      "detail": {
-        "status": 200,
-        "expected": [
-          200,
-          201,
-          204
-        ]
-      }
-    },
-    {
-      "name": "POST /purchase-orders/6ad4715303313fdffb24c7a3/approve",
-      "pass": true,
-      "detail": {
-        "status": 200,
-        "expected": [
-          200,
-          201,
-          204
-        ]
-      }
-    },
-    {
-      "name": "POST /purchase-orders/6ad4715303313fdffb24c7a3/send",
-      "pass": true,
-      "detail": {
-        "status": 200,
-        "expected": [
-          200,
-          201,
-          204
-        ]
-      }
-    },
-    {
-      "name": "POST /purchase-orders/6ad4715303313fdffb24c7a3/receipts",
-      "pass": true,
-      "detail": {
-        "status": 201,
-        "expected": [
-          200,
-          201,
-          204
-        ]
-      }
-    },
-    {
-      "name": "POST /purchase-orders",
-      "pass": true,
-      "detail": {
-        "status": 201,
-        "expected": [
-          200,
-          201,
-          204
-        ]
-      }
-    },
-    {
-      "name": "POST /purchase-orders/6ad4715503313fdffb24c7e3/submit",
-      "pass": true,
-      "detail": {
-        "status": 200,
-        "expected": [
-          200,
-          201,
-          204
-        ]
-      }
-    },
-    {
-      "name": "POST /purchase-orders/6ad4715503313fdffb24c7e3/approve",
-      "pass": true,
-      "detail": {
-        "status": 200,
-        "expected": [
-          200,
-          201,
-          204
-        ]
-      }
-    },
-    {
-      "name": "POST /purchase-orders/6ad4715503313fdffb24c7e3/send",
+      "name": "POST /purchase-orders/6adba43239e59f9ac7a88957/send",
       "pass": true,
       "detail": {
         "status": 200,
@@ -2166,7 +2009,7 @@
       }
     },
     {
-      "name": "POST /purchase-orders/6ad4715603313fdffb24c808/submit",
+      "name": "POST /purchase-orders/6adba43339e59f9ac7a88984/submit",
       "pass": true,
       "detail": {
         "status": 200,
@@ -2178,7 +2021,7 @@
       }
     },
     {
-      "name": "POST /purchase-orders/6ad4715603313fdffb24c808/approve",
+      "name": "POST /purchase-orders/6adba43339e59f9ac7a88984/approve",
       "pass": true,
       "detail": {
         "status": 200,
@@ -2190,7 +2033,7 @@
       }
     },
     {
-      "name": "POST /purchase-orders/6ad4715603313fdffb24c808/send",
+      "name": "POST /purchase-orders/6adba43339e59f9ac7a88984/send",
       "pass": true,
       "detail": {
         "status": 200,
@@ -2202,7 +2045,7 @@
       }
     },
     {
-      "name": "POST /purchase-orders/6ad4715603313fdffb24c808/receipts",
+      "name": "POST /purchase-orders/6adba43339e59f9ac7a88984/receipts",
       "pass": true,
       "detail": {
         "status": 201,
@@ -2226,7 +2069,7 @@
       }
     },
     {
-      "name": "POST /purchase-orders/6ad4715703313fdffb24c842/submit",
+      "name": "POST /purchase-orders/6adba43539e59f9ac7a889c7/submit",
       "pass": true,
       "detail": {
         "status": 200,
@@ -2238,7 +2081,7 @@
       }
     },
     {
-      "name": "POST /purchase-orders/6ad4715703313fdffb24c842/approve",
+      "name": "POST /purchase-orders/6adba43539e59f9ac7a889c7/approve",
       "pass": true,
       "detail": {
         "status": 200,
@@ -2250,7 +2093,115 @@
       }
     },
     {
-      "name": "POST /purchase-orders/6ad4715703313fdffb24c842/send",
+      "name": "POST /purchase-orders/6adba43539e59f9ac7a889c7/send",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "POST /purchase-orders",
+      "pass": true,
+      "detail": {
+        "status": 201,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "POST /purchase-orders/6adba43639e59f9ac7a889f4/submit",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "POST /purchase-orders/6adba43639e59f9ac7a889f4/approve",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "POST /purchase-orders/6adba43639e59f9ac7a889f4/send",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "POST /purchase-orders/6adba43639e59f9ac7a889f4/receipts",
+      "pass": true,
+      "detail": {
+        "status": 201,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "POST /purchase-orders",
+      "pass": true,
+      "detail": {
+        "status": 201,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "POST /purchase-orders/6adba43739e59f9ac7a88a37/submit",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "POST /purchase-orders/6adba43739e59f9ac7a88a37/approve",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "expected": [
+          200,
+          201,
+          204
+        ]
+      }
+    },
+    {
+      "name": "POST /purchase-orders/6adba43739e59f9ac7a88a37/send",
       "pass": true,
       "detail": {
         "status": 200,
@@ -2328,7 +2279,7 @@
       "pass": true
     },
     {
-      "name": "GET /reports/artifacts/6ad4716103313fdffb24c891/download",
+      "name": "GET /reports/artifacts/6adba442329cbd56e46a65ea/download",
       "pass": true,
       "detail": {
         "status": 200,
@@ -2360,17 +2311,17 @@
     {
       "name": "Real AI responses persisted for presentation",
       "pass": true,
-      "detail": 59
+      "detail": 69
     },
     {
       "name": "AI text responses persisted for presentation",
       "pass": true,
-      "detail": 36
+      "detail": 40
     },
     {
       "name": "Email delivery states persisted from real SMTP",
       "pass": true,
-      "detail": 228
+      "detail": 287
     }
   ]
 }

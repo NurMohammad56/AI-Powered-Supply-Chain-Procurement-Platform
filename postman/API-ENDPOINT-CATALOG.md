@@ -1,6 +1,6 @@
 # Backend API endpoint catalogue
 
-Generated from current route source. Public endpoints: auth registration/login/recovery, token-gated quotation responses, webhooks. All other routes require Bearer auth and module permissions.
+Generated from current route source. Public endpoints: auth registration/login/recovery/verification/invite acceptance, GET /billing/plans, token-gated quotation responses, signed Stripe webhooks. Other routes require Bearer auth, current account/subscription access and role permissions. See [Stripe API changes and manual workflow](SUBSCRIPTION-STRIPE-API-CHANGES.bn.md).
 
 | Method | Endpoint | Module |
 |---|---|---|
@@ -22,6 +22,8 @@ Generated from current route source. Public endpoints: auth registration/login/r
 | POST | /api/v1/auth/verify-email | auth |
 | POST | /api/v1/auth/accept-invite | auth |
 | GET | /api/v1/auth/me | auth |
+| GET | /api/v1/auth/access | auth |
+| POST | /api/v1/auth/resend-verification | auth |
 | PATCH | /api/v1/auth/me | auth |
 | POST | /api/v1/auth/change-password | auth |
 | GET | /api/v1/auth/users | auth |
@@ -29,6 +31,8 @@ Generated from current route source. Public endpoints: auth registration/login/r
 | PATCH | /api/v1/auth/users/:userId/role | auth |
 | DELETE | /api/v1/auth/users/:userId | auth |
 | POST | /api/v1/auth/logout-everywhere | auth |
+| POST | /api/v1/billing/trial/restart | billing |
+| POST | /api/v1/billing/portal-session | billing |
 | GET | /api/v1/billing/plans | billing |
 | GET | /api/v1/billing/subscription | billing |
 | POST | /api/v1/billing/checkout-session | billing |
@@ -36,7 +40,6 @@ Generated from current route source. Public endpoints: auth registration/login/r
 | POST | /api/v1/billing/subscription/cancel | billing |
 | GET | /api/v1/billing/invoices | billing |
 | POST | /api/v1/webhooks/stripe | billing |
-| POST | /api/v1/webhooks/sslcommerz | billing |
 | GET | /api/v1/inventory/warehouses | inventory |
 | POST | /api/v1/inventory/warehouses | inventory |
 | GET | /api/v1/inventory/warehouses/:id | inventory |

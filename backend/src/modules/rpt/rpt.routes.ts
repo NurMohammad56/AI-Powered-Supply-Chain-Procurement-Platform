@@ -21,7 +21,7 @@ export const rptRouter = Router();
 
 rptRouter.post(
   '/weekly-digest',
-  rbacFor('rpt.export'),
+  rbacFor('rpt.generate'),
   validate(ReportRangeQuerySchema),
   asyncHandler(async (req, res) => {
     if (!req.context) throw new NotFoundError();
@@ -92,7 +92,7 @@ rptRouter.get(
 );
 rptRouter.post(
   '/budget',
-  rbacFor('rpt.export'),
+  rbacFor('rpt.budget.manage'),
   validate(UpsertBudgetRequestSchema),
   rptController.upsertBudget,
 );

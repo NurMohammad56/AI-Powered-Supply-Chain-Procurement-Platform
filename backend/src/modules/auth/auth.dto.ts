@@ -52,6 +52,7 @@ export const VerifyEmailRequestSchema = z.object({
   token: z.string().min(16).max(256),
 });
 export type VerifyEmailRequest = z.infer<typeof VerifyEmailRequestSchema>;
+export const ResendVerificationRequestSchema = z.object({}).strict();
 
 // ----- Invite acceptance -----
 export const AcceptInviteRequestSchema = z.object({
