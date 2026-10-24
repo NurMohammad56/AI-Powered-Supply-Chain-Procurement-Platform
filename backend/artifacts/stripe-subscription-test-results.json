@@ -1,0 +1,336 @@
+{
+  "at": "2026-10-24T02:33:51.948Z",
+  "passed": true,
+  "checks": [
+    {
+      "name": "Actual Stripe CLI webhook listener is ready",
+      "pass": true
+    },
+    {
+      "name": "Public pricing exposes all four supported plans and 14-day trial",
+      "pass": true
+    },
+    {
+      "name": "Unavailable SSO/audit features are not advertised",
+      "pass": true
+    },
+    {
+      "name": "Verification/invite email arrives for starter-mvls9nnj",
+      "pass": true
+    },
+    {
+      "name": "New company atomically gets trial subscription",
+      "pass": true
+    },
+    {
+      "name": "Trial duration is fourteen days",
+      "pass": true
+    },
+    {
+      "name": "Unverified login is limited to onboarding",
+      "pass": true
+    },
+    {
+      "name": "Unverified user cannot access business APIs or checkout",
+      "pass": true
+    },
+    {
+      "name": "Verification/invite email arrives for starter-mvls9nnj",
+      "pass": true
+    },
+    {
+      "name": "Resend invalidates old token and verification is one-use",
+      "pass": true
+    },
+    {
+      "name": "Existing login token sees fresh verification state",
+      "pass": true
+    },
+    {
+      "name": "Real expired Checkout webhook releases its pending order",
+      "pass": true
+    },
+    {
+      "name": "Abandoned checkout preserves existing trial access",
+      "pass": true
+    },
+    {
+      "name": "Concurrent invitations cannot exceed trial seats",
+      "pass": true
+    },
+    {
+      "name": "Verification/invite email arrives for seat0-mvls9nnj",
+      "pass": true
+    },
+    {
+      "name": "Verification/invite email arrives for seat1-mvls9nnj",
+      "pass": true
+    },
+    {
+      "name": "Verification/invite email arrives for seat2-mvls9nnj",
+      "pass": true
+    },
+    {
+      "name": "Verification/invite email arrives for seat3-mvls9nnj",
+      "pass": true
+    },
+    {
+      "name": "Verification/invite email arrives for seat4-mvls9nnj",
+      "pass": true
+    },
+    {
+      "name": "Verification/invite email arrives for seat6-mvls9nnj",
+      "pass": true
+    },
+    {
+      "name": "Verification/invite email arrives for seat7-mvls9nnj",
+      "pass": true
+    },
+    {
+      "name": "Verification/invite email arrives for seat8-mvls9nnj",
+      "pass": true
+    },
+    {
+      "name": "Verification/invite email arrives for seat9-mvls9nnj",
+      "pass": true
+    },
+    {
+      "name": "Pending invitations and active users both occupy seats",
+      "pass": true
+    },
+    {
+      "name": "Viewer cannot update budget, generate AI report or upload",
+      "pass": true
+    },
+    {
+      "name": "Manager cannot read or manage company billing",
+      "pass": true
+    },
+    {
+      "name": "Only Owner can restart a company trial",
+      "pass": true
+    },
+    {
+      "name": "Old JWT cannot keep expired trial writable",
+      "pass": true
+    },
+    {
+      "name": "Expired trial retains read/export but blocks stock, AI and invites",
+      "pass": true
+    },
+    {
+      "name": "Restart grants fresh fourteen days and ten seats",
+      "pass": true
+    },
+    {
+      "name": "Restart retry does not extend or count the trial twice",
+      "pass": true
+    },
+    {
+      "name": "Existing JWT immediately gets all business features after restart",
+      "pass": true
+    },
+    {
+      "name": "Trial AI exposes unlimited caps as null",
+      "pass": true
+    },
+    {
+      "name": "SSLCommerz checkout is no longer accepted",
+      "pass": true
+    },
+    {
+      "name": "Forged Stripe webhook is rejected",
+      "pass": true
+    },
+    {
+      "name": "starter: checkout uses Stripe test mode and subscription mode",
+      "pass": true
+    },
+    {
+      "name": "starter: checkout alone does not activate paid access",
+      "pass": true
+    },
+    {
+      "name": "Hosted starter checkout displays card fields",
+      "pass": true
+    },
+    {
+      "name": "Real Stripe Checkout starter payment completes",
+      "pass": true
+    },
+    {
+      "name": "starter: real Stripe CLI webhook activates matching plan",
+      "pass": true
+    },
+    {
+      "name": "starter: paid invoice persisted",
+      "pass": true
+    },
+    {
+      "name": "starter: payment attempt succeeded",
+      "pass": true
+    },
+    {
+      "name": "Starter allows core inventory but gates AI and advanced reports",
+      "pass": true
+    },
+    {
+      "name": "Verified owner receives real Stripe customer portal",
+      "pass": true
+    },
+    {
+      "name": "Verification/invite email arrives for growth-mvls9nnj",
+      "pass": true
+    },
+    {
+      "name": "growth: checkout uses Stripe test mode and subscription mode",
+      "pass": true
+    },
+    {
+      "name": "growth: checkout alone does not activate paid access",
+      "pass": true
+    },
+    {
+      "name": "Hosted growth checkout displays card fields",
+      "pass": true
+    },
+    {
+      "name": "Real Stripe Checkout growth payment completes",
+      "pass": true
+    },
+    {
+      "name": "growth: real Stripe CLI webhook activates matching plan",
+      "pass": true
+    },
+    {
+      "name": "growth: paid invoice persisted",
+      "pass": true
+    },
+    {
+      "name": "growth: payment attempt succeeded",
+      "pass": true
+    },
+    {
+      "name": "Growth unlocks AI and advanced reports",
+      "pass": true
+    },
+    {
+      "name": "Verification/invite email arrives for enterprise-mvls9nnj",
+      "pass": true
+    },
+    {
+      "name": "enterprise: checkout uses Stripe test mode and subscription mode",
+      "pass": true
+    },
+    {
+      "name": "enterprise: checkout alone does not activate paid access",
+      "pass": true
+    },
+    {
+      "name": "Hosted enterprise checkout displays card fields",
+      "pass": true
+    },
+    {
+      "name": "Real Stripe Checkout enterprise payment completes",
+      "pass": true
+    },
+    {
+      "name": "enterprise: real Stripe CLI webhook activates matching plan",
+      "pass": true
+    },
+    {
+      "name": "enterprise: paid invoice persisted",
+      "pass": true
+    },
+    {
+      "name": "enterprise: payment attempt succeeded",
+      "pass": true
+    },
+    {
+      "name": "Enterprise grants 100 seats",
+      "pass": true
+    },
+    {
+      "name": "Actual signed event replay is idempotent",
+      "pass": true
+    },
+    {
+      "name": "One Stripe event produces one receipt",
+      "pass": true
+    },
+    {
+      "name": "Restart cannot replace an active paid Stripe subscription",
+      "pass": true
+    },
+    {
+      "name": "Period-end cancellation keeps current paid access",
+      "pass": true
+    },
+    {
+      "name": "Paid upgrade changes plan after Stripe invoice confirmation",
+      "pass": true
+    },
+    {
+      "name": "Downgrade schedules next cycle without removing paid Growth access",
+      "pass": true
+    },
+    {
+      "name": "Downgrade cannot exceed target plan seat limit",
+      "pass": true
+    },
+    {
+      "name": "Immediate cancellation revokes paid writes for old JWT",
+      "pass": true
+    },
+    {
+      "name": "Signed delayed event cannot restore cancelled access",
+      "pass": true
+    },
+    {
+      "name": "Queued forecast/report cannot bypass current cancellation using stale tier",
+      "pass": true
+    },
+    {
+      "name": "Cancelled paid subscription can start a fresh trial without erasing invoices",
+      "pass": true
+    }
+  ],
+  "plans": [
+    {
+      "tier": "starter",
+      "tenantId": "6adc18b07fdaa93e43eb5d64",
+      "sessionId": "cs_test_a1E5AyYOCVxti1CWdwkainzdyxFbqicvoZSairs6sR7V5CkJnLXvrHBCeW",
+      "subscriptionId": "sub_1UTulSCcgOOj8cVfJAbzwpeQ",
+      "status": "active"
+    },
+    {
+      "tier": "growth",
+      "tenantId": "6adc18d97fdaa93e43eb6041",
+      "sessionId": "cs_test_a1WCZrH9vRYHFUVOLywt9xksR3OsdjEP2uVAg8b7P0sBZ8mt1PkXxg2GbO",
+      "subscriptionId": "sub_1UTuliCcgOOj8cVfYiWPOHJ8",
+      "status": "active"
+    },
+    {
+      "tier": "enterprise",
+      "tenantId": "6adc18e87fdaa93e43eb6087",
+      "sessionId": "cs_test_a1Y61YFuFSp5JARBQ8UznloKn7SpkBu7rRuutWg5TpH3mHmGvWyyBBE6LL",
+      "subscriptionId": "sub_1UTulzCcgOOj8cVf58AIEGu7",
+      "status": "active"
+    }
+  ],
+  "actualWebhookCount": 20,
+  "tenants": [
+    {
+      "id": "6adc18b07fdaa93e43eb5d64",
+      "label": "starter"
+    },
+    {
+      "id": "6adc18d97fdaa93e43eb6041",
+      "label": "growth"
+    },
+    {
+      "id": "6adc18e87fdaa93e43eb6087",
+      "label": "enterprise"
+    }
+  ]
+}

@@ -25,12 +25,13 @@ import { Notification } from '../src/modules/notification/models/notification.mo
 import { EmailDelivery } from '../src/modules/notification/models/emailDelivery.model.js';
 import { Forecast } from '../src/modules/ai/models/forecast.model.js';
 import { AiUsage, periodKey } from '../src/modules/ai/models/aiUsage.model.js';
+import { Subscription } from '../src/modules/billing/models/subscription.model.js';
 import { Item } from '../src/modules/inventory/models/item.model.js';
 
 // Real dependencies, isolated queue prefix and new synthetic factory per run.
 assert.match(env.QUEUE_PREFIX, /^low-stock-qa-/);
 assert.equal(env.SMTP_HOST, '127.0.0.1');
-assert.equal(env.SMTP_PORT, 2525);
+assert.equal(env.SMTP_PORT, 2527);
 const checks: Array<{ name: string; pass: boolean }> = [];
 const suffix = Date.now().toString(36);
 const password = 'LowStockReal!2026';
@@ -115,6 +116,15 @@ const adjust = (
     key,
   );
 
+const capturedMail: Array<{ to: string; body: string }> = [];
+async function tokenFromMail(email: string): Promise<string> {
+  const entry = await waitFor(
+    'Actual verification/invitation email delivered',
+    async () => capturedMail.filter((m) => m.to === email).at(-1),
+    (m) => !!m?.body.match(/[?&]token=([A-Za-z0-9_-]+)/),
+  );
+  return entry!.body.match(/[?&]token=([A-Za-z0-9_-]+)/)![1]!;
+}
 const smtp = new SMTPServer({
   secure: false,
   disabledCommands: ['STARTTLS'],
@@ -126,10 +136,16 @@ const smtp = new SMTPServer({
       { user: 'demo' },
     );
   },
-  onData(stream, _session, cb) {
+  onData(stream, session, cb) {
     const chunks: Buffer[] = [];
     stream.on('data', (chunk) => chunks.push(chunk));
     stream.on('end', () => {
+      const decoded = Buffer.concat(chunks)
+        .toString()
+        .replace(/=\r?\n/g, '')
+        .replace(/=([A-Fa-f\d]{2})/g, (_m, h) => String.fromCharCode(parseInt(h, 16)));
+      for (const to of session.envelope.rcptTo)
+        capturedMail.push({ to: to.address, body: decoded });
       void mkdir('.demo-data/mail', { recursive: true })
         .then(() =>
           writeFile(`.demo-data/mail/${Date.now()}-${randomUUID()}.eml`, Buffer.concat(chunks)),
@@ -150,7 +166,7 @@ async function main() {
     await connectRedis();
     await new Promise<void>((resolve, reject) => {
       smtp.once('error', reject);
-      smtp.listen(2525, '127.0.0.1', resolve);
+      smtp.listen(env.SMTP_PORT, '127.0.0.1', resolve);
     });
     api = createApp().listen(0, '127.0.0.1');
     await new Promise<void>((resolve) => api.once('listening', resolve));
@@ -184,14 +200,34 @@ async function main() {
         '',
       )
     ).accessToken;
+    await call(
+      'POST',
+      '/auth/verify-email',
+      { token: await tokenFromMail(`owner-${suffix}@low-stock.example.test`) },
+      '',
+      200,
+    );
+    // Synthetic fixture permits the four-role regression; no gateway purchase is claimed.
+    await scope(() =>
+      Subscription.updateOne(
+        {},
+        {
+          $set: {
+            tier: 'enterprise',
+            status: 'active',
+            currentPeriodEnd: new Date(Date.now() + 30 * 86400_000),
+          },
+        },
+      ).exec(),
+    );
     for (const role of ['manager', 'warehouse_staff', 'viewer']) {
       const email = `${role}-${suffix}@low-stock.example.test`;
       await call('POST', '/auth/invite', { email, fullName: `QA ${role}`, role }, owner, 201);
-      const invitation = await User.collection.findOne({ tenantId, email });
+      const invitationToken = await tokenFromMail(email);
       const accepted = await call(
         'POST',
         '/auth/accept-invite',
-        { token: invitation!.emailVerifyToken, password },
+        { token: invitationToken, password },
         '',
         200,
       );
@@ -572,6 +608,13 @@ async function main() {
       },
       '',
       201,
+    );
+    await call(
+      'POST',
+      '/auth/verify-email',
+      { token: await tokenFromMail(`other-${suffix}@low-stock.example.test`) },
+      '',
+      200,
     );
     const otherToken = (
       await call(

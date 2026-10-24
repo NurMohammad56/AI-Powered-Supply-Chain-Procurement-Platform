@@ -27,6 +27,7 @@ export interface UserDoc {
   status: UserStatus;
   emailVerifiedAt: Date | null;
   emailVerifyToken: string | null;
+  emailVerifyTokenHash?: string | null;
   emailVerifyTokenExpiresAt: Date | null;
   passwordResetTokenHash: string | null;
   passwordResetExpiresAt: Date | null;
@@ -66,6 +67,7 @@ const userSchema = new Schema<UserDoc>(
     },
     emailVerifiedAt: { type: Date, default: null },
     emailVerifyToken: { type: String, default: null, select: false },
+    emailVerifyTokenHash: { type: String, default: null, select: false },
     emailVerifyTokenExpiresAt: { type: Date, default: null, select: false },
     passwordResetTokenHash: { type: String, default: null, select: false },
     passwordResetExpiresAt: { type: Date, default: null, select: false },

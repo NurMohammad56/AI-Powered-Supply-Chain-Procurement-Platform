@@ -1,0 +1,48 @@
+{
+  "name": "Stripe subscription QA - local",
+  "_postman_variable_scope": "environment",
+  "values": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:4001/api/v1",
+      "enabled": true,
+      "type": "default"
+    },
+    {
+      "key": "frontendUrl",
+      "value": "http://localhost:3000",
+      "enabled": true,
+      "type": "default"
+    },
+    {
+      "key": "subscriptionEmail",
+      "value": "replace-with-unique-owner@example.test",
+      "enabled": true,
+      "type": "default"
+    },
+    {
+      "key": "subscriptionPassword",
+      "value": "GarmentsQA!2026",
+      "enabled": true,
+      "type": "secret"
+    },
+    {
+      "key": "subscriptionTier",
+      "value": "starter",
+      "enabled": true,
+      "type": "default"
+    },
+    {
+      "key": "verificationToken",
+      "value": "",
+      "enabled": true,
+      "type": "secret"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "enabled": true,
+      "type": "secret"
+    }
+  ]
+}

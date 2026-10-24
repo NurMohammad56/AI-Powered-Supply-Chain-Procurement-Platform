@@ -10,6 +10,8 @@ import { logger } from '../../config/logger.js';
 import { enqueueForecast, enqueueScheduled } from '../../shared/queue/queues.js';
 import { tenantKey, uploadObject, presignGet } from '../../shared/storage/r2.client.js';
 import { Factory } from '../auth/models/factory.model.js';
+import { User } from '../auth/models/user.model.js';
+import { requireFeature } from '../billing/access.policy.js';
 import type { TenantContext } from '../../shared/auth/types.js';
 import { inventoryRepository } from '../inventory/inventory.repository.js';
 import { supplierRepository } from '../supplier/supplier.repository.js';
@@ -757,10 +759,22 @@ export class PoService {
         const sixHoursAgo = Date.now() - 6 * 60 * 60 * 1000;
         if (recent && recent.generatedAt.getTime() > sixHoursAgo) continue;
 
+        const actor = await User.findOne({
+          role: { $in: ['owner', 'manager'] },
+          status: 'active',
+          emailVerifiedAt: { $type: 'date' },
+        })
+          .lean()
+          .exec();
+        if (!actor) continue;
+        await requireFeature({ ...args.ctx, userId: actor._id, role: actor.role }, 'ai_forecast', [
+          'owner',
+          'manager',
+        ]);
         await enqueueForecast('forecast.single_item', {
           tenantId: args.ctx.tenantId.toString(),
           itemId: itemId.toString(),
-          requestedBy: args.ctx.userId.toString(),
+          requestedBy: actor._id.toString(),
         });
       } catch (err) {
         logger.warn(

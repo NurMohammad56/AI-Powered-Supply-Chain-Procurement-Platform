@@ -1,0 +1,304 @@
+{
+  "info": {
+    "name": "Stripe - self-service subscription workflow",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Read SUBSCRIPTION-STRIPE-API-CHANGES.bn.md first. Run individually. Checkout requires browser + Stripe CLI webhook. Optional change/cancel steps mutate real test subscriptions. Use a fresh company per plan."
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "if(pm.request.method==='POST') pm.request.headers.upsert({key:'Idempotency-Key',value:pm.variables.replaceIn('{{$guid}}')});"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "01 Public plans",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/billing/plans",
+        "auth": {
+          "type": "noauth"
+        }
+      }
+    },
+    {
+      "name": "02 Register fresh company - use unique email",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/register",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"factory\": {\n    \"name\": \"Garments Stripe QA\",\n    \"businessType\": \"rmg\",\n    \"country\": \"BD\",\n    \"timeZone\": \"Asia/Dhaka\"\n  },\n  \"owner\": {\n    \"fullName\": \"QA Owner\",\n    \"email\": \"{{subscriptionEmail}}\",\n    \"password\": \"{{subscriptionPassword}}\"\n  }\n}"
+        },
+        "auth": {
+          "type": "noauth"
+        }
+      }
+    },
+    {
+      "name": "03 Login Owner",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{subscriptionEmail}}\",\n  \"password\": \"{{subscriptionPassword}}\"\n}"
+        },
+        "auth": {
+          "type": "noauth"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if(pm.response.code===200) pm.environment.set('accessToken',pm.response.json().data.accessToken);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 Access before verification",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/auth/access"
+      }
+    },
+    {
+      "name": "05 Resend if needed - 60s cooldown",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/resend-verification",
+        "body": {
+          "mode": "raw",
+          "raw": "{}"
+        }
+      }
+    },
+    {
+      "name": "06 Verify latest email token",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/verify-email",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"token\": \"{{verificationToken}}\"\n}"
+        },
+        "auth": {
+          "type": "noauth"
+        }
+      }
+    },
+    {
+      "name": "07 Access verified trial",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/auth/access"
+      }
+    },
+    {
+      "name": "08 Checkout - open response URL in browser",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/billing/checkout-session",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"tier\": \"{{subscriptionTier}}\",\n  \"gateway\": \"stripe\",\n  \"successUrl\": \"{{frontendUrl}}/settings/billing?checkout=success\",\n  \"cancelUrl\": \"{{frontendUrl}}/settings/billing?checkout=cancel\"\n}"
+        }
+      }
+    },
+    {
+      "name": "09 Wait for webhook then subscription",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/billing/subscription"
+      }
+    },
+    {
+      "name": "10 Access after payment",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/auth/access"
+      }
+    },
+    {
+      "name": "11 Actual invoices",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/billing/invoices"
+      }
+    },
+    {
+      "name": "12 Billing portal - open returned URL",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/billing/portal-session",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"returnUrl\": \"{{frontendUrl}}/settings/billing\"\n}"
+        }
+      }
+    },
+    {
+      "name": "13 Optional upgrade Growth",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/billing/subscription/change",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"tier\": \"growth\"\n}"
+        }
+      }
+    },
+    {
+      "name": "14 Optional schedule downgrade Starter",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/billing/subscription/change",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"tier\": \"starter\"\n}"
+        }
+      }
+    },
+    {
+      "name": "15 Optional cancel at period end",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/billing/subscription/cancel",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"cancelImmediately\": false\n}"
+        }
+      }
+    },
+    {
+      "name": "16 Optional IMMEDIATE cancellation",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/billing/subscription/cancel",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"cancelImmediately\": true\n}"
+        }
+      }
+    },
+    {
+      "name": "17 Verify read-only after immediate cancel",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/auth/access"
+      }
+    },
+    {
+      "name": "18 Existing inventory remains readable",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/inventory/items"
+      }
+    },
+    {
+      "name": "Restart free trial - Owner (optional, new 14 days)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{}"
+        },
+        "url": "{{baseUrl}}/billing/trial/restart"
+      }
+    }
+  ]
+}

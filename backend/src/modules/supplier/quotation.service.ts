@@ -17,6 +17,7 @@ import type { TenantContext } from '../../shared/auth/types.js';
 import type { Page } from '../../shared/utils/pagination.js';
 import { runTextPipeline } from '../ai/forecastPipeline.js';
 import { AiInsight } from '../ai/models/aiInsight.model.js';
+import { requireFeature, requireTenantFeature } from '../billing/access.policy.js';
 import { checkQuota, aiUsageRepository, estimateCostMicroUsd } from '../ai/aiUsage.repository.js';
 import { inventoryRepository } from '../inventory/inventory.repository.js';
 import { poService } from '../po/po.service.js';
@@ -278,6 +279,7 @@ export class QuotationService {
           'Quotation response must use a single currency',
         );
       }
+      await requireTenantFeature(stub.tenantId, 'core_suppliers');
       const updated = await quotationRepository.setInvitationResponse({
         id: q._id,
         token,
@@ -482,6 +484,7 @@ export class QuotationService {
   async compareQuotes(
     ctx: TenantContext,
     id: Types.ObjectId,
+    includeAi = false,
   ): Promise<{
     quotationNumber: string;
     rows: Array<{
@@ -496,6 +499,7 @@ export class QuotationService {
     aiSummary: string | null;
     recommendedSupplierId: string | null;
   }> {
+    if (includeAi) ctx = await requireFeature(ctx, 'ai_forecast', ['owner', 'manager']);
     const q = await quotationRepository.findById(id);
     assertTenantOwns(q, ctx);
     const supplierIds = q.supplierInvitations.map((inv) => inv.supplierId);
@@ -548,7 +552,7 @@ export class QuotationService {
     const recommended = completeRows[0] ?? null;
 
     let aiSummary: string | null = null;
-    if (rows.some((r) => r.isComplete)) {
+    if (includeAi && rows.some((r) => r.isComplete)) {
       try {
         const prompt = `You are a senior procurement analyst. Compare the following quote responses for RFQ ${q.number} and recommend a supplier in 4-6 sentences. Reference numbers from the data; do not invent. If the cheapest supplier has a notably longer lead time or partial coverage, call that out.
 

@@ -46,6 +46,9 @@ export type Capability =
   // Reporting
   | 'rpt.read'
   | 'rpt.export'
+  | 'rpt.generate'
+  | 'rpt.budget.manage'
+  | 'file.upload'
   // Users
   | 'user.invite'
   | 'user.role.assign'
@@ -68,6 +71,8 @@ export interface TenantContext {
   readonly seats: number;
   readonly features: ReadonlySet<string>;
   readonly requestId: string;
+  readonly emailVerified?: boolean;
+  readonly accessMode?: 'full' | 'read_only' | 'verification_required' | 'suspended';
 }
 
 declare global {

@@ -10,6 +10,12 @@
       "type": "default"
     },
     {
+      "key": "frontendUrl",
+      "value": "http://localhost:3000",
+      "enabled": true,
+      "type": "default"
+    },
+    {
       "key": "accessToken",
       "value": "",
       "enabled": true,
@@ -113,25 +119,25 @@
     },
     {
       "key": "from",
-      "value": "2026-04-21T07:18:45.216Z",
+      "value": "2026-04-27T02:33:24.110Z",
       "enabled": true,
       "type": "default"
     },
     {
       "key": "to",
-      "value": "2026-10-19T07:18:45.216Z",
+      "value": "2026-10-25T02:33:24.111Z",
       "enabled": true,
       "type": "default"
     },
     {
       "key": "future",
-      "value": "2026-11-01T07:18:45.216Z",
+      "value": "2026-11-07T02:33:24.111Z",
       "enabled": true,
       "type": "default"
     },
     {
       "key": "runSuffix",
-      "value": "mvdhv200",
+      "value": "mvlsb79r",
       "enabled": true,
       "type": "default"
     }

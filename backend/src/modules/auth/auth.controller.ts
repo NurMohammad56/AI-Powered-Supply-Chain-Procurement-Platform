@@ -1,6 +1,9 @@
 import type { Request, Response } from 'express';
 
 import { env } from '../../config/env.js';
+import { capabilitiesFor } from '../../shared/auth/rbac.js';
+import { ensureSubscription, effectiveSeatLimit } from '../billing/access.policy.js';
+import { User } from './models/user.model.js';
 import { asyncHandler } from '../../shared/http/asyncHandler.js';
 import { ok, created, noContent } from '../../shared/http/apiResponse.js';
 import { UnauthorizedError } from '../../shared/errors/HttpErrors.js';
@@ -69,6 +72,34 @@ function clientMeta(req: Request): { userAgent: string | null; ip: string | null
 }
 
 export const authController = {
+  resendVerification: asyncHandler(async (req, res) => {
+    const ctx = requireContext(req);
+    await authService.resendVerification(ctx.userId, ctx.tenantId);
+    return ok(req, res, { ok: true });
+  }),
+  access: asyncHandler(async (req, res) => {
+    const ctx = requireContext(req);
+    const sub = await ensureSubscription(ctx.tenantId);
+    const used = await User.countDocuments({
+      $or: [
+        { status: 'active' },
+        { status: 'invited', emailVerifyTokenExpiresAt: { $gt: new Date() } },
+      ],
+    }).exec();
+    return ok(req, res, {
+      role: ctx.role,
+      emailVerified: ctx.emailVerified,
+      accessMode: ctx.accessMode,
+      canWrite: ctx.accessMode === 'full',
+      tier: ctx.subscriptionTier,
+      features: Array.from(ctx.features),
+      capabilities: capabilitiesFor(ctx.role),
+      seats: { used, limit: await effectiveSeatLimit(sub), planLimit: ctx.seats },
+      subscriptionStatus: sub.status,
+      trialEndsAt: sub.trialEndsAt,
+      currentPeriodEnd: sub.currentPeriodEnd,
+    });
+  }),
   register: asyncHandler(async (req, res) => {
     const result = await authService.registerFactory(req.body);
     return created(req, res, result);
@@ -132,6 +163,8 @@ export const authController = {
     return ok(req, res, {
       ...user,
       tier: ctx.subscriptionTier,
+      accessMode: ctx.accessMode,
+      canWrite: ctx.accessMode === 'full',
       features: Array.from(ctx.features),
     });
   }),

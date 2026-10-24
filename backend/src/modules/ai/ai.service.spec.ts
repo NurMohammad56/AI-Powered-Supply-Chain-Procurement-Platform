@@ -1,4 +1,8 @@
 import { Types } from 'mongoose';
+import { requireFeature } from '../billing/access.policy.js';
+jest.mock('../billing/access.policy.js', () => ({
+  requireFeature: jest.fn(async (ctx: unknown) => ctx),
+}));
 
 process.env.MONGO_URI ??= 'mongodb://localhost:27017/test';
 process.env.REDIS_URL ??= 'redis://localhost:6379';
@@ -113,6 +117,7 @@ describe('aiService.generateForecast', () => {
 
   beforeEach(() => {
     jest.resetAllMocks();
+    jest.mocked(requireFeature).mockImplementation(async (ctx) => ctx);
   });
 
   it('generates and persists a forecast through the AI pipeline path', async () => {

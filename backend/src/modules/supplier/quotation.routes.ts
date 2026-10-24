@@ -1,4 +1,6 @@
 import { Router } from 'express';
+import { z } from 'zod';
+import { rateLimitAi } from '../../shared/middleware/rateLimit.js';
 
 import { validate } from '../../shared/middleware/validate.js';
 import { rbacFor } from '../../shared/middleware/rbac.js';
@@ -55,6 +57,10 @@ quotationRouter.get(
   '/:id/compare',
   rbacFor('supplier.read'),
   validate(QuotationIdParamSchema, 'params'),
+  validate(z.object({ includeAi: z.enum(['true', 'false']).default('false') }), 'query'),
+  (req, res, next) =>
+    req.query.includeAi === 'true' ? rbacFor('ai.forecast.generate')(req, res, next) : next(),
+  (req, res, next) => (req.query.includeAi === 'true' ? rateLimitAi(req, res, next) : next()),
   quotationController.compareQuotes,
 );
 

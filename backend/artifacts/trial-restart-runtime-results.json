@@ -1,0 +1,11 @@
+{
+  "at": "2026-10-24T02:34:35.994Z",
+  "passed": true,
+  "tenantId": "6adc18b07fdaa93e43eb5d64",
+  "checks": [
+    "Updated runtime uses ten-seat trial",
+    "Delayed cancelled-provider event preserves restarted trial and expiry",
+    "Trial usage API returns explicit unlimited caps",
+    "API MongoDB Redis readiness passes"
+  ]
+}

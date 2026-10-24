@@ -1,4 +1,6 @@
 import { Router } from 'express';
+import { accountAccess } from './shared/middleware/accountAccess.js';
+import { billingController } from './modules/billing/billing.controller.js';
 
 import {
   authPublicRouter,
@@ -32,12 +34,14 @@ export function buildApiRouter(): Router {
   router.use('/auth', authPublicRouter);
   router.use('/public/quotations', publicQuotationRouter);
   router.use('/webhooks', webhookRouter);
+  router.get('/billing/plans', billingController.listPlans);
 
   // Authenticated surface
   const authenticated = Router();
   authenticated.use(rateLimitAuthenticated);
   authenticated.use(...authPrivateMiddleware);
   authenticated.use(rateLimitTenant);
+  authenticated.use(accountAccess);
 
   authenticated.use('/auth', authPrivateRouter);
   authenticated.use('/inventory', inventoryRouter);

@@ -47,6 +47,9 @@ export interface SubscriptionDoc {
   gatewaySubscriptionId: string | null;
   paymentMethod: PaymentMethod | null;
   seats: number;
+  seatVersion?: number;
+  trialRestartCount?: number;
+  lastTrialRestartedAt?: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -77,6 +80,9 @@ const subscriptionSchema = new Schema<SubscriptionDoc>(
     gatewaySubscriptionId: { type: String, default: null, trim: true, maxlength: 128 },
     paymentMethod: { type: paymentMethodSchema, default: null },
     seats: { type: Number, default: 0, min: 0 },
+    seatVersion: { type: Number, default: 0 },
+    trialRestartCount: { type: Number, default: 0, min: 0 },
+    lastTrialRestartedAt: { type: Date, default: null },
   },
   { timestamps: true },
 );

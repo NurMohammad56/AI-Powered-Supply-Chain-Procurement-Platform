@@ -1,5 +1,14 @@
 # Postman Collection — Quick start
 
+Latest trial policy: **10 seats, all business features, no trial AI monthly quota**. New Owner-only `POST /billing/trial/restart` with `{}`. [Exact restart body, response and frontend steps](TRIAL-RESTART.bn.md).
+
+> **2026-10-24 subscription update:** [Stripe, 14-day trial, verification, exact API changes and onboarding sequence](SUBSCRIPTION-STRIPE-API-CHANGES.bn.md). Follow that guide for billing; older SSLCommerz steps are superseded. Verify email before business APIs. RFQ comparison is numeric by default; Owner/Manager must explicitly add `?includeAi=true` for AI. Viewer cannot update budget, generate digest or upload.
+
+
+Frontend developers: [role-wise API authorization matrix](FRONTEND-AUTHORIZATION.bn.md).
+
+Subscription testing: import [Stripe workflow collection](stripe-subscription.collection.json) and [environment](stripe-subscription.environment.json). Set a unique owner email and your frontend origin; run requests individually following [the exact sequence and API changes](SUBSCRIPTION-STRIPE-API-CHANGES.bn.md). Checkout requires opening the response URL in a browser and waiting for the provider webhook; do not run optional change/cancel requests blindly in Collection Runner.
+
 Automatic stock alerts and AI: [Low-stock automation guide](LOW-STOCK-AUTOMATION.bn.md).
 
 Detailed Bengali walkthrough: [Start-to-end manual API flow](START-TO-END-MANUAL.bn.md) — roles, request bodies, response IDs, automatic jobs, waiting checkpoints, receipts, AI and reports.
@@ -52,8 +61,8 @@ This is the order to run the requests for an end-to-end smoke test:
 3. **Adjust Stock (positive opening balance)** to seed inventory
 4. **Create Supplier** → **Create Second Supplier**
 5. **Create Quotation Request** with both suppliers invited
-6. (Optional) submit a public quote response — copy the token from the database into `quoteToken`
-7. **Compare Quotes** to see deterministic ranking + AI prose
+6. (Optional) submit a public quote response — copy the token from the invitation email into `quoteToken`
+7. **Compare Quotes** to see numeric ranking; add `?includeAi=true` as eligible Owner/Manager for AI prose
 8. **Accept Quotation** → auto-creates a draft PO; saves `poId`
 9. **Submit PO for Approval** → **Approve PO** → **Dispatch PO**
 10. **Record Receipt** → run twice (50 + 50) to walk `partially_received` → `fully_received`
@@ -66,6 +75,6 @@ This is the order to run the requests for an end-to-end smoke test:
 ## Notes
 
 - `Idempotency-Key` is auto-generated per POST via a collection-level pre-request script.
-- The webhook URLs use `{{baseUrl}}/../webhooks/...` because the webhook router mounts at `/api/webhooks` (NOT `/api/v1/webhooks`). Edit each webhook request URL if you want absolute paths.
+- The webhook URLs use `{{baseUrl}}/webhooks/stripe` because the webhook router mounts at `/api/v1/webhooks` (NOT `/api/v1/webhooks`). Edit each webhook request URL if you want absolute paths.
 - Public quotation responses require setting `quoteToken` manually — the `responseToken` is treated as PII and not exposed by the GET endpoint.
 - The `Refresh Token` endpoint requires the `X-CSRF` header; the env var `csrfToken` defaults to `dev-csrf-token` for local testing.

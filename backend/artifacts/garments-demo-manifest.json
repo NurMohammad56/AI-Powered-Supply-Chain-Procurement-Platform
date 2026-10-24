@@ -3015,14 +3015,14 @@
     "p95Ms": 422
   },
   "finalCounts": {
-    "items": 46,
-    "stockMovements": 3698,
-    "stockBalances": 49,
-    "purchaseOrders": 115,
-    "forecasts": 59,
-    "liveAiForecasts": 59,
-    "aiInsights": 38,
-    "emailDeliveries": 232
+    "items": 48,
+    "stockMovements": 3707,
+    "stockBalances": 51,
+    "purchaseOrders": 126,
+    "forecasts": 69,
+    "liveAiForecasts": 69,
+    "aiInsights": 40,
+    "emailDeliveries": 287
   },
   "collectionCounts": {
     "notifications": 214,

@@ -1,5 +1,8 @@
 # Start থেকে end: garments procurement-এর manual API walkthrough
 
+> **2026-10-24 subscription update:** [Stripe, 14-day trial, verification, exact API changes and onboarding sequence](SUBSCRIPTION-STRIPE-API-CHANGES.bn.md). Follow that guide for billing; older SSLCommerz steps are superseded. Verify email before business APIs. RFQ comparison is numeric by default; Owner/Manager must explicitly add `?includeAi=true` for AI. Viewer cannot update budget, generate digest or upload.
+
+
 এই নির্দেশিকায় আপনি Postman থেকে একটি নতুন cotton procurement চালাবেন: stock কমবে → RFQ যাবে → দুই supplier দাম দেবে → AI comparison হবে → একটি offer accept হবে → PO approve ও send হবে → ৪০ + ৬০ kg receive হবে → PO close হবে → AI ও PDF report যাচাই হবে। প্রতিটি ধাপ সফল হওয়ার পর পরের ধাপে যাবেন।
 
 মূল ক্রম:

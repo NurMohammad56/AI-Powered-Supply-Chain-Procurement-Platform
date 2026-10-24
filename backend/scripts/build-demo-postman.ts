@@ -5,6 +5,7 @@ async function main() {
   const m = JSON.parse(await readFile('artifacts/garments-demo-manifest.json', 'utf8'));
   const values: Record<string, string> = {
     baseUrl: m.baseUrl,
+    frontendUrl: 'http://localhost:3000',
     accessToken: '',
     tenantId: m.tenantId,
     ownerEmail: m.users.owner,
@@ -189,7 +190,7 @@ async function main() {
     request(
       'Compare offers with live AI and persist response',
       'GET',
-      '/quotations/{{quotationId}}/compare',
+      '/quotations/{{quotationId}}/compare?includeAi=true',
     ),
     request(
       'Accept supplier and create draft PO',
@@ -307,7 +308,7 @@ async function main() {
       if (entry.name.includes('Get Quotation (saves'))
         entry.name = 'Get Quotation (tokens are delivered by invitation email)';
       if (entry.name.startsWith('Create Checkout Session'))
-        entry.name = 'Create Checkout Session (Stripe disabled; use SSLCommerz sandbox)';
+        entry.name = 'Create Checkout Session (Stripe subscription)';
       if (r.body?.mode === 'raw' && r.body.raw.startsWith('{')) {
         try {
           const b = JSON.parse(r.body.raw);
@@ -364,7 +365,7 @@ async function main() {
     }
   await writeFile(
     '../postman/API-ENDPOINT-CATALOG.md',
-    `# Backend API endpoint catalogue\n\nGenerated from current route source. Public endpoints: auth registration/login/recovery, token-gated quotation responses, webhooks. All other routes require Bearer auth and module permissions.\n\n| Method | Endpoint | Module |\n|---|---|---|\n${rows.join('\n')}\n\nHealth: GET /healthz and GET /readyz. Socket.IO: /realtime (WebSocket).\n`,
+    `# Backend API endpoint catalogue\n\nGenerated from current route source. Public endpoints: auth registration/login/recovery/verification/invite acceptance, GET /billing/plans, token-gated quotation responses, signed Stripe webhooks. Other routes require Bearer auth, current account/subscription access and role permissions. See [Stripe API changes and manual workflow](SUBSCRIPTION-STRIPE-API-CHANGES.bn.md).\n\n| Method | Endpoint | Module |\n|---|---|---|\n${rows.join('\n')}\n\nHealth: GET /healthz and GET /readyz. Socket.IO: /realtime (WebSocket).\n`,
   );
   console.log('Presentation environment, collection and full endpoint catalogue generated.');
 }

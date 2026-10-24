@@ -1,0 +1,50 @@
+{
+  "at": "2026-10-24T02:33:51.948Z",
+  "stripe": {
+    "passed": true,
+    "checks": 73
+  },
+  "renewal": {
+    "passed": true,
+    "checks": 22
+  },
+  "business": {
+    "passed": 213,
+    "failed": 0
+  },
+  "lowStock": {
+    "passed": true,
+    "checks": 58
+  },
+  "unit": {
+    "passed": 117,
+    "skipped": 3
+  },
+  "typecheck": "passed",
+  "build": "passed",
+  "lint": {
+    "errors": 0,
+    "warnings": 15
+  },
+  "presentation": {
+    "ready": 200,
+    "mode": "full",
+    "verified": true,
+    "tier": "enterprise"
+  },
+  "database": "Existing configured Atlas database, separate synthetic QA tenants",
+  "format": {
+    "changedSource": "passed",
+    "repositoryWide": "Existing style debt outside changed files; see prior format check"
+  },
+  "trialPolicy": {
+    "days": 14,
+    "seats": 10,
+    "allBusinessFeatures": true,
+    "monthlyAiQuota": "unlimited",
+    "restart": "POST /api/v1/billing/trial/restart",
+    "restartRole": "verified Owner",
+    "existingTrialRowsMigrated": 5,
+    "runtimeFollowupChecks": 4
+  }
+}

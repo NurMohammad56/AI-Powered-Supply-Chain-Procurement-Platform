@@ -10,6 +10,9 @@ import type { Capability, Role } from './types.js';
  */
 const MATRIX: Readonly<Record<Role, ReadonlySet<Capability>>> = {
   owner: new Set<Capability>([
+    'rpt.generate',
+    'rpt.budget.manage',
+    'file.upload',
     'inventory.item.create',
     'inventory.item.read',
     'inventory.item.update',
@@ -41,6 +44,9 @@ const MATRIX: Readonly<Record<Role, ReadonlySet<Capability>>> = {
     'audit.read',
   ]),
   manager: new Set<Capability>([
+    'rpt.generate',
+    'rpt.budget.manage',
+    'file.upload',
     'inventory.item.create',
     'inventory.item.read',
     'inventory.item.update',
@@ -66,6 +72,7 @@ const MATRIX: Readonly<Record<Role, ReadonlySet<Capability>>> = {
     'user.invite',
   ]),
   warehouse_staff: new Set<Capability>([
+    'file.upload',
     'inventory.item.read',
     'inventory.movement.create',
     'po.receive',

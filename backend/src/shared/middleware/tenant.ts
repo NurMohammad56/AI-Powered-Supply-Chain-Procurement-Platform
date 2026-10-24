@@ -8,6 +8,7 @@ import { tenantStorage } from '../db/tenancyPlugin.js';
 import { getRequestId } from '../http/apiResponse.js';
 import { isAccessTokenDenied } from '../security/tokenDenylist.js';
 import type { TenantContext } from '../auth/types.js';
+import { resolveAccount } from '../../modules/billing/access.policy.js';
 
 /**
  * Control Point 1 of the multi-tenant boundary (SDD §2.4.1).
@@ -53,9 +54,9 @@ export const resolveTenant: RequestHandler = (req, _res, next) => {
       features: new Set(claims.features ?? []),
       requestId: getRequestId(req) ?? '',
     };
-    req.context = ctx;
+    req.context = await resolveAccount(ctx);
     next();
-  })();
+  })().catch(next);
 };
 
 /**

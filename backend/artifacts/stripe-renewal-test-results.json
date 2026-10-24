@@ -1,0 +1,97 @@
+{
+  "at": "2026-10-23T18:09:58.509Z",
+  "passed": true,
+  "checks": [
+    {
+      "name": "Real Stripe renewal webhook listener ready",
+      "pass": true
+    },
+    {
+      "name": "Test clock subscription is not live",
+      "pass": true
+    },
+    {
+      "name": "Initial actual invoice activates Growth via webhook",
+      "pass": true
+    },
+    {
+      "name": "Stripe test clock completed billing simulation",
+      "pass": true
+    },
+    {
+      "name": "Stripe test clock completed billing simulation",
+      "pass": true
+    },
+    {
+      "name": "Real monthly renewal creates a second paid invoice",
+      "pass": true
+    },
+    {
+      "name": "Renewal extends local paid-through period from Stripe",
+      "pass": true
+    },
+    {
+      "name": "Stripe test clock completed billing simulation",
+      "pass": true
+    },
+    {
+      "name": "Stripe test clock completed billing simulation",
+      "pass": true
+    },
+    {
+      "name": "Failed real renewal marks subscription past_due",
+      "pass": true
+    },
+    {
+      "name": "Failed renewal makes existing JWT read-only",
+      "pass": true
+    },
+    {
+      "name": "Read survives while writes are blocked after payment failure",
+      "pass": true
+    },
+    {
+      "name": "Real recovery payment restores active access",
+      "pass": true
+    },
+    {
+      "name": "Same JWT sees recovered full access",
+      "pass": true
+    },
+    {
+      "name": "Downgrade remains pending until the next paid cycle",
+      "pass": true
+    },
+    {
+      "name": "Stripe test clock completed billing simulation",
+      "pass": true
+    },
+    {
+      "name": "Stripe test clock completed billing simulation",
+      "pass": true
+    },
+    {
+      "name": "Actual scheduled downgrade activates Starter at renewal",
+      "pass": true
+    },
+    {
+      "name": "Downgraded plan loses AI access even with old JWT",
+      "pass": true
+    },
+    {
+      "name": "Stripe test clock completed billing simulation",
+      "pass": true
+    },
+    {
+      "name": "Period-end cancellation becomes cancelled through Stripe",
+      "pass": true
+    },
+    {
+      "name": "Period-end cancellation retains read-only access",
+      "pass": true
+    }
+  ],
+  "tenantId": "6adba2a227ff57468710ac3f",
+  "clockId": "clock_1UTmtQCcgOOj8cVffbiME4V4",
+  "subscriptionId": "sub_1UTmtSCcgOOj8cVfHQk83xlR"
+}
