@@ -1,11 +1,13 @@
 # Postman Collection — Quick start
 
+Garments collection now contains **57 real saved response examples**, one per request. [Import/view instructions](SAVED-RESPONSES.bn.md). Viewing examples needs only [the collection import](garments-demo.collection.json); live request execution requires the running backend.
+
 Latest trial policy: **10 seats, all business features, no trial AI monthly quota**. New Owner-only `POST /billing/trial/restart` with `{}`. [Exact restart body, response and frontend steps](TRIAL-RESTART.bn.md).
 
 > **2026-10-24 subscription update:** [Stripe, 14-day trial, verification, exact API changes and onboarding sequence](SUBSCRIPTION-STRIPE-API-CHANGES.bn.md). Follow that guide for billing; older SSLCommerz steps are superseded. Verify email before business APIs. RFQ comparison is numeric by default; Owner/Manager must explicitly add `?includeAi=true` for AI. Viewer cannot update budget, generate digest or upload.
 
 
-Frontend developers: [role-wise API authorization matrix](FRONTEND-AUTHORIZATION.bn.md).
+Frontend developers: [role-wise API authorization lists](FRONTEND-AUTHORIZATION.bn.md).
 
 Subscription testing: import [Stripe workflow collection](stripe-subscription.collection.json) and [environment](stripe-subscription.environment.json). Set a unique owner email and your frontend origin; run requests individually following [the exact sequence and API changes](SUBSCRIPTION-STRIPE-API-CHANGES.bn.md). Checkout requires opening the response URL in a browser and waiting for the provider webhook; do not run optional change/cancel requests blindly in Collection Runner.
 

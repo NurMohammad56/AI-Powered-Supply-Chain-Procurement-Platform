@@ -1,0 +1,162 @@
+{
+  "at": "2026-10-24T04:17:56.989Z",
+  "health": {
+    "4000": {
+      "status": 200,
+      "ok": true,
+      "deps": {
+        "mongo": true,
+        "redis": true
+      }
+    },
+    "4001": {
+      "status": 200,
+      "ok": true,
+      "deps": {
+        "mongo": true,
+        "redis": true
+      }
+    }
+  },
+  "redis": {
+    "version": "5.0.14.1",
+    "maxmemoryPolicy": "noeviction"
+  },
+  "development": {
+    "prefix": "bull",
+    "port": 4000,
+    "logLevel": "debug",
+    "allTenantsLowStock": true,
+    "smtp": "Gmail SMTP"
+  },
+  "queues": [
+    {
+      "prefix": "bull",
+      "name": "email",
+      "counts": {
+        "active": 0,
+        "waiting": 0,
+        "failed": 0,
+        "delayed": 96,
+        "completed": 2,
+        "paused": 0
+      },
+      "gmailDailyLimit": 96,
+      "missingTenantJobs": 78,
+      "testRecipientJobs": 96,
+      "unattempted": 0
+    },
+    {
+      "prefix": "bull",
+      "name": "forecast",
+      "counts": {
+        "active": 0,
+        "waiting": 0,
+        "failed": 10,
+        "delayed": 0,
+        "completed": 9,
+        "paused": 0
+      },
+      "gmailDailyLimit": 0,
+      "missingTenantJobs": 10,
+      "testRecipientJobs": 0,
+      "unattempted": 0
+    },
+    {
+      "prefix": "bull",
+      "name": "report",
+      "counts": {
+        "active": 0,
+        "waiting": 0,
+        "failed": 0,
+        "delayed": 0,
+        "completed": 0,
+        "paused": 0
+      },
+      "gmailDailyLimit": 0,
+      "missingTenantJobs": 0,
+      "testRecipientJobs": 0,
+      "unattempted": 0
+    },
+    {
+      "prefix": "bull",
+      "name": "scheduled",
+      "counts": {
+        "active": 0,
+        "waiting": 0,
+        "failed": 0,
+        "delayed": 21,
+        "completed": 5,
+        "paused": 0
+      },
+      "gmailDailyLimit": 0,
+      "missingTenantJobs": 20,
+      "testRecipientJobs": 0,
+      "unattempted": 21
+    },
+    {
+      "prefix": "garments-presentation",
+      "name": "email",
+      "counts": {
+        "active": 0,
+        "waiting": 0,
+        "failed": 0,
+        "delayed": 0,
+        "completed": 55,
+        "paused": 0
+      },
+      "gmailDailyLimit": 0,
+      "missingTenantJobs": 0,
+      "testRecipientJobs": 0,
+      "unattempted": 0
+    },
+    {
+      "prefix": "garments-presentation",
+      "name": "forecast",
+      "counts": {
+        "active": 0,
+        "waiting": 0,
+        "failed": 0,
+        "delayed": 0,
+        "completed": 10,
+        "paused": 0
+      },
+      "gmailDailyLimit": 0,
+      "missingTenantJobs": 0,
+      "testRecipientJobs": 0,
+      "unattempted": 0
+    },
+    {
+      "prefix": "garments-presentation",
+      "name": "report",
+      "counts": {
+        "active": 0,
+        "waiting": 0,
+        "failed": 0,
+        "delayed": 0,
+        "completed": 2,
+        "paused": 0
+      },
+      "gmailDailyLimit": 0,
+      "missingTenantJobs": 0,
+      "testRecipientJobs": 0,
+      "unattempted": 0
+    },
+    {
+      "prefix": "garments-presentation",
+      "name": "scheduled",
+      "counts": {
+        "active": 0,
+        "waiting": 0,
+        "failed": 0,
+        "delayed": 52,
+        "completed": 798,
+        "paused": 0
+      },
+      "gmailDailyLimit": 0,
+      "missingTenantJobs": 0,
+      "testRecipientJobs": 0,
+      "unattempted": 52
+    }
+  ]
+}

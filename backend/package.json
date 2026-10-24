@@ -37,6 +37,7 @@
     "demo:stripe": "node --env-file=.env.presentation scripts/stripe-webhooks.mjs",
     "seed:garments": "tsx --env-file=.env.presentation scripts/garments-demo.ts",
     "demo:postman": "tsx scripts/build-demo-postman.ts",
+    "demo:postman:responses": "tsx --env-file=.env.presentation scripts/capture-demo-postman.ts",
     "demo:ready": "tsx --env-file=.env.presentation scripts/prepare-presentation.ts",
     "seed": "tsx --env-file=.env scripts/seed.ts",
     "seed:notifications": "tsx --env-file=.env scripts/seedNotifications.ts"

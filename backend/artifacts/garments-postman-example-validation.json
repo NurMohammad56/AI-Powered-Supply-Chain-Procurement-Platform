@@ -1,0 +1,16 @@
+{
+  "at": "2026-10-24T05:09:53.368Z",
+  "passed": true,
+  "requests": 57,
+  "examples": 57,
+  "allSuccess": true,
+  "officialPostmanSchema": true,
+  "regenerationPreservesExamples": true,
+  "collectionOnlyLogin": true,
+  "credentialsScan": true,
+  "statuses": {
+    "200": 51,
+    "201": 5,
+    "202": 1
+  }
+}
